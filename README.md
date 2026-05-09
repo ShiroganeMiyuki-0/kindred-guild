@@ -63,3 +63,12 @@ git push origin main
 
 - This is a static front-end app (`index.html`, `styles.css`, `app.js`), so GitHub Pages works out of the box.
 - Current data is in-memory only (refreshing the page resets quests).
+## Run locally
+
+Open `index.html` directly in your browser, or serve the folder:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then visit `http://localhost:8000`.
