@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kindred Guild | Fairy Tail-Inspired Quest Board</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="overlay"></div>
+    <div class="hero-content container">
+      <p class="tag">S-Rank Opportunity Network</p>
+      <h1>Kindred Guild</h1>
+      <p class="subtitle">A Fairy Tail-inspired guild where members post quests, bounties, and side-jobs. Accept free missions or paid contracts—and let the guild earn a percentage from completed paid jobs.</p>
+      <div class="hero-cta">
+        <a href="#create" class="btn primary">Post a Quest</a>
+        <a href="#quests" class="btn ghost">Browse Board</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="stats">
+      <article>
+        <h2 id="totalQuests">0</h2>
+        <p>Total quests</p>
+      </article>
+      <article>
+        <h2 id="paidQuests">0</h2>
+        <p>Paid contracts</p>
+      </article>
+      <article>
+        <h2 id="guildRevenue">$0</h2>
+        <p>Estimated guild cut</p>
+      </article>
+    </section>
+
+    <section id="create" class="card form-card">
+      <h2>Create a New Quest</h2>
+      <form id="questForm">
+        <label>
+          Quest Title
+          <input type="text" id="title" required maxlength="80" placeholder="Ex: Deliver magical herbs" />
+        </label>
+        <label>
+          Description
+          <textarea id="description" rows="4" required maxlength="300" placeholder="Describe the task clearly..."></textarea>
+        </label>
+        <div class="row">
+          <label>
+            Reward ($)
+            <input type="number" id="reward" min="0" step="1" value="0" />
+          </label>
+          <label>
+            Guild Fee (%)
+            <input type="number" id="fee" min="0" max="50" step="1" value="10" />
+          </label>
+        </div>
+        <button type="submit" class="btn primary">Add Quest</button>
+      </form>
+    </section>
+
+    <section id="quests" class="quests-section">
+      <div class="section-header">
+        <h2>Quest Board</h2>
+        <p>Members can accept available quests and mark them complete.</p>
+      </div>
+      <div id="questList" class="quest-list"></div>
+    </section>
+  </main>
+
+  <template id="questTemplate">
+    <article class="card quest">
+      <div>
+        <p class="quest-meta"></p>
+        <h3 class="quest-title"></h3>
+        <p class="quest-description"></p>
+      </div>
+      <div class="quest-footer">
+        <p class="reward"></p>
+        <div class="actions">
+          <button class="btn accept">Accept</button>
+          <button class="btn complete">Complete</button>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
