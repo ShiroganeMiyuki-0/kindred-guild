@@ -1,89 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kindred Guild | Fairy Tail-Inspired Quest Board</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .auth-bar {
+      background: #1f1732;
+      border-bottom: 1px solid #3a2f57;
+      padding: 1rem;
+    }
+    .auth-bar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+    .auth-inputs {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .auth-inputs input {
+      padding: .5rem .8rem;
+      border-radius: .5rem;
+      border: 1px solid #4e3c75;
+      background: #130f21;
+      color: #fff;
+      width: 170px;
+    }
+    .auth-inputs button {
+      padding: .5rem 1rem;
+      border-radius: 999px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #btnSignUp { background: #86b0ff; color: #071f4a; }
+    #btnSignIn { background: linear-gradient(120deg, #af002d, #ff7a18); color: #fff; }
+    #btnSignOut { background: #4e3c75; color: #fff; }
+    .user-badge { color: #ffe1cc; font-weight: 600; }
+    .locked {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #c3bdd4;
+    }
+    .locked h2 { color: #f8f5ff; margin-bottom: .5rem; }
+  </style>
 </head>
 <body>
-  <header class="hero">
-    <div class="overlay"></div>
-    <div class="hero-content container">
-      <p class="tag">S-Rank Opportunity Network</p>
-      <h1>Kindred Guild</h1>
-      <p class="subtitle">A Fairy Tail-inspired guild where members post quests, bounties, and side-jobs. Accept free missions or paid contracts—and let the guild earn a percentage from completed paid jobs.</p>
-      <div class="hero-cta">
-        <a href="#create" class="btn primary">Post a Quest</a>
-        <a href="#quests" class="btn ghost">Browse Board</a>
+
+  <!-- LOGIN BAR -->
+  <div class="auth-bar">
+    <div class="container">
+      <div style="font-weight:700; color:#ff7a18;">🛡️ Kindred Guild</div>
+      
+      <div id="loginForm" class="auth-inputs">
+        <input type="email" id="authEmail" placeholder="Email">
+        <input type="password" id="authPassword" placeholder="Password">
+        <button id="btnSignIn">Login</button>
+        <button id="btnSignUp">Sign Up</button>
+      </div>
+      
+      <div id="userInfo" style="display:none; align-items:center; gap:.8rem;">
+        <span class="user-badge" id="userEmail"></span>
+        <button id="btnSignOut">Logout</button>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="container">
+  <div class="hero">
+    <div class="overlay"></div>
+    <div class="hero-content container">
+      <div class="tag">S-Rank Opportunity Network</div>
+      <h1>Kindred Guild</h1>
+      <p class="subtitle">
+        A Fairy Tail-inspired guild where members post quests, bounties, and side-jobs. 
+        Accept free missions or paid contracts—and let the guild earn a percentage from completed paid jobs.
+      </p>
+      <div class="hero-cta">
+        <a href="#post" class="btn primary">Post a Quest</a>
+        <a href="#board" class="btn ghost">Browse Board</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" id="board">
     <section class="stats">
       <article>
         <h2 id="totalQuests">0</h2>
-        <p>Total quests</p>
+        <p>Active Quests</p>
       </article>
       <article>
         <h2 id="paidQuests">0</h2>
-        <p>Paid contracts</p>
+        <p>Paid Contracts</p>
       </article>
       <article>
         <h2 id="guildRevenue">$0</h2>
-        <p>Estimated guild cut</p>
+        <p>Guild Revenue</p>
       </article>
     </section>
 
-    <section id="create" class="card form-card">
-      <h2>Create a New Quest</h2>
-      <form id="questForm">
-        <label>
-          Quest Title
-          <input type="text" id="title" required maxlength="80" placeholder="Ex: Deliver magical herbs" />
-        </label>
-        <label>
-          Description
-          <textarea id="description" rows="4" required maxlength="300" placeholder="Describe the task clearly..."></textarea>
-        </label>
-        <div class="row">
+    <!-- THIS SHOWS ONLY WHEN LOGGED IN -->
+    <div id="questBoard">
+      <div class="card form-card" id="post">
+        <h2>Post a New Quest</h2>
+        <form id="questForm">
           <label>
-            Reward ($)
-            <input type="number" id="reward" min="0" step="1" value="0" />
+            Title
+            <input type="text" id="title" placeholder="e.g., Escort celestial key merchant" required>
           </label>
           <label>
-            Guild Fee (%)
-            <input type="number" id="fee" min="0" max="50" step="1" value="10" />
+            Description
+            <textarea id="description" rows="3" placeholder="Describe the mission..." required></textarea>
           </label>
-        </div>
-        <button type="submit" class="btn primary">Add Quest</button>
-      </form>
-    </section>
+          <div class="row">
+            <label>
+              Reward ($)
+              <input type="number" id="reward" min="0" value="0" required>
+            </label>
+            <label>
+              Guild Fee (%)
+              <input type="number" id="fee" min="0" max="100" value="10" required>
+            </label>
+          </div>
+          <button type="submit" class="btn primary">Publish Quest</button>
+        </form>
+      </div>
 
-    <section id="quests" class="quests-section">
       <div class="section-header">
         <h2>Quest Board</h2>
-        <p>Members can accept available quests and mark them complete.</p>
+        <p>Accept a mission, complete it, and claim your reward.</p>
       </div>
-      <div id="questList" class="quest-list"></div>
-    </section>
+      <div class="quest-list" id="questList"></div>
+    </div>
+
+    <!-- THIS SHOWS ONLY WHEN LOGGED OUT -->
+    <div id="lockedMessage" class="locked" style="display:none;">
+      <h2>🔒 Guild Members Only</h2>
+      <p>Login or sign up above to view and post quests.</p>
+    </div>
   </main>
 
   <template id="questTemplate">
     <article class="card quest">
-      <div>
-        <p class="quest-meta"></p>
-        <h3 class="quest-title"></h3>
-        <p class="quest-description"></p>
-      </div>
+      <div class="quest-meta">Status: <span class="badge pending">pending</span></div>
+      <h3 class="quest-title">Quest Title</h3>
+      <p class="quest-description">Description goes here.</p>
       <div class="quest-footer">
-        <p class="reward"></p>
+        <span class="reward">$0</span>
         <div class="actions">
           <button class="btn accept">Accept</button>
           <button class="btn complete">Complete</button>
         </div>
       </div>
+      <div style="margin-top:.5rem; font-size:.8rem; color:#a99ec7;" class="quest-people"></div>
     </article>
   </template>
 
