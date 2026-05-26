@@ -3,9 +3,13 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const GUILD_FEE_PERCENT = 10; // YOU control this. Users cannot change it.
+
 let currentUser = null;
 let quests = [];
 let ratings = [];
+let strikes = [];
+let comments = [];
 let currentFilter = 'all';
 let currentTab = 'all';
 
@@ -51,6 +55,8 @@ async function signOut() {
   await supabaseClient.auth.signOut();
   quests = [];
   ratings = [];
+  strikes = [];
+  comments = [];
   renderQuests();
 }
 
@@ -68,8 +74,16 @@ function getUserRating(userId) {
   return (userRatings.reduce((sum, r) => sum + r.rating, 0) / userRatings.length).toFixed(1);
 }
 
+function getUserStrikes(userId) {
+  return strikes.filter(s => s.user_id === userId && !s.resolved).length;
+}
+
 function hasRated(questId, toUserId) {
   return ratings.some(r => r.quest_id === questId && r.from_user === currentUser?.id && r.to_user === toUserId);
+}
+
+function isBanned(userId) {
+  return getUserStrikes(userId) >= 3;
 }
 
 function updateUI() {
@@ -90,6 +104,20 @@ function updateUI() {
 
     const avg = getUserRating(currentUser.id);
     document.getElementById('userRating').textContent = avg ? `(${avg}⭐)` : '';
+
+    const strikeCount = getUserStrikes(currentUser.id);
+    const strikeBadge = document.getElementById('userStrikes');
+    if (strikeCount > 0) {
+      strikeBadge.textContent = `⚠ ${strikeCount} Strikes`;
+      strikeBadge.style.display = 'inline';
+    } else {
+      strikeBadge.style.display = 'none';
+    }
+
+    if (isBanned(currentUser.id)) {
+      alert('🚫 You are banned! 3+ unpaid quests. Contact admin.');
+      signOut();
+    }
   } else {
     loginForm.style.display = 'flex';
     userInfo.style.display = 'none';
@@ -108,16 +136,28 @@ async function loadQuests() {
     .from('ratings')
     .select('*');
 
+  const { data: strikeData, error: strikeError } = await supabaseClient
+    .from('strikes')
+    .select('*');
+
+  const { data: commentData, error: commentError } = await supabaseClient
+    .from('comments')
+    .select('*')
+    .order('created_at', { ascending: true });
+
   if (questError) { console.error(questError); return; }
-  if (ratingError) { console.error(ratingError); }
+  if (ratingError) console.error(ratingError);
+  if (strikeError) console.error(strikeError);
+  if (commentError) console.error(commentError);
 
   quests = questData || [];
   ratings = ratingData || [];
+  strikes = strikeData || [];
+  comments = commentData || [];
   updateUI();
   renderQuests();
 }
 
-// Realtime backup (in case it works, this is a bonus)
 supabaseClient
   .channel('public:quests')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'quests' }, () => {
@@ -132,38 +172,70 @@ supabaseClient
   })
   .subscribe();
 
+supabaseClient
+  .channel('public:strikes')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'strikes' }, () => {
+    loadQuests();
+  })
+  .subscribe();
+
+supabaseClient
+  .channel('public:comments')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
+    loadQuests();
+  })
+  .subscribe();
+
 questForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentUser) { alert('Login first!'); return; }
+  
+  if (isBanned(currentUser.id)) {
+    alert('🚫 You are banned! Cannot post quests.');
+    return;
+  }
+
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
   const reward = Number(document.getElementById('reward').value) || 0;
-  let fee = Number(document.getElementById('fee').value) || 0;
   const category = document.getElementById('category').value;
+  const upiId = document.getElementById('upiId').value.trim();
+  const deadlineVal = document.getElementById('deadline').value;
+  
   if (!title || !description) { alert('Fill in title and description'); return; }
-  if (reward === 0) fee = 0;
+  if (reward > 0 && !upiId) { alert('UPI ID required for paid quests'); return; }
+
+  let deadline = null;
+  if (deadlineVal) {
+    deadline = new Date(deadlineVal).toISOString();
+  }
+
   const { error } = await supabaseClient.from('quests').insert({
-    title, description, reward, fee_percent: fee, status: 'pending', category,
-    posted_by: currentUser.id, poster_email: currentUser.email
+    title, description, reward, fee_percent: GUILD_FEE_PERCENT, status: 'pending', category,
+    posted_by: currentUser.id, poster_email: currentUser.email, poster_upi: upiId, deadline
   });
+  
   if (error) alert('Error: ' + error.message);
   else {
     questForm.reset();
     document.getElementById('reward').value = 0;
-    document.getElementById('fee').value = 10;
     document.getElementById('category').value = 'Misc';
-    await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
+    await loadQuests();
   }
 });
 
 async function acceptQuest(id) {
   if (!currentUser) { alert('Login first!'); return; }
+  if (isBanned(currentUser.id)) {
+    alert('🚫 You are banned! Cannot accept quests.');
+    return;
+  }
   const { error } = await supabaseClient
     .from('quests')
     .update({ status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email })
     .eq('id', id);
   if (error) alert('Error: ' + error.message);
-  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
+  else await loadQuests();
 }
 
 async function completeQuest(id) {
@@ -173,7 +245,7 @@ async function completeQuest(id) {
     .update({ status: 'completed' })
     .eq('id', id);
   if (error) alert('Error: ' + error.message);
-  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
+  else await loadQuests();
 }
 
 async function cancelQuest(id) {
@@ -186,7 +258,7 @@ async function cancelQuest(id) {
     .update({ status: 'pending', accepted_by: null, acceptor_email: null })
     .eq('id', id);
   if (error) alert('Error: ' + error.message);
-  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
+  else await loadQuests();
 }
 
 async function deleteQuest(id) {
@@ -196,7 +268,7 @@ async function deleteQuest(id) {
   if (!confirm('Delete this quest forever?')) return;
   const { error } = await supabaseClient.from('quests').delete().eq('id', id);
   if (error) alert('Error: ' + error.message);
-  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
+  else await loadQuests();
 }
 
 async function confirmPayment(questId, field) {
@@ -205,7 +277,7 @@ async function confirmPayment(questId, field) {
   updateObj[field] = true;
   const { error } = await supabaseClient.from('quests').update(updateObj).eq('id', questId);
   if (error) alert('Error: ' + error.message);
-  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
+  else await loadQuests();
 }
 
 async function submitRating(questId, toUser, toEmail, ratingValue) {
@@ -219,7 +291,34 @@ async function submitRating(questId, toUser, toEmail, ratingValue) {
     rating: ratingValue
   });
   if (error) alert('Error: ' + error.message);
-  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
+  else await loadQuests();
+}
+
+async function addStrike(userId, userEmail, questId, reason) {
+  if (!currentUser) return;
+  const { error } = await supabaseClient.from('strikes').insert({
+    user_id: userId,
+    user_email: userEmail,
+    quest_id: questId,
+    reason: reason
+  });
+  if (error) alert('Error: ' + error.message);
+  else {
+    alert('Strike added! User will be banned at 3 strikes.');
+    await loadQuests();
+  }
+}
+
+async function sendComment(questId, message) {
+  if (!currentUser || !message.trim()) return;
+  const { error } = await supabaseClient.from('comments').insert({
+    quest_id: questId,
+    user_id: currentUser.id,
+    user_email: currentUser.email,
+    message: message.trim()
+  });
+  if (error) alert('Error: ' + error.message);
+  else await loadQuests();
 }
 
 function createStarRating(questId, toUser, toEmail, container) {
@@ -249,6 +348,18 @@ function createPaymentCheckbox(quest, labelText, field, container) {
   label.appendChild(checkbox);
   label.appendChild(document.createTextNode(labelText));
   container.appendChild(label);
+}
+
+function formatDeadline(deadlineStr) {
+  if (!deadlineStr) return '';
+  const d = new Date(deadlineStr);
+  const now = new Date();
+  const diff = d - now;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  
+  if (diff < 0) return `<span class="deadline-overdue">⏰ OVERDUE by ${Math.abs(hours)} hours</span>`;
+  if (hours < 24) return `<span style="color:#ff7a18;">⏰ Due in ${hours} hours</span>`;
+  return `<span style="color:#89f0b8;">⏰ Due in ${Math.floor(hours/24)} days</span>`;
 }
 
 function setFilter(filter) {
@@ -289,137 +400,4 @@ function renderQuests() {
 
   displayQuests.forEach(quest => {
     const node = questTemplate.content.firstElementChild.cloneNode(true);
-    const badge = node.querySelector('.badge');
-    badge.className = 'badge ' + quest.status;
-    badge.textContent = quest.status;
-
-    node.querySelector('.cat-badge').textContent = quest.category || 'Misc';
-    node.querySelector('.quest-title').textContent = quest.title;
-    node.querySelector('.quest-description').textContent = quest.description;
-
-    const feeLabel = quest.reward > 0 ? ` • Guild fee ${quest.fee_percent}%` : ' • Free mission';
-    node.querySelector('.reward').textContent = '₹ ' + quest.reward + feeLabel;
-
-    let peopleText = `Posted by: ${quest.poster_email || 'Unknown'}`;
-    if (quest.acceptor_email) peopleText += ` | Accepted by: ${quest.acceptor_email}`;
-    node.querySelector('.quest-people').textContent = peopleText;
-
-    const acceptBtn = node.querySelector('.accept');
-    const completeBtn = node.querySelector('.complete');
-    const cancelBtn = node.querySelector('.cancel');
-    const deleteBtn = node.querySelector('.delete');
-
-    if (quest.status !== 'pending' || quest.posted_by === currentUser?.id) {
-      acceptBtn.style.display = 'none';
-    }
-    if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) {
-      completeBtn.style.display = 'none';
-    }
-    if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) {
-      cancelBtn.style.display = 'none';
-    }
-    if (quest.posted_by !== currentUser?.id || quest.status !== 'pending') {
-      deleteBtn.style.display = 'none';
-    }
-
-    acceptBtn.addEventListener('click', () => acceptQuest(quest.id));
-    completeBtn.addEventListener('click', () => completeQuest(quest.id));
-    cancelBtn.addEventListener('click', () => cancelQuest(quest.id));
-    deleteBtn.addEventListener('click', () => deleteQuest(quest.id));
-
-    const extras = node.querySelector('.quest-extras');
-
-    // PAYMENT & RATING UI FOR COMPLETED QUESTS
-    if (quest.status === 'completed') {
-      const paymentBox = document.createElement('div');
-      paymentBox.className = 'payment-box';
-
-      if (quest.poster_paid && quest.acceptor_received) {
-        paymentBox.innerHTML = '<div style="color:#27c26f; font-weight:700;">✓ Payment Settled</div>';
-      } else {
-        const title = document.createElement('div');
-        title.textContent = 'Payment Confirmation:';
-        title.style.cssText = 'color:#ffd700; font-size:.85rem; font-weight:600; margin-bottom:.3rem;';
-        paymentBox.appendChild(title);
-
-        if (currentUser?.id === quest.posted_by && !quest.poster_paid) {
-          createPaymentCheckbox(quest, 'I have paid the reward', 'poster_paid', paymentBox);
-        } else if (quest.poster_paid) {
-          const msg = document.createElement('div');
-          msg.textContent = '✓ Poster confirmed payment sent';
-          msg.style.cssText = 'font-size:.85rem; color:#89f0b8;';
-          paymentBox.appendChild(msg);
-        }
-
-        if (currentUser?.id === quest.accepted_by && !quest.acceptor_received) {
-          createPaymentCheckbox(quest, 'I have received the reward', 'acceptor_received', paymentBox);
-        } else if (quest.acceptor_received) {
-          const msg = document.createElement('div');
-          msg.textContent = '✓ Acceptor confirmed payment received';
-          msg.style.cssText = 'font-size:.85rem; color:#89f0b8;';
-          paymentBox.appendChild(msg);
-        }
-
-        if ((!quest.poster_paid || !quest.acceptor_received) && currentUser && (currentUser.id === quest.posted_by || currentUser.id === quest.accepted_by)) {
-          const warn = document.createElement('div');
-          warn.textContent = 'Waiting for both confirmations...';
-          warn.style.cssText = 'font-size:.8rem; color:#ff7a18; margin-top:.3rem;';
-          paymentBox.appendChild(warn);
-        }
-      }
-      extras.appendChild(paymentBox);
-
-      // Show existing ratings
-      const questRatings = ratings.filter(r => r.quest_id === quest.id);
-      if (questRatings.length > 0) {
-        const ratingBox = document.createElement('div');
-        ratingBox.className = 'payment-box';
-        const rt = document.createElement('div');
-        rt.textContent = 'Ratings:';
-        rt.style.cssText = 'font-size:.85rem; color:#c3bdd4; margin-bottom:.3rem;';
-        ratingBox.appendChild(rt);
-
-        questRatings.forEach(r => {
-          const line = document.createElement('div');
-          line.textContent = `${r.from_email}: ${'⭐'.repeat(r.rating)}`;
-          line.style.cssText = 'font-size:.8rem; color:#d5c9f3; margin-bottom:.2rem;';
-          ratingBox.appendChild(line);
-        });
-        extras.appendChild(ratingBox);
-      }
-
-      // Rating forms
-      if (currentUser?.id === quest.posted_by && quest.accepted_by && !hasRated(quest.id, quest.accepted_by)) {
-        const rateBox = document.createElement('div');
-        rateBox.className = 'payment-box';
-        createStarRating(quest.id, quest.accepted_by, quest.acceptor_email, rateBox);
-        extras.appendChild(rateBox);
-      }
-
-      if (currentUser?.id === quest.accepted_by && !hasRated(quest.id, quest.posted_by)) {
-        const rateBox = document.createElement('div');
-        rateBox.className = 'payment-box';
-        createStarRating(quest.id, quest.posted_by, quest.poster_email, rateBox);
-        extras.appendChild(rateBox);
-      }
-    }
-
-    questList.appendChild(node);
-  });
-
-  computeStats(displayQuests);
-}
-
-function computeStats(displayList) {
-  const total = displayList.length;
-  const paid = displayList.filter(q => q.reward > 0).length;
-  const revenue = quests
-    .filter(q => q.status === 'completed' && q.reward > 0)
-    .reduce((sum, q) => sum + (q.reward * (q.fee_percent / 100)), 0);
-  totalQuestsEl.textContent = total;
-  paidQuestsEl.textContent = paid;
-  guildRevenueEl.textContent = '₹ ' + Math.round(revenue).toLocaleString('en-IN');
-}
-
-updateUI();
-renderQuests();
+    const badge =
