@@ -44,6 +44,7 @@
     #btnSignIn { background: linear-gradient(120deg, #af002d, #ff7a18); color: #fff; }
     #btnSignOut { background: #4e3c75; color: #fff; }
     .user-badge { color: #ffe1cc; font-weight: 600; }
+    .user-rating { color: #ffd700; font-size: .85rem; margin-left: .3rem; }
     .rank-badge {
       font-size: .75rem;
       font-weight: 800;
@@ -99,6 +100,30 @@
       padding: .65rem;
       width: 100%;
     }
+    .payment-box {
+      margin-top: .6rem;
+      padding: .6rem;
+      border-radius: .5rem;
+      background: #130f2122;
+      border: 1px solid #3a2f57;
+    }
+    .rating-stars {
+      display: flex;
+      gap: .3rem;
+      margin-top: .3rem;
+    }
+    .star-btn {
+      background: #2a1f47;
+      border: 1px solid #4e3c75;
+      color: #ffd700;
+      border-radius: .3rem;
+      padding: .3rem .5rem;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .star-btn:hover {
+      background: #4e3c75;
+    }
   </style>
 </head>
 <body>
@@ -114,6 +139,7 @@
       </div>
       <div id="userInfo" style="display:none; align-items:center; gap:.8rem;">
         <span class="user-badge" id="userEmail"></span>
+        <span id="userRating" class="user-rating"></span>
         <span id="userRank" class="rank-badge"></span>
         <button id="btnSignOut">Logout</button>
       </div>
@@ -140,7 +166,7 @@
     <section class="stats">
       <article><h2 id="totalQuests">0</h2><p>Active Quests</p></article>
       <article><h2 id="paidQuests">0</h2><p>Paid Contracts</p></article>
-      <article><h2 id="guildRevenue">$0</h2><p>Guild Revenue</p></article>
+      <article><h2 id="guildRevenue">₹ 0</h2><p>Guild Revenue</p></article>
     </section>
 
     <div id="questBoard">
@@ -162,7 +188,7 @@
             </label>
           </div>
           <div class="row">
-            <label>Reward ($)<input type="number" id="reward" min="0" value="0" required></label>
+            <label>Reward (₹)<input type="number" id="reward" min="0" value="0" required></label>
             <label>Guild Fee (%)<<input type="number" id="fee" min="0" max="100" value="10" required></label>
           </div>
           <button type="submit" class="btn primary">Publish Quest</button>
@@ -198,7 +224,7 @@
     </div>
   </main>
 
-    <template id="questTemplate">
+  <template id="questTemplate">
     <article class="card quest">
       <div class="quest-meta">
         Status: <span class="badge pending">pending</span>
@@ -207,7 +233,7 @@
       <h3 class="quest-title">Quest Title</h3>
       <p class="quest-description">Description goes here.</p>
       <div class="quest-footer">
-        <span class="reward">$0</span>
+        <span class="reward">₹ 0</span>
         <div class="actions">
           <button class="btn accept">Accept</button>
           <button class="btn complete">Complete</button>
@@ -216,7 +242,7 @@
         </div>
       </div>
       <div style="margin-top:.5rem; font-size:.8rem; color:#a99ec7;" class="quest-people"></div>
-      <div style="margin-top:.4rem; font-size:.85rem; color:#ffd700;" class="quest-rating"></div>
+      <div class="quest-extras"></div>
     </article>
   </template>
 
