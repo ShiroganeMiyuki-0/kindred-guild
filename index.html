@@ -184,12 +184,76 @@
     }
     .deadline-text {
       font-size: .8rem;
-      color: #ff7a18;
       margin-top: .3rem;
     }
     .deadline-overdue {
       color: #ff4757;
       font-weight: 700;
+    }
+    .motto-box {
+      background: linear-gradient(120deg, rgba(175,0,45,0.3), rgba(255,122,24,0.2));
+      border: 1px solid #af002d55;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin: 1rem 0 2rem;
+      text-align: center;
+    }
+    .motto-box h3 {
+      color: #ffd700;
+      margin: 0 0 .5rem;
+      font-size: 1.2rem;
+    }
+    .motto-box p {
+      color: #fdeee5;
+      margin: 0;
+      font-size: .95rem;
+      line-height: 1.6;
+    }
+    .fairy-wallet-banner {
+      background: linear-gradient(120deg, #2a1f47, #1f1732);
+      border: 1px solid #ffd70055;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin: 1rem 0;
+      text-align: center;
+      color: #ffd700;
+    }
+    .fairy-wallet-banner h4 {
+      margin: 0 0 .3rem;
+    }
+    .fairy-wallet-banner p {
+      margin: 0;
+      font-size: .85rem;
+      color: #c3bdd4;
+    }
+    .admin-panel {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: #1f1732;
+      border: 1px solid #ff7a18;
+      border-radius: .5rem;
+      padding: 1rem;
+      display: none;
+      z-index: 100;
+      max-width: 300px;
+    }
+    .admin-panel h4 {
+      color: #ff7a18;
+      margin: 0 0 .5rem;
+    }
+    .admin-toggle {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: #ff7a18;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: .7rem 1.2rem;
+      cursor: pointer;
+      font-weight: 700;
+      z-index: 99;
     }
   </style>
 </head>
@@ -199,8 +263,8 @@
     <div class="container">
       <div style="font-weight:700; color:#ff7a18;">🛡️ Kindred Guild</div>
       <div id="loginForm" class="auth-inputs">
-        <input type="email" id="authEmail" placeholder="Email">
-        <input type="password" id="authPassword" placeholder="Password">
+        <input type="email" id="authEmail" placeholder="Email" onkeypress="handleEnter(event)">
+        <input type="password" id="authPassword" placeholder="Password" onkeypress="handleEnter(event)">
         <button id="btnSignIn">Login</button>
         <button id="btnSignUp">Sign Up</button>
       </div>
@@ -220,9 +284,23 @@
       <div class="tag">S-Rank Opportunity Network</div>
       <h1>Kindred Guild</h1>
       <p class="subtitle">
-        A Fairy Tail-inspired guild where members post quests, bounties, and side-jobs. 
-        Accept free missions or paid contracts—and let the guild earn a percentage from completed paid jobs.
+        A guild for everyone — communist, socialist, capitalist — but with one rule: 
+        no double standards. Want money for your work? Pay others fairly for theirs. 
+        This world is shaped by YOU, the guild members. Make it a heaven.
       </p>
+      <div class="motto-box">
+        <h3>🧚 The Guild's Promise</h3>
+        <p>
+          The Guild is always here to help. You can donate or collect funds freely. 
+          But since we don't want people to misuse this kindness, we charge a small fee 
+          whenever money moves between members. Free quests remain truly free — no fees, no strings. 
+          Fair is fair. Build your legend.
+        </p>
+      </div>
+      <div class="fairy-wallet-banner">
+        <h4>🧚‍♀️ Fairy Wallet (Coming Soon)</h4>
+        <p>International members: Buy Fairy Coins with your local currency and spend them in the guild. No banks, no borders.</p>
+      </div>
       <div class="hero-cta">
         <a href="#post" class="btn primary">Post a Quest</a>
         <a href="#board" class="btn ghost">Browse Board</a>
@@ -234,7 +312,7 @@
     <section class="stats">
       <article><h2 id="totalQuests">0</h2><p>Active Quests</p></article>
       <article><h2 id="paidQuests">0</h2><p>Paid Contracts</p></article>
-      <article><h2 id="guildRevenue">₹ 0</h2><p>Guild Revenue</p></article>
+      <article><h2 id="completedQuests">0</h2><p>Completed</p></article>
     </section>
 
     <div id="questBoard">
@@ -262,7 +340,7 @@
           <div class="row">
             <label>Your UPI ID for payments<input type="text" id="upiId" placeholder="yourname@okbank" required></label>
           </div>
-          <p style="color:#c3bdd4; font-size:.85rem; margin:0;">Guild Fee: <strong style="color:#ff7a18;">10%</strong> (automatically deducted)</p>
+          <p style="color:#c3bdd4; font-size:.85rem; margin:0;">Guild Fee: <strong style="color:#ff7a18;">10%</strong> (automatically deducted on paid quests)</p>
           <button type="submit" class="btn primary">Publish Quest</button>
         </form>
       </div>
@@ -296,6 +374,26 @@
     </div>
   </main>
 
+  <!-- Admin Panel (Hidden from users, only you see it) -->
+  <button class="admin-toggle" id="adminToggle" style="display:none;">👑 Guild Master</button>
+  <div class="admin-panel" id="adminPanel">
+    <h4>👑 Guild Master Dashboard</h4>
+    <div style="color:#c3bdd4; font-size:.85rem; margin-bottom:.5rem;">Only you can see this</div>
+    <div style="color:#ffd700; font-size:1.1rem; font-weight:700; margin-bottom:.3rem;">
+      Total Revenue: <span id="adminRevenue">₹ 0</span>
+    </div>
+    <div style="color:#89f0b8; font-size:.9rem; margin-bottom:.3rem;">
+      Active Users: <span id="adminUsers">0</span>
+    </div>
+    <div style="color:#86b0ff; font-size:.9rem; margin-bottom:.3rem;">
+      Total Quests Ever: <span id="adminTotalQuests">0</span>
+    </div>
+    <div style="color:#ff7a18; font-size:.9rem;">
+      Pending Payments: <span id="adminPending">0</span>
+    </div>
+    <button onclick="toggleAdmin()" style="margin-top:.5rem; background:#4e3c75; color:#fff; border:none; border-radius:.3rem; padding:.3rem .6rem; cursor:pointer;">Close</button>
+  </div>
+
   <template id="questTemplate">
     <article class="card quest">
       <div class="quest-meta">
@@ -320,7 +418,7 @@
         <div style="font-size:.85rem; color:#ffe1cc; margin-bottom:.3rem;">💬 Comments</div>
         <div class="comment-list"></div>
         <div class="comment-input">
-          <input type="text" class="comment-field" placeholder="Type a message...">
+          <input type="text" class="comment-field" placeholder="Type a message..." onkeypress="handleCommentEnter(event, this)">
           <button class="btn primary send-comment" style="padding:.4rem .8rem;">Send</button>
         </div>
       </div>
