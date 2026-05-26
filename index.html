@@ -198,7 +198,7 @@
     </div>
   </main>
 
-  <template id="questTemplate">
+    <template id="questTemplate">
     <article class="card quest">
       <div class="quest-meta">
         Status: <span class="badge pending">pending</span>
@@ -211,9 +211,12 @@
         <div class="actions">
           <button class="btn accept">Accept</button>
           <button class="btn complete">Complete</button>
+          <button class="btn cancel" style="background:#ff4757; color:#fff;">Cancel</button>
+          <button class="btn delete" style="background:#2f3542; color:#fff;">Delete</button>
         </div>
       </div>
       <div style="margin-top:.5rem; font-size:.8rem; color:#a99ec7;" class="quest-people"></div>
+      <div style="margin-top:.4rem; font-size:.85rem; color:#ffd700;" class="quest-rating"></div>
     </article>
   </template>
 
