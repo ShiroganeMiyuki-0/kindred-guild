@@ -117,6 +117,7 @@ async function loadQuests() {
   renderQuests();
 }
 
+// Realtime backup (in case it works, this is a bonus)
 supabaseClient
   .channel('public:quests')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'quests' }, () => {
@@ -151,6 +152,7 @@ questForm.addEventListener('submit', async (e) => {
     document.getElementById('reward').value = 0;
     document.getElementById('fee').value = 10;
     document.getElementById('category').value = 'Misc';
+    await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
   }
 });
 
@@ -161,6 +163,7 @@ async function acceptQuest(id) {
     .update({ status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email })
     .eq('id', id);
   if (error) alert('Error: ' + error.message);
+  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
 }
 
 async function completeQuest(id) {
@@ -170,6 +173,7 @@ async function completeQuest(id) {
     .update({ status: 'completed' })
     .eq('id', id);
   if (error) alert('Error: ' + error.message);
+  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
 }
 
 async function cancelQuest(id) {
@@ -182,6 +186,7 @@ async function cancelQuest(id) {
     .update({ status: 'pending', accepted_by: null, acceptor_email: null })
     .eq('id', id);
   if (error) alert('Error: ' + error.message);
+  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
 }
 
 async function deleteQuest(id) {
@@ -191,6 +196,7 @@ async function deleteQuest(id) {
   if (!confirm('Delete this quest forever?')) return;
   const { error } = await supabaseClient.from('quests').delete().eq('id', id);
   if (error) alert('Error: ' + error.message);
+  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
 }
 
 async function confirmPayment(questId, field) {
@@ -199,6 +205,7 @@ async function confirmPayment(questId, field) {
   updateObj[field] = true;
   const { error } = await supabaseClient.from('quests').update(updateObj).eq('id', questId);
   if (error) alert('Error: ' + error.message);
+  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
 }
 
 async function submitRating(questId, toUser, toEmail, ratingValue) {
@@ -212,6 +219,7 @@ async function submitRating(questId, toUser, toEmail, ratingValue) {
     rating: ratingValue
   });
   if (error) alert('Error: ' + error.message);
+  else await loadQuests(); // <-- REFRESH LIST IMMEDIATELY
 }
 
 function createStarRating(questId, toUser, toEmail, container) {
