@@ -125,6 +125,7 @@
       background: #4e3c75;
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -174,7 +175,7 @@
         <h2>Post a New Quest</h2>
         <form id="questForm">
           <label>Title<input type="text" id="title" placeholder="e.g., Escort celestial key merchant" required></label>
-          <label>Description<<textarea id="description" rows="3" placeholder="Describe the mission..." required></textarea></label>
+          <label>Description<textarea id="description" rows="3" placeholder="Describe the mission..." required></textarea></label>
           <div class="row">
             <label>Category
               <select id="category" required>
@@ -189,7 +190,7 @@
           </div>
           <div class="row">
             <label>Reward (₹)<input type="number" id="reward" min="0" value="0" required></label>
-            <label>Guild Fee (%)<<input type="number" id="fee" min="0" max="100" value="10" required></label>
+            <label>Guild Fee (%)<input type="number" id="fee" min="0" max="100" value="10" required></label>
           </div>
           <button type="submit" class="btn primary">Publish Quest</button>
         </form>
