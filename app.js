@@ -4,7 +4,8 @@
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';  // <-- REPLACE THIS WITH YOUR URL
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';                  // <-- REPLACE THIS WITH YOUR LONG KEY
 
-
+const SUPABASE_URL = 'https://your-project.supabase.co';
+const SUPABASE_KEY = 'your-anon-key-here';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
@@ -71,7 +72,6 @@ function updateUI() {
     questBoard.style.display = 'block';
     lockedMessage.style.display = 'none';
     document.getElementById('userEmail').textContent = currentUser.email;
-
     const completed = quests.filter(q => q.accepted_by === currentUser.id && q.status === 'completed').length;
     const info = getRankInfo(completed);
     const badge = document.getElementById('userRank');
@@ -146,6 +146,27 @@ async function completeQuest(id) {
   if (error) alert('Error: ' + error.message);
 }
 
+async function cancelQuest(id) {
+  if (!currentUser) return;
+  const quest = quests.find(q => q.id === id);
+  if (!quest || quest.accepted_by !== currentUser.id) return;
+  if (!confirm('Cancel this quest? It will go back to pending.')) return;
+  const { error } = await supabaseClient
+    .from('quests')
+    .update({ status: 'pending', accepted_by: null, acceptor_email: null })
+    .eq('id', id);
+  if (error) alert('Error: ' + error.message);
+}
+
+async function deleteQuest(id) {
+  if (!currentUser) return;
+  const quest = quests.find(q => q.id === id);
+  if (!quest || quest.posted_by !== currentUser.id) return;
+  if (!confirm('Delete this quest forever?')) return;
+  const { error } = await supabaseClient.from('quests').delete().eq('id', id);
+  if (error) alert('Error: ' + error.message);
+}
+
 function setFilter(filter) {
   currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -201,16 +222,30 @@ function renderQuests() {
 
     const acceptBtn = node.querySelector('.accept');
     const completeBtn = node.querySelector('.complete');
+    const cancelBtn = node.querySelector('.cancel');
+    const deleteBtn = node.querySelector('.delete');
 
+    // Accept: only if pending and NOT your own quest
     if (quest.status !== 'pending' || quest.posted_by === currentUser?.id) {
       acceptBtn.style.display = 'none';
     }
+    // Complete: only if accepted by YOU
     if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) {
       completeBtn.style.display = 'none';
+    }
+    // Cancel: only if accepted by YOU
+    if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) {
+      cancelBtn.style.display = 'none';
+    }
+    // Delete: only if posted by YOU and still pending
+    if (quest.posted_by !== currentUser?.id || quest.status !== 'pending') {
+      deleteBtn.style.display = 'none';
     }
 
     acceptBtn.addEventListener('click', () => acceptQuest(quest.id));
     completeBtn.addEventListener('click', () => completeQuest(quest.id));
+    cancelBtn.addEventListener('click', () => cancelQuest(quest.id));
+    deleteBtn.addEventListener('click', () => deleteQuest(quest.id));
 
     questList.appendChild(node);
   });
