@@ -4,7 +4,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const GUILD_FEE_PERCENT = 10;
-const ADMIN_EMAIL = 'your-email@gmail.com'; // CHANGE TO YOUR EMAIL
+const ADMIN_EMAIL = 'yashwanthrangasway72@gmail.com'; // CHANGE TO YOUR EMAIL
 
 let currentUser = null;
 let quests = [];
