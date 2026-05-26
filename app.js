@@ -1,13 +1,11 @@
-// ==========================================
-// STEP 1: PASTE YOUR SUPABASE KEYS HERE
-// ==========================================
-const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';  // <-- REPLACE THIS WITH YOUR URL
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';                  // <-- REPLACE THIS WITH YOUR LONG KEY
+const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
 let quests = [];
+let ratings = [];
 let currentFilter = 'all';
 let currentTab = 'all';
 
@@ -52,6 +50,7 @@ async function signIn() {
 async function signOut() {
   await supabaseClient.auth.signOut();
   quests = [];
+  ratings = [];
   renderQuests();
 }
 
@@ -63,6 +62,16 @@ function getRankInfo(count) {
   return { rank: 'D-Rank', color: '#a0a0a0', bg: '#a0a0a022' };
 }
 
+function getUserRating(userId) {
+  const userRatings = ratings.filter(r => r.to_user === userId);
+  if (userRatings.length === 0) return null;
+  return (userRatings.reduce((sum, r) => sum + r.rating, 0) / userRatings.length).toFixed(1);
+}
+
+function hasRated(questId, toUserId) {
+  return ratings.some(r => r.quest_id === questId && r.from_user === currentUser?.id && r.to_user === toUserId);
+}
+
 function updateUI() {
   if (currentUser) {
     loginForm.style.display = 'none';
@@ -70,6 +79,7 @@ function updateUI() {
     questBoard.style.display = 'block';
     lockedMessage.style.display = 'none';
     document.getElementById('userEmail').textContent = currentUser.email;
+
     const completed = quests.filter(q => q.accepted_by === currentUser.id && q.status === 'completed').length;
     const info = getRankInfo(completed);
     const badge = document.getElementById('userRank');
@@ -77,6 +87,9 @@ function updateUI() {
     badge.style.background = info.bg;
     badge.style.color = info.color;
     badge.style.border = '1px solid ' + info.color;
+
+    const avg = getUserRating(currentUser.id);
+    document.getElementById('userRating').textContent = avg ? `(${avg}⭐)` : '';
   } else {
     loginForm.style.display = 'flex';
     userInfo.style.display = 'none';
@@ -86,12 +99,20 @@ function updateUI() {
 }
 
 async function loadQuests() {
-  const { data, error } = await supabaseClient
+  const { data: questData, error: questError } = await supabaseClient
     .from('quests')
     .select('*')
     .order('created_at', { ascending: false });
-  if (error) { console.error(error); return; }
-  quests = data || [];
+
+  const { data: ratingData, error: ratingError } = await supabaseClient
+    .from('ratings')
+    .select('*');
+
+  if (questError) { console.error(questError); return; }
+  if (ratingError) { console.error(ratingError); }
+
+  quests = questData || [];
+  ratings = ratingData || [];
   updateUI();
   renderQuests();
 }
@@ -99,6 +120,13 @@ async function loadQuests() {
 supabaseClient
   .channel('public:quests')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'quests' }, () => {
+    loadQuests();
+  })
+  .subscribe();
+
+supabaseClient
+  .channel('public:ratings')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'ratings' }, () => {
     loadQuests();
   })
   .subscribe();
@@ -165,6 +193,56 @@ async function deleteQuest(id) {
   if (error) alert('Error: ' + error.message);
 }
 
+async function confirmPayment(questId, field) {
+  if (!currentUser) return;
+  const updateObj = {};
+  updateObj[field] = true;
+  const { error } = await supabaseClient.from('quests').update(updateObj).eq('id', questId);
+  if (error) alert('Error: ' + error.message);
+}
+
+async function submitRating(questId, toUser, toEmail, ratingValue) {
+  if (!currentUser) return;
+  const { error } = await supabaseClient.from('ratings').insert({
+    quest_id: questId,
+    from_user: currentUser.id,
+    to_user: toUser,
+    from_email: currentUser.email,
+    to_email: toEmail,
+    rating: ratingValue
+  });
+  if (error) alert('Error: ' + error.message);
+}
+
+function createStarRating(questId, toUser, toEmail, container) {
+  const label = document.createElement('div');
+  label.textContent = 'Rate your partner:';
+  label.style.cssText = 'font-size:.85rem; color:#ffe1cc; margin-bottom:.3rem;';
+  container.appendChild(label);
+
+  const row = document.createElement('div');
+  row.className = 'rating-stars';
+  [1, 2, 3, 4, 5].forEach(n => {
+    const btn = document.createElement('button');
+    btn.textContent = '⭐';
+    btn.className = 'star-btn';
+    btn.addEventListener('click', () => submitRating(questId, toUser, toEmail, n));
+    row.appendChild(btn);
+  });
+  container.appendChild(row);
+}
+
+function createPaymentCheckbox(quest, labelText, field, container) {
+  const label = document.createElement('label');
+  label.style.cssText = 'display:flex; align-items:center; gap:.4rem; margin-top:.3rem; cursor:pointer; font-size:.85rem; color:#ddd6ef;';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.addEventListener('change', () => confirmPayment(quest.id, field));
+  label.appendChild(checkbox);
+  label.appendChild(document.createTextNode(labelText));
+  container.appendChild(label);
+}
+
 function setFilter(filter) {
   currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -212,7 +290,7 @@ function renderQuests() {
     node.querySelector('.quest-description').textContent = quest.description;
 
     const feeLabel = quest.reward > 0 ? ` • Guild fee ${quest.fee_percent}%` : ' • Free mission';
-    node.querySelector('.reward').textContent = formatMoney(quest.reward) + feeLabel;
+    node.querySelector('.reward').textContent = '₹ ' + quest.reward + feeLabel;
 
     let peopleText = `Posted by: ${quest.poster_email || 'Unknown'}`;
     if (quest.acceptor_email) peopleText += ` | Accepted by: ${quest.acceptor_email}`;
@@ -223,19 +301,15 @@ function renderQuests() {
     const cancelBtn = node.querySelector('.cancel');
     const deleteBtn = node.querySelector('.delete');
 
-    // Accept: only if pending and NOT your own quest
     if (quest.status !== 'pending' || quest.posted_by === currentUser?.id) {
       acceptBtn.style.display = 'none';
     }
-    // Complete: only if accepted by YOU
     if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) {
       completeBtn.style.display = 'none';
     }
-    // Cancel: only if accepted by YOU
     if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) {
       cancelBtn.style.display = 'none';
     }
-    // Delete: only if posted by YOU and still pending
     if (quest.posted_by !== currentUser?.id || quest.status !== 'pending') {
       deleteBtn.style.display = 'none';
     }
@@ -245,14 +319,87 @@ function renderQuests() {
     cancelBtn.addEventListener('click', () => cancelQuest(quest.id));
     deleteBtn.addEventListener('click', () => deleteQuest(quest.id));
 
+    const extras = node.querySelector('.quest-extras');
+
+    // PAYMENT & RATING UI FOR COMPLETED QUESTS
+    if (quest.status === 'completed') {
+      const paymentBox = document.createElement('div');
+      paymentBox.className = 'payment-box';
+
+      if (quest.poster_paid && quest.acceptor_received) {
+        paymentBox.innerHTML = '<div style="color:#27c26f; font-weight:700;">✓ Payment Settled</div>';
+      } else {
+        const title = document.createElement('div');
+        title.textContent = 'Payment Confirmation:';
+        title.style.cssText = 'color:#ffd700; font-size:.85rem; font-weight:600; margin-bottom:.3rem;';
+        paymentBox.appendChild(title);
+
+        if (currentUser?.id === quest.posted_by && !quest.poster_paid) {
+          createPaymentCheckbox(quest, 'I have paid the reward', 'poster_paid', paymentBox);
+        } else if (quest.poster_paid) {
+          const msg = document.createElement('div');
+          msg.textContent = '✓ Poster confirmed payment sent';
+          msg.style.cssText = 'font-size:.85rem; color:#89f0b8;';
+          paymentBox.appendChild(msg);
+        }
+
+        if (currentUser?.id === quest.accepted_by && !quest.acceptor_received) {
+          createPaymentCheckbox(quest, 'I have received the reward', 'acceptor_received', paymentBox);
+        } else if (quest.acceptor_received) {
+          const msg = document.createElement('div');
+          msg.textContent = '✓ Acceptor confirmed payment received';
+          msg.style.cssText = 'font-size:.85rem; color:#89f0b8;';
+          paymentBox.appendChild(msg);
+        }
+
+        if ((!quest.poster_paid || !quest.acceptor_received) && currentUser && (currentUser.id === quest.posted_by || currentUser.id === quest.accepted_by)) {
+          const warn = document.createElement('div');
+          warn.textContent = 'Waiting for both confirmations...';
+          warn.style.cssText = 'font-size:.8rem; color:#ff7a18; margin-top:.3rem;';
+          paymentBox.appendChild(warn);
+        }
+      }
+      extras.appendChild(paymentBox);
+
+      // Show existing ratings
+      const questRatings = ratings.filter(r => r.quest_id === quest.id);
+      if (questRatings.length > 0) {
+        const ratingBox = document.createElement('div');
+        ratingBox.className = 'payment-box';
+        const rt = document.createElement('div');
+        rt.textContent = 'Ratings:';
+        rt.style.cssText = 'font-size:.85rem; color:#c3bdd4; margin-bottom:.3rem;';
+        ratingBox.appendChild(rt);
+
+        questRatings.forEach(r => {
+          const line = document.createElement('div');
+          line.textContent = `${r.from_email}: ${'⭐'.repeat(r.rating)}`;
+          line.style.cssText = 'font-size:.8rem; color:#d5c9f3; margin-bottom:.2rem;';
+          ratingBox.appendChild(line);
+        });
+        extras.appendChild(ratingBox);
+      }
+
+      // Rating forms
+      if (currentUser?.id === quest.posted_by && quest.accepted_by && !hasRated(quest.id, quest.accepted_by)) {
+        const rateBox = document.createElement('div');
+        rateBox.className = 'payment-box';
+        createStarRating(quest.id, quest.accepted_by, quest.acceptor_email, rateBox);
+        extras.appendChild(rateBox);
+      }
+
+      if (currentUser?.id === quest.accepted_by && !hasRated(quest.id, quest.posted_by)) {
+        const rateBox = document.createElement('div');
+        rateBox.className = 'payment-box';
+        createStarRating(quest.id, quest.posted_by, quest.poster_email, rateBox);
+        extras.appendChild(rateBox);
+      }
+    }
+
     questList.appendChild(node);
   });
 
   computeStats(displayQuests);
-}
-
-function formatMoney(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 }
 
 function computeStats(displayList) {
@@ -263,7 +410,7 @@ function computeStats(displayList) {
     .reduce((sum, q) => sum + (q.reward * (q.fee_percent / 100)), 0);
   totalQuestsEl.textContent = total;
   paidQuestsEl.textContent = paid;
-  guildRevenueEl.textContent = formatMoney(revenue);
+  guildRevenueEl.textContent = '₹ ' + Math.round(revenue).toLocaleString('en-IN');
 }
 
 updateUI();
