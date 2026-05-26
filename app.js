@@ -3,7 +3,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const GUILD_FEE_PERCENT = 10; // YOU control this. Users cannot change it.
+const GUILD_FEE_PERCENT = 10;
+const ADMIN_EMAIL = 'yashwanthrangaswamy72@okhdfcbank'; // Change this to your actual admin email
 
 let currentUser = null;
 let quests = [];
@@ -22,11 +23,30 @@ const questList = document.getElementById('questList');
 const questTemplate = document.getElementById('questTemplate');
 const totalQuestsEl = document.getElementById('totalQuests');
 const paidQuestsEl = document.getElementById('paidQuests');
-const guildRevenueEl = document.getElementById('guildRevenue');
+const completedQuestsEl = document.getElementById('completedQuests');
 
 document.getElementById('btnSignUp').addEventListener('click', signUp);
 document.getElementById('btnSignIn').addEventListener('click', signIn);
 document.getElementById('btnSignOut').addEventListener('click', signOut);
+
+// Keyboard support for login
+function handleEnter(event) {
+  if (event.key === 'Enter') {
+    signIn();
+  }
+}
+
+// Keyboard support for comments
+function handleCommentEnter(event, input) {
+  if (event.key === 'Enter') {
+    const questCard = input.closest('.quest');
+    const questId = questCard?.dataset?.questId;
+    if (questId) {
+      sendComment(questId, input.value);
+      input.value = '';
+    }
+  }
+}
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user ?? null;
@@ -86,6 +106,10 @@ function isBanned(userId) {
   return getUserStrikes(userId) >= 3;
 }
 
+function isAdmin() {
+  return currentUser?.email === ADMIN_EMAIL;
+}
+
 function updateUI() {
   if (currentUser) {
     loginForm.style.display = 'none';
@@ -114,6 +138,16 @@ function updateUI() {
       strikeBadge.style.display = 'none';
     }
 
+    // Show admin panel toggle only for admin
+    const adminToggle = document.getElementById('adminToggle');
+    if (isAdmin()) {
+      adminToggle.style.display = 'block';
+      updateAdminPanel();
+    } else {
+      adminToggle.style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'none';
+    }
+
     if (isBanned(currentUser.id)) {
       alert('🚫 You are banned! 3+ unpaid quests. Contact admin.');
       signOut();
@@ -123,7 +157,38 @@ function updateUI() {
     userInfo.style.display = 'none';
     questBoard.style.display = 'none';
     lockedMessage.style.display = 'block';
+    document.getElementById('adminToggle').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'none';
   }
+}
+
+function toggleAdmin() {
+  const panel = document.getElementById('adminPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block') updateAdminPanel();
+}
+
+document.getElementById('adminToggle').addEventListener('click', toggleAdmin);
+
+function updateAdminPanel() {
+  const totalRevenue = quests
+    .filter(q => q.status === 'completed' && q.reward > 0)
+    .reduce((sum, q) => sum + (q.reward * (GUILD_FEE_PERCENT / 100)), 0);
+  
+  const uniqueUsers = new Set();
+  quests.forEach(q => {
+    if (q.posted_by) uniqueUsers.add(q.posted_by);
+    if (q.accepted_by) uniqueUsers.add(q.accepted_by);
+  });
+
+  const pendingPayments = quests.filter(q => 
+    q.status === 'completed' && q.reward > 0 && (!q.poster_paid || !q.acceptor_received)
+  ).length;
+
+  document.getElementById('adminRevenue').textContent = '₹ ' + Math.round(totalRevenue).toLocaleString('en-IN');
+  document.getElementById('adminUsers').textContent = uniqueUsers.size;
+  document.getElementById('adminTotalQuests').textContent = quests.length;
+  document.getElementById('adminPending').textContent = pendingPayments;
 }
 
 async function loadQuests() {
@@ -400,6 +465,8 @@ function renderQuests() {
 
   displayQuests.forEach(quest => {
     const node = questTemplate.content.firstElementChild.cloneNode(true);
+    node.dataset.questId = quest.id;
+    
     const badge = node.querySelector('.badge');
     badge.className = 'badge ' + quest.status;
     badge.textContent = quest.status;
@@ -447,7 +514,7 @@ function renderQuests() {
 
     const extras = node.querySelector('.quest-extras');
 
-    // PAYMENT, UPI QR, RATING UI FOR COMPLETED QUESTS
+    // PAYMENT, UPI, RATING UI FOR COMPLETED QUESTS
     if (quest.status === 'completed') {
       const paymentBox = document.createElement('div');
       paymentBox.className = 'payment-box';
@@ -485,7 +552,6 @@ function renderQuests() {
           paymentBox.appendChild(warn);
         }
 
-        // Add Strike button for non-payment
         if (currentUser?.id === quest.accepted_by && quest.poster_paid === false) {
           const strikeBtn = document.createElement('button');
           strikeBtn.textContent = '⚠ Report Non-Payment';
@@ -499,7 +565,6 @@ function renderQuests() {
         }
       }
 
-      // Show UPI QR for payment
       if (quest.reward > 0 && quest.poster_upi && currentUser?.id === quest.accepted_by && !quest.poster_paid) {
         const upiBox = document.createElement('div');
         upiBox.className = 'upi-box';
@@ -513,7 +578,6 @@ function renderQuests() {
 
       extras.appendChild(paymentBox);
 
-      // Show existing ratings
       const questRatings = ratings.filter(r => r.quest_id === quest.id);
       if (questRatings.length > 0) {
         const ratingBox = document.createElement('div');
@@ -532,7 +596,6 @@ function renderQuests() {
         extras.appendChild(ratingBox);
       }
 
-      // Rating forms
       if (currentUser?.id === quest.posted_by && quest.accepted_by && !hasRated(quest.id, quest.accepted_by)) {
         const rateBox = document.createElement('div');
         rateBox.className = 'payment-box';
@@ -548,7 +611,6 @@ function renderQuests() {
       }
     }
 
-    // COMMENTS SECTION (visible to poster, acceptor, and everyone for transparency)
     const commentBox = node.querySelector('.comment-box');
     if (quest.status !== 'pending' || quest.posted_by === currentUser?.id) {
       commentBox.style.display = 'block';
@@ -570,7 +632,6 @@ function renderQuests() {
       const sendBtn = commentBox.querySelector('.send-comment');
       const commentField = commentBox.querySelector('.comment-field');
       
-      // Remove old listeners by cloning
       const newSendBtn = sendBtn.cloneNode(true);
       sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
       
@@ -589,12 +650,11 @@ function renderQuests() {
 function computeStats(displayList) {
   const total = displayList.length;
   const paid = displayList.filter(q => q.reward > 0).length;
-  const revenue = quests
-    .filter(q => q.status === 'completed' && q.reward > 0)
-    .reduce((sum, q) => sum + (q.reward * (GUILD_FEE_PERCENT / 100)), 0);
+  const completed = quests.filter(q => q.status === 'completed').length;
+  
   totalQuestsEl.textContent = total;
   paidQuestsEl.textContent = paid;
-  guildRevenueEl.textContent = '₹ ' + Math.round(revenue).toLocaleString('en-IN');
+  completedQuestsEl.textContent = completed;
 }
 
 updateUI();
