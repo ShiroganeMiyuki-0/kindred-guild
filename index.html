@@ -3,326 +3,684 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild | Fairy Tail-Inspired Quest Board</title>
+  <title>Kindred Guild — Quest Board</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0814">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    .auth-bar {
-      background: #1f1732;
-      border-bottom: 1px solid #3a2f57;
-      padding: 1rem;
+    :root {
+      --bg: #0a0814;
+      --surface: #14121f;
+      --surface-hover: #1c1a2e;
+      --border: #2a2640;
+      --text: #f0e6ff;
+      --text-muted: #9d94b8;
+      --accent: #ff6b35;
+      --accent-glow: #ff6b3533;
+      --success: #00d9a3;
+      --warning: #ffc107;
+      --danger: #ff4757;
+      --rank-s: #ff6b35;
+      --rank-a: #ffd700;
+      --rank-b: #6b8cff;
+      --rank-c: #cd7f32;
+      --rank-d: #888;
     }
-    .auth-bar .container {
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Navbar */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    .navbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), #ff8f5a);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+    }
+    .nav-auth {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-auth input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      width: 160px;
+    }
+    .nav-auth input::placeholder { color: var(--text-muted); }
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #ff8f5a);
+      color: #fff;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px var(--accent-glow); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.85rem; }
+    
+    .user-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .user-rank {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+    .user-strike {
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #1a0f2e 0%, #0a0814 100%);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 1.5rem;
+      font-size: 1.1rem;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-large {
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 12px;
+    }
+
+    /* Motto */
+    .motto {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .motto-card {
+      background: linear-gradient(135deg, #1a0f2e, #14121f);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .motto-card h3 {
+      color: var(--accent);
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .motto-card p {
+      color: var(--text-muted);
+      line-height: 1.8;
+      font-size: 0.95rem;
+    }
+
+    /* Stats */
+    .stats-bar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+    .stat-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-pill h3 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .stat-pill p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Main Layout */
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .main-container { grid-template-columns: 1fr; }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .sidebar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .sidebar-card h4 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .filter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .filter-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .filter-item:hover { background: var(--surface-hover); color: var(--text); }
+    .filter-item.active { background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+
+    /* Quest Form */
+    .quest-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .quest-form h3 {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .field label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .field input, .field textarea, .field select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.625rem 0.875rem;
+      color: var(--text);
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .fee-notice {
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-top: 0.5rem;
+    }
+
+    /* Quest Cards */
+    .quest-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .quest-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .quest-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .quest-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      display: none;
+    }
+    .quest-image.visible { display: block; }
+    .quest-body {
+      padding: 1.25rem;
+    }
+    .quest-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.25rem 0.625rem;
+      border-radius: 6px;
+    }
+    .status-pending { background: #ffc10722; color: var(--warning); }
+    .status-accepted { background: #6b8cff22; color: var(--rank-b); }
+    .status-completed { background: #00d9a322; color: var(--success); }
+    .cat-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--surface-hover);
+      color: var(--text-muted);
+      padding: 0.25rem 0.625rem;
+      border-radius: 6px;
+    }
+    .quest-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .quest-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    .quest-meta-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: .5rem;
+      gap: 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
     }
-    .auth-inputs {
-      display: flex;
-      gap: .5rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .auth-inputs input {
-      padding: .5rem .8rem;
-      border-radius: .5rem;
-      border: 1px solid #4e3c75;
-      background: #130f21;
-      color: #fff;
-      width: 170px;
-    }
-    .auth-inputs button {
-      padding: .5rem 1rem;
-      border-radius: 999px;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    #btnSignUp { background: #86b0ff; color: #071f4a; }
-    #btnSignIn { background: linear-gradient(120deg, #af002d, #ff7a18); color: #fff; }
-    #btnSignOut { background: #4e3c75; color: #fff; }
-    .user-badge { color: #ffe1cc; font-weight: 600; }
-    .user-rating { color: #ffd700; font-size: .85rem; margin-left: .3rem; }
-    .strike-badge {
-      background: #ff4757;
-      color: #fff;
-      font-size: .7rem;
-      font-weight: 700;
-      padding: .15rem .4rem;
-      border-radius: .3rem;
-      margin-left: .4rem;
-    }
-    .rank-badge {
-      font-size: .75rem;
+    .reward-tag {
+      font-size: 1.1rem;
       font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      padding: .2rem .6rem;
-      border-radius: .4rem;
-      margin-left: .4rem;
+      color: var(--success);
     }
-    .locked {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: #c3bdd4;
-    }
-    .locked h2 { color: #f8f5ff; margin-bottom: .5rem; }
-    .tabs {
+    .reward-tag.free { color: var(--text-muted); }
+    .quest-actions {
       display: flex;
-      gap: .5rem;
-      margin: 1.5rem 0 1rem;
-      flex-wrap: wrap;
+      gap: 0.5rem;
     }
-    .tab-btn, .filter-btn {
-      background: #1f1732;
-      border: 1px solid #3a2f57;
-      color: #c3bdd4;
-      padding: .5rem 1rem;
-      border-radius: .6rem;
-      cursor: pointer;
+    .btn-action {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
       font-weight: 600;
     }
-    .tab-btn.active, .filter-btn.active {
-      background: linear-gradient(120deg, #af002d, #ff7a18);
-      color: #fff;
-      border-color: transparent;
-    }
-    .cat-badge {
-      display: inline-block;
-      font-size: .72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      padding: .15rem .5rem;
-      border-radius: .3rem;
-      background: #2a1f47;
-      color: #d5c9f3;
-      margin-left: .5rem;
-    }
-    select {
-      border-radius: .65rem;
-      border: 1px solid #4e3c75;
-      background: #130f21;
-      color: #fff;
-      padding: .65rem;
-      width: 100%;
+    .btn-accept { background: var(--rank-b); color: #fff; }
+    .btn-complete { background: var(--success); color: #fff; }
+    .btn-cancel { background: var(--danger); color: #fff; }
+    .btn-delete { background: var(--surface-hover); color: var(--text-muted); }
+    .btn-delete:hover { background: var(--danger); color: #fff; }
+
+    /* Payment & Extras */
+    .extras {
+      padding: 0 1.25rem 1.25rem;
     }
     .payment-box {
-      margin-top: .6rem;
-      padding: .6rem;
-      border-radius: .5rem;
-      background: #130f2122;
-      border: 1px solid #3a2f57;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
     }
-    .rating-stars {
+    .payment-settled {
+      color: var(--success);
+      font-weight: 700;
       display: flex;
-      gap: .3rem;
-      margin-top: .3rem;
+      align-items: center;
+      gap: 0.5rem;
     }
-    .star-btn {
-      background: #2a1f47;
-      border: 1px solid #4e3c75;
-      color: #ffd700;
-      border-radius: .3rem;
-      padding: .3rem .5rem;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    .star-btn:hover {
-      background: #4e3c75;
-    }
-    .upi-box {
-      background: #130f21;
-      border: 1px solid #27c26f;
-      border-radius: .5rem;
-      padding: .8rem;
-      margin-top: .5rem;
+    .upi-display {
+      background: linear-gradient(135deg, #00d9a322, #00d9a311);
+      border: 1px solid var(--success);
+      border-radius: 12px;
+      padding: 1rem;
       text-align: center;
+      margin-top: 0.75rem;
     }
-    .upi-box img {
-      max-width: 200px;
-      border-radius: .5rem;
+    .upi-display .label {
+      font-size: 0.8rem;
+      color: var(--success);
+      margin-bottom: 0.25rem;
     }
-    .upi-id {
+    .upi-display .id {
       font-family: monospace;
-      color: #89f0b8;
-      font-size: .9rem;
-      margin-top: .3rem;
+      font-size: 1rem;
+      color: var(--text);
     }
-    .comment-box {
-      margin-top: .5rem;
-      padding: .5rem;
-      background: #130f21;
-      border-radius: .5rem;
-      border: 1px solid #3a2f57;
-    }
-    .comment-input {
-      display: flex;
-      gap: .4rem;
-      margin-top: .3rem;
-    }
-    .comment-input input {
-      flex: 1;
-      padding: .5rem;
-      border-radius: .4rem;
-      border: 1px solid #4e3c75;
-      background: #1f1732;
-      color: #fff;
+    .comment-section {
+      margin-top: 0.75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
     }
     .comment-list {
-      max-height: 150px;
+      max-height: 120px;
       overflow-y: auto;
-      margin-top: .3rem;
+      margin-bottom: 0.75rem;
     }
     .comment-item {
-      font-size: .8rem;
-      color: #c3bdd4;
-      padding: .2rem 0;
-      border-bottom: 1px solid #2a1f47;
+      padding: 0.4rem 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
     }
-    .deadline-text {
-      font-size: .8rem;
-      margin-top: .3rem;
+    .comment-input-row {
+      display: flex;
+      gap: 0.5rem;
     }
-    .deadline-overdue {
-      color: #ff4757;
-      font-weight: 700;
+    .comment-input-row input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      color: var(--text);
     }
-    .motto-box {
-      background: linear-gradient(120deg, rgba(175,0,45,0.3), rgba(255,122,24,0.2));
-      border: 1px solid #af002d55;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      margin: 1rem 0 2rem;
-      text-align: center;
+    .deadline-display {
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
     }
-    .motto-box h3 {
-      color: #ffd700;
-      margin: 0 0 .5rem;
-      font-size: 1.2rem;
-    }
-    .motto-box p {
-      color: #fdeee5;
-      margin: 0;
-      font-size: .95rem;
-      line-height: 1.6;
-    }
-    .fairy-wallet-banner {
-      background: linear-gradient(120deg, #2a1f47, #1f1732);
-      border: 1px solid #ffd70055;
-      border-radius: 1rem;
-      padding: 1rem;
-      margin: 1rem 0;
-      text-align: center;
-      color: #ffd700;
-    }
-    .fairy-wallet-banner h4 {
-      margin: 0 0 .3rem;
-    }
-    .fairy-wallet-banner p {
-      margin: 0;
-      font-size: .85rem;
-      color: #c3bdd4;
+    .deadline-urgent { color: var(--warning); }
+    .deadline-overdue { color: var(--danger); font-weight: 700; }
+
+    /* Admin */
+    .admin-fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #ff8f5a);
+      color: #fff;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 16px var(--accent-glow);
+      display: none;
+      z-index: 90;
     }
     .admin-panel {
       position: fixed;
-      bottom: 1rem;
-      right: 1rem;
-      background: #1f1732;
-      border: 1px solid #ff7a18;
-      border-radius: .5rem;
-      padding: 1rem;
+      bottom: 5rem;
+      right: 1.5rem;
+      width: 320px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
       display: none;
-      z-index: 100;
-      max-width: 300px;
+      z-index: 91;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
     }
     .admin-panel h4 {
-      color: #ff7a18;
-      margin: 0 0 .5rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
     }
-    .admin-toggle {
+    .admin-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .admin-stat span:first-child { color: var(--text-muted); }
+    .admin-stat span:last-child { font-weight: 700; }
+
+    /* Install Button */
+    .install-fab {
       position: fixed;
-      bottom: 1rem;
-      right: 1rem;
-      background: #ff7a18;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      background: var(--success);
       color: #fff;
       border: none;
       border-radius: 999px;
-      padding: .7rem 1.2rem;
-      cursor: pointer;
+      padding: 0.75rem 1.25rem;
       font-weight: 700;
-      z-index: 99;
+      cursor: pointer;
+      display: none;
+      z-index: 90;
     }
+
+    /* Locked */
+    .locked-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .locked-state h2 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .locked-state p {
+      color: var(--text-muted);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .quest-card { animation: fadeIn 0.3s ease-out; }
   </style>
 </head>
 <body>
 
-  <div class="auth-bar">
-    <div class="container">
-      <div style="font-weight:700; color:#ff7a18;">🛡️ Kindred Guild</div>
-      <div id="loginForm" class="auth-inputs">
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="#" class="logo">
+        <div class="logo-icon">🛡️</div>
+        <span>Kindred Guild</span>
+      </a>
+      <div id="navAuth" class="nav-auth">
         <input type="email" id="authEmail" placeholder="Email" onkeypress="handleEnter(event)">
         <input type="password" id="authPassword" placeholder="Password" onkeypress="handleEnter(event)">
-        <button id="btnSignIn">Login</button>
-        <button id="btnSignUp">Sign Up</button>
+        <button class="btn btn-primary btn-sm" id="btnSignIn">Login</button>
+        <button class="btn btn-ghost btn-sm" id="btnSignUp">Sign Up</button>
       </div>
-      <div id="userInfo" style="display:none; align-items:center; gap:.8rem;">
-        <span class="user-badge" id="userEmail"></span>
-        <span id="userRating" class="user-rating"></span>
-        <span id="userRank" class="rank-badge"></span>
-        <span id="userStrikes" class="strike-badge" style="display:none;"></span>
-        <button id="btnSignOut">Logout</button>
+      <div id="userBar" class="user-bar" style="display:none;">
+        <span id="userEmail"></span>
+        <span id="userRank" class="user-rank"></span>
+        <span id="userRating" style="color:var(--warning);font-size:0.85rem;"></span>
+        <span id="userStrikes" class="user-strike" style="display:none;"></span>
+        <button class="btn btn-ghost btn-sm" id="btnSignOut">Logout</button>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <div class="hero">
-    <div class="overlay"></div>
-    <div class="hero-content container">
-      <div class="tag">S-Rank Opportunity Network</div>
-      <h1>Kindred Guild</h1>
-      <p class="subtitle">
-        A guild for everyone — communist, socialist, capitalist — but with one rule: 
-        no double standards. Want money for your work? Pay others fairly for theirs. 
-        This world is shaped by YOU, the guild members. Make it a heaven.
+  <section class="hero">
+    <div class="hero-badge">✨ S-Rank Opportunity Network</div>
+    <h1>Forge Your Legend</h1>
+    <p>A guild for every soul — worker, warrior, wanderer — bound by one iron rule: no double standards. Want gold for your blade? Pay fair coin for another's.</p>
+    <div class="hero-actions">
+      <a href="#post" class="btn btn-primary btn-large">⚔️ Post a Quest</a>
+      <a href="#board" class="btn btn-ghost btn-large">📋 Browse Board</a>
+    </div>
+  </section>
+
+  <div class="motto">
+    <div class="motto-card">
+      <h3>🧚 The Guild's Promise</h3>
+      <p>
+        The Guild never turns away a member in need. Give what you can, take what you must. 
+        But kindness without boundaries breeds greed — so when coin changes hands, 
+        the Guild takes its tithe. Fair is fair. Free quests carry no tax, no debt, no shadow. 
+        A favor freely given is magic itself. This world is forged by YOU, the guild. 
+        Make it worthy of the S-Rank.
       </p>
-      <div class="motto-box">
-        <h3>🧚 The Guild's Promise</h3>
-        <p>
-          The Guild is always here to help. You can donate or collect funds freely. 
-          But since we don't want people to misuse this kindness, we charge a small fee 
-          whenever money moves between members. Free quests remain truly free — no fees, no strings. 
-          Fair is fair. Build your legend.
-        </p>
-      </div>
-      <div class="fairy-wallet-banner">
-        <h4>🧚‍♀️ Fairy Wallet (Coming Soon)</h4>
-        <p>International members: Buy Fairy Coins with your local currency and spend them in the guild. No banks, no borders.</p>
-      </div>
-      <div class="hero-cta">
-        <a href="#post" class="btn primary">Post a Quest</a>
-        <a href="#board" class="btn ghost">Browse Board</a>
-      </div>
     </div>
   </div>
 
-  <main class="container" id="board">
-    <section class="stats">
-      <article><h2 id="totalQuests">0</h2><p>Active Quests</p></article>
-      <article><h2 id="paidQuests">0</h2><p>Paid Contracts</p></article>
-      <article><h2 id="completedQuests">0</h2><p>Completed</p></article>
-    </section>
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <h3 id="totalQuests">0</h3>
+      <p>Active Quests</p>
+    </div>
+    <div class="stat-pill">
+      <h3 id="paidQuests">0</h3>
+      <p>Paid Contracts</p>
+    </div>
+    <div class="stat-pill">
+      <h3 id="completedQuests">0</h3>
+      <p>Completed</p>
+    </div>
+  </div>
+
+  <div class="main-container" id="board">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-card">
+        <h4>📂 Categories</h4>
+        <div class="filter-list">
+          <div class="filter-item active" onclick="setFilter('all')">🌍 All Quests</div>
+          <div class="filter-item" onclick="setFilter('Combat')">⚔️ Combat</div>
+          <div class="filter-item" onclick="setFilter('Delivery')">📦 Delivery</div>
+          <div class="filter-item" onclick="setFilter('Escort')">🛡️ Escort</div>
+          <div class="filter-item" onclick="setFilter('Bounty')">🎯 Bounty</div>
+          <div class="filter-item" onclick="setFilter('Research')">🔮 Research</div>
+          <div class="filter-item" onclick="setFilter('Misc')">📋 Misc</div>
+        </div>
+      </div>
+      <div class="sidebar-card">
+        <h4>📊 My Quests</h4>
+        <div class="filter-list">
+          <div class="filter-item" onclick="setTab('all')">🌍 All</div>
+          <div class="filter-item" onclick="setTab('posted')">📤 My Posted</div>
+          <div class="filter-item" onclick="setTab('accepted')">📥 My Accepted</div>
+        </div>
+      </div>
+    </aside>
 
     <div id="questBoard">
-      <div class="card form-card" id="post">
-        <h2>Post a New Quest</h2>
+      <div class="quest-form" id="post">
+        <h3>⚔️ Post a New Quest</h3>
         <form id="questForm">
-          <label>Title<input type="text" id="title" placeholder="e.g., Escort celestial key merchant" required></label>
-          <label>Description<<textarea id="description" rows="3" placeholder="Describe the mission..." required></textarea></label>
-          <div class="row">
-            <label>Category
+          <div class="field" style="margin-bottom:1rem;">
+            <label>Quest Title</label>
+            <input type="text" id="title" placeholder="e.g., Escort celestial key merchant" required>
+          </div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label>Description</label>
+            <textarea id="description" placeholder="Describe the mission in detail..." required></textarea>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Category</label>
               <select id="category" required>
                 <option value="Combat">⚔️ Combat</option>
                 <option value="Delivery">📦 Delivery</option>
@@ -331,100 +689,107 @@
                 <option value="Research">🔮 Research</option>
                 <option value="Misc" selected>📋 Misc</option>
               </select>
-            </label>
+            </div>
+            <div class="field">
+              <label>Reward (₹)</label>
+              <input type="number" id="reward" min="0" value="0" required>
+            </div>
+            <div class="field">
+              <label>Deadline (optional)</label>
+              <input type="datetime-local" id="deadline">
+            </div>
+            <div class="field">
+              <label>Your UPI ID</label>
+              <input type="text" id="upiId" placeholder="yourname@okbank" required>
+            </div>
           </div>
-          <div class="row">
-            <label>Reward (₹)<input type="number" id="reward" min="0" value="0" required></label>
-            <label>Deadline (optional)<input type="datetime-local" id="deadline"></label>
+          <div class="field" style="margin-top:1rem;">
+            <label>Quest Image (optional)</label>
+            <input type="file" id="questImage" accept="image/*">
           </div>
-          <div class="row">
-            <label>Your UPI ID for payments<input type="text" id="upiId" placeholder="yourname@okbank" required></label>
+          <div class="fee-notice">
+            💰 Guild Fee: <strong>10%</strong> automatically deducted on paid quests. Free quests are always free.
           </div>
-          <p style="color:#c3bdd4; font-size:.85rem; margin:0;">Guild Fee: <strong style="color:#ff7a18;">10%</strong> (automatically deducted on paid quests)</p>
-          <button type="submit" class="btn primary">Publish Quest</button>
+          <button type="submit" class="btn btn-primary" style="margin-top:1rem; width:100%;">Publish Quest</button>
         </form>
       </div>
 
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="all" onclick="setTab('all')">🌍 All Quests</button>
-        <button class="tab-btn" data-tab="posted" onclick="setTab('posted')">📤 My Posted</button>
-        <button class="tab-btn" data-tab="accepted" onclick="setTab('accepted')">📥 My Accepted</button>
-      </div>
-
-      <div style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1rem;">
-        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
-        <button class="filter-btn" data-filter="Combat" onclick="setFilter('Combat')">Combat</button>
-        <button class="filter-btn" data-filter="Delivery" onclick="setFilter('Delivery')">Delivery</button>
-        <button class="filter-btn" data-filter="Escort" onclick="setFilter('Escort')">Escort</button>
-        <button class="filter-btn" data-filter="Bounty" onclick="setFilter('Bounty')">Bounty</button>
-        <button class="filter-btn" data-filter="Research" onclick="setFilter('Research')">Research</button>
-        <button class="filter-btn" data-filter="Misc" onclick="setFilter('Misc')">Misc</button>
-      </div>
-
-      <div class="section-header">
-        <h2>Quest Board</h2>
-        <p>Accept a mission, complete it, and claim your reward.</p>
-      </div>
-      <div class="quest-list" id="questList"></div>
+      <div class="quest-feed" id="questList"></div>
     </div>
 
-    <div id="lockedMessage" class="locked" style="display:none;">
+    <div id="lockedMessage" class="locked-state" style="display:none;">
       <h2>🔒 Guild Members Only</h2>
-      <p>Login or sign up above to view and post quests.</p>
+      <p>Login or sign up to view quests and start your adventure.</p>
     </div>
-  </main>
-
-  <!-- Admin Panel (Hidden from users, only you see it) -->
-  <button class="admin-toggle" id="adminToggle" style="display:none;">👑 Guild Master</button>
-  <div class="admin-panel" id="adminPanel">
-    <h4>👑 Guild Master Dashboard</h4>
-    <div style="color:#c3bdd4; font-size:.85rem; margin-bottom:.5rem;">Only you can see this</div>
-    <div style="color:#ffd700; font-size:1.1rem; font-weight:700; margin-bottom:.3rem;">
-      Total Revenue: <span id="adminRevenue">₹ 0</span>
-    </div>
-    <div style="color:#89f0b8; font-size:.9rem; margin-bottom:.3rem;">
-      Active Users: <span id="adminUsers">0</span>
-    </div>
-    <div style="color:#86b0ff; font-size:.9rem; margin-bottom:.3rem;">
-      Total Quests Ever: <span id="adminTotalQuests">0</span>
-    </div>
-    <div style="color:#ff7a18; font-size:.9rem;">
-      Pending Payments: <span id="adminPending">0</span>
-    </div>
-    <button onclick="toggleAdmin()" style="margin-top:.5rem; background:#4e3c75; color:#fff; border:none; border-radius:.3rem; padding:.3rem .6rem; cursor:pointer;">Close</button>
   </div>
 
+  <button class="admin-fab" id="adminToggle">👑</button>
+  <div class="admin-panel" id="adminPanel">
+    <h4>Guild Master Dashboard</h4>
+    <div class="admin-stat"><span>Total Revenue</span><span id="adminRevenue">₹ 0</span></div>
+    <div class="admin-stat"><span>Active Users</span><span id="adminUsers">0</span></div>
+    <div class="admin-stat"><span>Total Quests</span><span id="adminTotalQuests">0</span></div>
+    <div class="admin-stat"><span>Pending Payments</span><span id="adminPending">0</span></div>
+    <div class="admin-stat"><span>Fairy Coins</span><span id="adminCoins">0</span></div>
+    <button onclick="toggleAdmin()" class="btn btn-ghost" style="margin-top:1rem;width:100%;">Close</button>
+  </div>
+
+  <button class="install-fab" id="installBtn">📲 Install App</button>
+
   <template id="questTemplate">
-    <article class="card quest">
-      <div class="quest-meta">
-        Status: <span class="badge pending">pending</span>
-        <span class="cat-badge">Misc</span>
-      </div>
-      <h3 class="quest-title">Quest Title</h3>
-      <p class="quest-description">Description goes here.</p>
-      <div class="deadline-text"></div>
-      <div class="quest-footer">
-        <span class="reward">₹ 0</span>
-        <div class="actions">
-          <button class="btn accept">Accept</button>
-          <button class="btn complete">Complete</button>
-          <button class="btn cancel" style="background:#ff4757; color:#fff;">Cancel</button>
-          <button class="btn delete" style="background:#2f3542; color:#fff;">Delete</button>
+    <article class="quest-card">
+      <img class="quest-image" alt="Quest image">
+      <div class="quest-body">
+        <div class="quest-header">
+          <span class="status-badge status-pending">Pending</span>
+          <span class="cat-badge">Misc</span>
+        </div>
+        <h3 class="quest-title">Quest Title</h3>
+        <div class="deadline-display"></div>
+        <p class="quest-desc">Description goes here.</p>
+        <div class="quest-meta-bar">
+          <span class="reward-tag">₹ 0</span>
+          <div class="quest-actions">
+            <button class="btn btn-action btn-accept">Accept</button>
+            <button class="btn btn-action btn-complete">Complete</button>
+            <button class="btn btn-action btn-cancel">Cancel</button>
+            <button class="btn btn-action btn-delete">Delete</button>
+          </div>
+        </div>
+        <div style="margin-top:0.75rem; font-size:0.85rem; color:var(--text-muted);">
+          Posted by: <span class="poster-email">Unknown</span>
         </div>
       </div>
-      <div style="margin-top:.5rem; font-size:.8rem; color:#a99ec7;" class="quest-people"></div>
-      <div class="quest-extras"></div>
-      <div class="comment-box" style="display:none;">
-        <div style="font-size:.85rem; color:#ffe1cc; margin-bottom:.3rem;">💬 Comments</div>
-        <div class="comment-list"></div>
-        <div class="comment-input">
-          <input type="text" class="comment-field" placeholder="Type a message..." onkeypress="handleCommentEnter(event, this)">
-          <button class="btn primary send-comment" style="padding:.4rem .8rem;">Send</button>
+      <div class="extras">
+        <div class="payment-section"></div>
+        <div class="comment-section" style="display:none;">
+          <div style="font-size:0.85rem; color:var(--accent); margin-bottom:0.5rem;">💬 Discussion</div>
+          <div class="comment-list"></div>
+          <div class="comment-input-row">
+            <input type="text" class="comment-field" placeholder="Type a message..." onkeypress="handleCommentEnter(event, this)">
+            <button class="btn btn-primary btn-sm send-comment">Send</button>
+          </div>
         </div>
       </div>
     </article>
   </template>
 
   <script src="app.js"></script>
+  <script>
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBtn').style.display = 'block';
+    });
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
+        deferredPrompt = null;
+      }
+    });
+  </script>
 </body>
 </html>
