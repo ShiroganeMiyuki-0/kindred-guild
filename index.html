@@ -44,30 +44,77 @@
     #btnSignIn { background: linear-gradient(120deg, #af002d, #ff7a18); color: #fff; }
     #btnSignOut { background: #4e3c75; color: #fff; }
     .user-badge { color: #ffe1cc; font-weight: 600; }
+    .rank-badge {
+      font-size: .75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      padding: .2rem .6rem;
+      border-radius: .4rem;
+      margin-left: .4rem;
+    }
     .locked {
       text-align: center;
       padding: 4rem 2rem;
       color: #c3bdd4;
     }
     .locked h2 { color: #f8f5ff; margin-bottom: .5rem; }
+    .tabs {
+      display: flex;
+      gap: .5rem;
+      margin: 1.5rem 0 1rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn, .filter-btn {
+      background: #1f1732;
+      border: 1px solid #3a2f57;
+      color: #c3bdd4;
+      padding: .5rem 1rem;
+      border-radius: .6rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .tab-btn.active, .filter-btn.active {
+      background: linear-gradient(120deg, #af002d, #ff7a18);
+      color: #fff;
+      border-color: transparent;
+    }
+    .cat-badge {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: .15rem .5rem;
+      border-radius: .3rem;
+      background: #2a1f47;
+      color: #d5c9f3;
+      margin-left: .5rem;
+    }
+    select {
+      border-radius: .65rem;
+      border: 1px solid #4e3c75;
+      background: #130f21;
+      color: #fff;
+      padding: .65rem;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
 
-  <!-- LOGIN BAR -->
   <div class="auth-bar">
     <div class="container">
       <div style="font-weight:700; color:#ff7a18;">🛡️ Kindred Guild</div>
-      
       <div id="loginForm" class="auth-inputs">
         <input type="email" id="authEmail" placeholder="Email">
         <input type="password" id="authPassword" placeholder="Password">
         <button id="btnSignIn">Login</button>
         <button id="btnSignUp">Sign Up</button>
       </div>
-      
       <div id="userInfo" style="display:none; align-items:center; gap:.8rem;">
         <span class="user-badge" id="userEmail"></span>
+        <span id="userRank" class="rank-badge"></span>
         <button id="btnSignOut">Logout</button>
       </div>
     </div>
@@ -91,45 +138,51 @@
 
   <main class="container" id="board">
     <section class="stats">
-      <article>
-        <h2 id="totalQuests">0</h2>
-        <p>Active Quests</p>
-      </article>
-      <article>
-        <h2 id="paidQuests">0</h2>
-        <p>Paid Contracts</p>
-      </article>
-      <article>
-        <h2 id="guildRevenue">$0</h2>
-        <p>Guild Revenue</p>
-      </article>
+      <article><h2 id="totalQuests">0</h2><p>Active Quests</p></article>
+      <article><h2 id="paidQuests">0</h2><p>Paid Contracts</p></article>
+      <article><h2 id="guildRevenue">$0</h2><p>Guild Revenue</p></article>
     </section>
 
-    <!-- THIS SHOWS ONLY WHEN LOGGED IN -->
     <div id="questBoard">
       <div class="card form-card" id="post">
         <h2>Post a New Quest</h2>
         <form id="questForm">
-          <label>
-            Title
-            <input type="text" id="title" placeholder="e.g., Escort celestial key merchant" required>
-          </label>
-          <label>
-            Description
-            <textarea id="description" rows="3" placeholder="Describe the mission..." required></textarea>
-          </label>
+          <label>Title<input type="text" id="title" placeholder="e.g., Escort celestial key merchant" required></label>
+          <label>Description<<textarea id="description" rows="3" placeholder="Describe the mission..." required></textarea></label>
           <div class="row">
-            <label>
-              Reward ($)
-              <input type="number" id="reward" min="0" value="0" required>
+            <label>Category
+              <select id="category" required>
+                <option value="Combat">⚔️ Combat</option>
+                <option value="Delivery">📦 Delivery</option>
+                <option value="Escort">🛡️ Escort</option>
+                <option value="Bounty">🎯 Bounty</option>
+                <option value="Research">🔮 Research</option>
+                <option value="Misc" selected>📋 Misc</option>
+              </select>
             </label>
-            <label>
-              Guild Fee (%)
-              <input type="number" id="fee" min="0" max="100" value="10" required>
-            </label>
+          </div>
+          <div class="row">
+            <label>Reward ($)<input type="number" id="reward" min="0" value="0" required></label>
+            <label>Guild Fee (%)<<input type="number" id="fee" min="0" max="100" value="10" required></label>
           </div>
           <button type="submit" class="btn primary">Publish Quest</button>
         </form>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="all" onclick="setTab('all')">🌍 All Quests</button>
+        <button class="tab-btn" data-tab="posted" onclick="setTab('posted')">📤 My Posted</button>
+        <button class="tab-btn" data-tab="accepted" onclick="setTab('accepted')">📥 My Accepted</button>
+      </div>
+
+      <div style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+        <button class="filter-btn" data-filter="Combat" onclick="setFilter('Combat')">Combat</button>
+        <button class="filter-btn" data-filter="Delivery" onclick="setFilter('Delivery')">Delivery</button>
+        <button class="filter-btn" data-filter="Escort" onclick="setFilter('Escort')">Escort</button>
+        <button class="filter-btn" data-filter="Bounty" onclick="setFilter('Bounty')">Bounty</button>
+        <button class="filter-btn" data-filter="Research" onclick="setFilter('Research')">Research</button>
+        <button class="filter-btn" data-filter="Misc" onclick="setFilter('Misc')">Misc</button>
       </div>
 
       <div class="section-header">
@@ -139,7 +192,6 @@
       <div class="quest-list" id="questList"></div>
     </div>
 
-    <!-- THIS SHOWS ONLY WHEN LOGGED OUT -->
     <div id="lockedMessage" class="locked" style="display:none;">
       <h2>🔒 Guild Members Only</h2>
       <p>Login or sign up above to view and post quests.</p>
@@ -148,7 +200,10 @@
 
   <template id="questTemplate">
     <article class="card quest">
-      <div class="quest-meta">Status: <span class="badge pending">pending</span></div>
+      <div class="quest-meta">
+        Status: <span class="badge pending">pending</span>
+        <span class="cat-badge">Misc</span>
+      </div>
       <h3 class="quest-title">Quest Title</h3>
       <p class="quest-description">Description goes here.</p>
       <div class="quest-footer">
