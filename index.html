@@ -45,6 +45,15 @@
     #btnSignOut { background: #4e3c75; color: #fff; }
     .user-badge { color: #ffe1cc; font-weight: 600; }
     .user-rating { color: #ffd700; font-size: .85rem; margin-left: .3rem; }
+    .strike-badge {
+      background: #ff4757;
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: .15rem .4rem;
+      border-radius: .3rem;
+      margin-left: .4rem;
+    }
     .rank-badge {
       font-size: .75rem;
       font-weight: 800;
@@ -124,8 +133,65 @@
     .star-btn:hover {
       background: #4e3c75;
     }
+    .upi-box {
+      background: #130f21;
+      border: 1px solid #27c26f;
+      border-radius: .5rem;
+      padding: .8rem;
+      margin-top: .5rem;
+      text-align: center;
+    }
+    .upi-box img {
+      max-width: 200px;
+      border-radius: .5rem;
+    }
+    .upi-id {
+      font-family: monospace;
+      color: #89f0b8;
+      font-size: .9rem;
+      margin-top: .3rem;
+    }
+    .comment-box {
+      margin-top: .5rem;
+      padding: .5rem;
+      background: #130f21;
+      border-radius: .5rem;
+      border: 1px solid #3a2f57;
+    }
+    .comment-input {
+      display: flex;
+      gap: .4rem;
+      margin-top: .3rem;
+    }
+    .comment-input input {
+      flex: 1;
+      padding: .5rem;
+      border-radius: .4rem;
+      border: 1px solid #4e3c75;
+      background: #1f1732;
+      color: #fff;
+    }
+    .comment-list {
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: .3rem;
+    }
+    .comment-item {
+      font-size: .8rem;
+      color: #c3bdd4;
+      padding: .2rem 0;
+      border-bottom: 1px solid #2a1f47;
+    }
+    .deadline-text {
+      font-size: .8rem;
+      color: #ff7a18;
+      margin-top: .3rem;
+    }
+    .deadline-overdue {
+      color: #ff4757;
+      font-weight: 700;
+    }
   </style>
-<base target="_blank">
 </head>
 <body>
 
@@ -142,6 +208,7 @@
         <span class="user-badge" id="userEmail"></span>
         <span id="userRating" class="user-rating"></span>
         <span id="userRank" class="rank-badge"></span>
+        <span id="userStrikes" class="strike-badge" style="display:none;"></span>
         <button id="btnSignOut">Logout</button>
       </div>
     </div>
@@ -175,7 +242,7 @@
         <h2>Post a New Quest</h2>
         <form id="questForm">
           <label>Title<input type="text" id="title" placeholder="e.g., Escort celestial key merchant" required></label>
-          <label>Description<textarea id="description" rows="3" placeholder="Describe the mission..." required></textarea></label>
+          <label>Description<<textarea id="description" rows="3" placeholder="Describe the mission..." required></textarea></label>
           <div class="row">
             <label>Category
               <select id="category" required>
@@ -190,8 +257,12 @@
           </div>
           <div class="row">
             <label>Reward (₹)<input type="number" id="reward" min="0" value="0" required></label>
-            <label>Guild Fee (%)<input type="number" id="fee" min="0" max="100" value="10" required></label>
+            <label>Deadline (optional)<input type="datetime-local" id="deadline"></label>
           </div>
+          <div class="row">
+            <label>Your UPI ID for payments<input type="text" id="upiId" placeholder="yourname@okbank" required></label>
+          </div>
+          <p style="color:#c3bdd4; font-size:.85rem; margin:0;">Guild Fee: <strong style="color:#ff7a18;">10%</strong> (automatically deducted)</p>
           <button type="submit" class="btn primary">Publish Quest</button>
         </form>
       </div>
@@ -233,6 +304,7 @@
       </div>
       <h3 class="quest-title">Quest Title</h3>
       <p class="quest-description">Description goes here.</p>
+      <div class="deadline-text"></div>
       <div class="quest-footer">
         <span class="reward">₹ 0</span>
         <div class="actions">
@@ -244,6 +316,14 @@
       </div>
       <div style="margin-top:.5rem; font-size:.8rem; color:#a99ec7;" class="quest-people"></div>
       <div class="quest-extras"></div>
+      <div class="comment-box" style="display:none;">
+        <div style="font-size:.85rem; color:#ffe1cc; margin-bottom:.3rem;">💬 Comments</div>
+        <div class="comment-list"></div>
+        <div class="comment-input">
+          <input type="text" class="comment-field" placeholder="Type a message...">
+          <button class="btn primary send-comment" style="padding:.4rem .8rem;">Send</button>
+        </div>
+      </div>
     </article>
   </template>
 
