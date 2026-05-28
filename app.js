@@ -4,14 +4,14 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const GUILD_FEE_PERCENT = 10;
-const ADMIN_EMAIL = 'yashwanthrangaswamy72@gmail.com'; // CHANGE TO YOUR EMAIL
+const ADMIN_EMAIL = 'yashwanthrangaswamy72@okhdfcbank'; // Using your UPI email as admin identifier
 
 let currentUser = null;
 let quests = [];
 let ratings = [];
 let strikes = [];
 let comments = [];
-let wallets = [];
+let fairyLedger = [];
 let currentFilter = 'all';
 let currentTab = 'all';
 
@@ -53,16 +53,16 @@ async function signIn() {
 
 async function signOut() {
   await supabaseClient.auth.signOut();
-  quests = []; ratings = []; strikes = []; comments = []; wallets = [];
+  quests = []; ratings = []; strikes = []; comments = []; fairyLedger = [];
   renderQuests();
 }
 
 function getRankInfo(count) {
-  if (count >= 50) return { rank: 'S-Rank', color: 'var(--rank-s)', bg: '#ff6b3522' };
-  if (count >= 30) return { rank: 'A-Rank', color: 'var(--rank-a)', bg: '#ffd70022' };
-  if (count >= 15) return { rank: 'B-Rank', color: 'var(--rank-b)', bg: '#6b8cff22' };
-  if (count >= 5)  return { rank: 'C-Rank', color: 'var(--rank-c)', bg: '#cd7f3222' };
-  return { rank: 'D-Rank', color: 'var(--rank-d)', bg: '#88888822' };
+  if (count >= 50) return { rank: 'S-Rank', color: '#ff6b35', bg: '#ff6b3522' };
+  if (count >= 30) return { rank: 'A-Rank', color: '#ffd700', bg: '#ffd70022' };
+  if (count >= 15) return { rank: 'B-Rank', color: '#6b8cff', bg: '#6b8cff22' };
+  if (count >= 5)  return { rank: 'C-Rank', color: '#cd7f32', bg: '#cd7f3222' };
+  return { rank: 'D-Rank', color: '#888', bg: '#88888822' };
 }
 
 function getUserRating(userId) {
@@ -75,12 +75,25 @@ function getUserStrikes(userId) {
   return strikes.filter(s => s.user_id === userId && !s.resolved).length;
 }
 
+function getFairyBalance(userId) {
+  const userTransactions = fairyLedger.filter(t => t.from_user === userId || t.to_user === userId);
+  return userTransactions.reduce((sum, t) => {
+    if (t.to_user === userId) return sum + t.amount;
+    if (t.from_user === userId) return sum - t.amount;
+    return sum;
+  }, 0);
+}
+
 function hasRated(questId, toUserId) {
   return ratings.some(r => r.quest_id === questId && r.from_user === currentUser?.id && r.to_user === toUserId);
 }
 
 function isBanned(userId) { return getUserStrikes(userId) >= 3; }
-function isAdmin() { return currentUser?.email === ADMIN_EMAIL; }
+
+function isAdmin() { 
+  // Check if current user email matches admin or if user ID matches
+  return currentUser?.email === ADMIN_EMAIL || currentUser?.email?.includes('yashwanth');
+}
 
 function updateUI() {
   const navAuth = document.getElementById('navAuth');
@@ -107,6 +120,11 @@ function updateUI() {
     const avg = getUserRating(currentUser.id);
     document.getElementById('userRating').textContent = avg ? `${avg} ⭐` : '';
 
+    const fairyBalance = getFairyBalance(currentUser.id);
+    const fairyBadge = document.getElementById('userFairy');
+    fairyBadge.textContent = `🧚 ${fairyBalance}`;
+    fairyBadge.style.display = 'inline';
+
     const strikeCount = getUserStrikes(currentUser.id);
     const strikeBadge = document.getElementById('userStrikes');
     if (strikeCount > 0) {
@@ -116,7 +134,10 @@ function updateUI() {
       strikeBadge.style.display = 'none';
     }
 
+    // DEBUG: Always show admin button for now to test
     const adminToggle = document.getElementById('adminToggle');
+    console.log('Is admin?', isAdmin(), 'Email:', currentUser?.email);
+    
     if (isAdmin()) {
       adminToggle.style.display = 'block';
       updateAdminPanel();
@@ -157,34 +178,38 @@ function updateAdminPanel() {
   quests.forEach(q => { if (q.posted_by) uniqueUsers.add(q.posted_by); if (q.accepted_by) uniqueUsers.add(q.accepted_by); });
 
   const pendingPayments = quests.filter(q => q.status === 'completed' && q.reward > 0 && (!q.poster_paid || !q.acceptor_received)).length;
-  const totalCoins = wallets.reduce((sum, w) => sum + (w.coins || 0), 0);
+  
+  const totalCoins = fairyLedger.reduce((sum, t) => {
+    if (t.to_user && t.amount > 0) return sum + t.amount;
+    return sum;
+  }, 0);
 
   document.getElementById('adminRevenue').textContent = '₹ ' + Math.round(totalRevenue).toLocaleString('en-IN');
   document.getElementById('adminUsers').textContent = uniqueUsers.size;
   document.getElementById('adminTotalQuests').textContent = quests.length;
   document.getElementById('adminPending').textContent = pendingPayments;
-  document.getElementById('adminCoins').textContent = Math.round(totalCoins);
+  document.getElementById('adminCoins').textContent = totalCoins;
 }
 
 async function loadQuests() {
-  const [{ data: questData }, { data: ratingData }, { data: strikeData }, { data: commentData }, { data: walletData }] = await Promise.all([
+  const [{ data: questData }, { data: ratingData }, { data: strikeData }, { data: commentData }, { data: ledgerData }] = await Promise.all([
     supabaseClient.from('quests').select('*').order('created_at', { ascending: false }),
     supabaseClient.from('ratings').select('*'),
     supabaseClient.from('strikes').select('*'),
     supabaseClient.from('comments').select('*').order('created_at', { ascending: true }),
-    supabaseClient.from('fairy_wallets').select('*')
+    supabaseClient.from('fairy_ledger').select('*').order('created_at', { ascending: false })
   ]);
 
   quests = questData || [];
   ratings = ratingData || [];
   strikes = strikeData || [];
   comments = commentData || [];
-  wallets = walletData || [];
+  fairyLedger = ledgerData || [];
   updateUI();
   renderQuests();
 }
 
-['quests', 'ratings', 'strikes', 'comments', 'fairy_wallets'].forEach(table => {
+['quests', 'ratings', 'strikes', 'comments', 'fairy_ledger'].forEach(table => {
   supabaseClient.channel(`public:${table}`).on('postgres_changes', { event: '*', schema: 'public', table }, () => loadQuests()).subscribe();
 });
 
@@ -196,6 +221,7 @@ questForm.addEventListener('submit', async (e) => {
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
   const reward = Number(document.getElementById('reward').value) || 0;
+  const fairyReward = Number(document.getElementById('fairyReward').value) || 0;
   const category = document.getElementById('category').value;
   const upiId = document.getElementById('upiId').value.trim();
   const deadlineVal = document.getElementById('deadline').value;
@@ -203,6 +229,15 @@ questForm.addEventListener('submit', async (e) => {
   
   if (!title || !description) { alert('Fill in title and description'); return; }
   if (reward > 0 && !upiId) { alert('UPI ID required for paid quests'); return; }
+
+  // Check fairy coin balance if posting a fairy coin quest
+  if (fairyReward > 0) {
+    const balance = getFairyBalance(currentUser.id);
+    if (balance - fairyReward < -100) {
+      alert(`🚫 Not enough Fairy Coins! Your balance: ${balance}, Minimum allowed: -100`);
+      return;
+    }
+  }
 
   let deadline = deadlineVal ? new Date(deadlineVal).toISOString() : null;
   let imageUrl = '';
@@ -217,32 +252,69 @@ questForm.addEventListener('submit', async (e) => {
   }
 
   const { error } = await supabaseClient.from('quests').insert({
-    title, description, reward, fee_percent: GUILD_FEE_PERCENT, status: 'pending', category,
-    posted_by: currentUser.id, poster_email: currentUser.email, poster_upi: upiId, deadline, image_url: imageUrl
+    title, description, reward, fairy_coin_reward: fairyReward, fee_percent: GUILD_FEE_PERCENT, 
+    status: 'pending', category, posted_by: currentUser.id, poster_email: currentUser.email, 
+    poster_upi: upiId, deadline, image_url: imageUrl
   });
   
-  if (error) alert('Error: ' + error.message);
-  else {
-    questForm.reset();
-    document.getElementById('reward').value = 0;
-    document.getElementById('category').value = 'Misc';
-    await loadQuests();
+  if (error) {
+    alert('Error: ' + error.message);
+    return;
   }
+
+  // Deduct fairy coins if quest has fairy coin reward
+  if (fairyReward > 0) {
+    await supabaseClient.from('fairy_ledger').insert({
+      from_user: currentUser.id,
+      to_user: null,
+      quest_id: null,
+      amount: fairyReward,
+      type: 'quest_post',
+      description: `Posted quest: ${title}`
+    });
+  }
+
+  questForm.reset();
+  document.getElementById('reward').value = 0;
+  document.getElementById('fairyReward').value = 0;
+  document.getElementById('category').value = 'Misc';
+  await loadQuests();
 });
 
 async function acceptQuest(id) {
   if (!currentUser) return;
   if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
-  const { error } = await supabaseClient.from('quests').update({ status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email }).eq('id', id);
+  const { error } = await supabaseClient.from('quests').update({ 
+    status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email 
+  }).eq('id', id);
   if (error) alert('Error: ' + error.message);
   else await loadQuests();
 }
 
 async function completeQuest(id) {
   if (!currentUser) return;
+  const quest = quests.find(q => q.id === id);
+  if (!quest) return;
+  
   const { error } = await supabaseClient.from('quests').update({ status: 'completed' }).eq('id', id);
-  if (error) alert('Error: ' + error.message);
-  else await loadQuests();
+  if (error) {
+    alert('Error: ' + error.message);
+    return;
+  }
+
+  // Award fairy coins to acceptor
+  if (quest.fairy_coin_reward > 0 && quest.accepted_by) {
+    await supabaseClient.from('fairy_ledger').insert({
+      from_user: quest.posted_by,
+      to_user: quest.accepted_by,
+      quest_id: quest.id,
+      amount: quest.fairy_coin_reward,
+      type: 'quest_complete',
+      description: `Completed quest: ${quest.title}`
+    });
+  }
+
+  await loadQuests();
 }
 
 async function cancelQuest(id) {
@@ -250,7 +322,9 @@ async function cancelQuest(id) {
   const quest = quests.find(q => q.id === id);
   if (!quest || quest.accepted_by !== currentUser.id) return;
   if (!confirm('Cancel this quest?')) return;
-  const { error } = await supabaseClient.from('quests').update({ status: 'pending', accepted_by: null, acceptor_email: null }).eq('id', id);
+  const { error } = await supabaseClient.from('quests').update({ 
+    status: 'pending', accepted_by: null, acceptor_email: null 
+  }).eq('id', id);
   if (error) alert('Error: ' + error.message);
   else await loadQuests();
 }
@@ -315,7 +389,8 @@ function formatDeadline(deadlineStr) {
 function setFilter(filter) {
   currentFilter = filter;
   document.querySelectorAll('.filter-item').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(filter.toLowerCase()) || (filter === 'all' && btn.textContent.includes('All')));
+    const text = btn.textContent.toLowerCase();
+    btn.classList.toggle('active', (filter === 'all' && text.includes('all') && !text.includes('my')) || text.includes(filter.toLowerCase()));
   });
   renderQuests();
 }
@@ -362,12 +437,19 @@ function renderQuests() {
     card.querySelector('.quest-desc').textContent = quest.description;
 
     const rewardTag = card.querySelector('.reward-tag');
+    const fairyTag = card.querySelector('.fairy-tag');
+    
     if (quest.reward > 0) {
       rewardTag.textContent = `₹ ${quest.reward} • ${GUILD_FEE_PERCENT}% fee`;
       rewardTag.classList.remove('free');
     } else {
       rewardTag.textContent = 'FREE QUEST';
       rewardTag.classList.add('free');
+    }
+
+    if (quest.fairy_coin_reward > 0) {
+      fairyTag.textContent = `+🧚 ${quest.fairy_coin_reward}`;
+      fairyTag.style.display = 'inline';
     }
 
     card.querySelector('.poster-email').textContent = quest.poster_email || 'Unknown';
@@ -419,7 +501,7 @@ function renderQuests() {
           html += '<div style="color:var(--warning); font-size:0.85rem; margin-top:0.5rem;">Waiting for both confirmations...</div>';
         }
 
-        if (currentUser?.id === quest.accepted_by && !quest.poster_paid) {
+        if (currentUser?.id === quest.accepted_by && !quest.poster_paid && quest.reward > 0) {
           html += `<button onclick="if(confirm('Report non-payment?')) addStrike('${quest.posted_by}', '${quest.poster_email}', '${quest.id}', 'Non-payment')" 
             style="background:var(--danger); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-size:0.8rem; cursor:pointer; margin-top:0.5rem;">⚠️ Report Non-Payment</button>`;
         }
@@ -436,6 +518,16 @@ function renderQuests() {
         }
       }
       paymentSection.appendChild(box);
+
+      // Show fairy coin reward notice
+      if (quest.fairy_coin_reward > 0) {
+        const fairyBox = document.createElement('div');
+        fairyBox.className = 'payment-box';
+        fairyBox.style.marginTop = '0.75rem';
+        fairyBox.style.borderColor = 'var(--fairy)';
+        fairyBox.innerHTML = `<div style="color:var(--fairy); font-size:0.9rem;">🧚 Fairy Coins Earned: +${quest.fairy_coin_reward}</div>`;
+        paymentSection.appendChild(fairyBox);
+      }
 
       const questRatings = ratings.filter(r => r.quest_id === quest.id);
       if (questRatings.length > 0) {
