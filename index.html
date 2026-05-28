@@ -21,11 +21,8 @@
       --success: #00d9a3;
       --warning: #ffc107;
       --danger: #ff4757;
-      --rank-s: #ff6b35;
-      --rank-a: #ffd700;
-      --rank-b: #6b8cff;
-      --rank-c: #cd7f32;
-      --rank-d: #888;
+      --fairy: #e056fd;
+      --fairy-glow: #e056fd33;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,7 +43,6 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      backdrop-filter: blur(10px);
     }
     .navbar-inner {
       max-width: 1200px;
@@ -55,6 +51,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      flex-wrap: wrap;
     }
     .logo {
       display: flex;
@@ -78,6 +75,7 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      flex-wrap: wrap;
     }
     .nav-auth input {
       background: var(--bg);
@@ -86,7 +84,7 @@
       padding: 0.5rem 0.75rem;
       color: var(--text);
       font-size: 0.9rem;
-      width: 160px;
+      width: 150px;
     }
     .nav-auth input::placeholder { color: var(--text-muted); }
     .btn {
@@ -115,6 +113,7 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
     .user-rank {
       font-size: 0.7rem;
@@ -131,6 +130,15 @@
       font-weight: 700;
       padding: 0.15rem 0.4rem;
       border-radius: 4px;
+    }
+    .fairy-badge {
+      background: var(--fairy-glow);
+      border: 1px solid var(--fairy);
+      color: var(--fairy);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 8px;
     }
 
     /* Hero */
@@ -179,7 +187,7 @@
       border-radius: 12px;
     }
 
-    /* Motto */
+    /* Motto - YOUR ORIGINAL, CLEAN */
     .motto {
       max-width: 800px;
       margin: 2rem auto;
@@ -332,6 +340,15 @@
       color: var(--accent);
       margin-top: 0.5rem;
     }
+    .fairy-notice {
+      background: var(--fairy-glow);
+      border: 1px solid var(--fairy);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--fairy);
+      margin-top: 0.5rem;
+    }
 
     /* Quest Cards */
     .quest-feed {
@@ -411,6 +428,11 @@
       color: var(--success);
     }
     .reward-tag.free { color: var(--text-muted); }
+    .fairy-tag {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--fairy);
+    }
     .quest-actions {
       display: flex;
       gap: 0.5rem;
@@ -572,7 +594,6 @@
       color: var(--text-muted);
     }
 
-    /* Animations */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -598,6 +619,7 @@
         <span id="userEmail"></span>
         <span id="userRank" class="user-rank"></span>
         <span id="userRating" style="color:var(--warning);font-size:0.85rem;"></span>
+        <span id="userFairy" class="fairy-badge" style="display:none;"></span>
         <span id="userStrikes" class="user-strike" style="display:none;"></span>
         <button class="btn btn-ghost btn-sm" id="btnSignOut">Logout</button>
       </div>
@@ -607,7 +629,7 @@
   <section class="hero">
     <div class="hero-badge">✨ S-Rank Opportunity Network</div>
     <h1>Forge Your Legend</h1>
-    <p>A guild for every soul — worker, warrior, wanderer — bound by one iron rule: no double standards. Want gold for your blade? Pay fair coin for another's.</p>
+    <p>A guild for everyone — worker, warrior, wanderer. No double standards: want gold for your work? Pay fair coin for another's.</p>
     <div class="hero-actions">
       <a href="#post" class="btn btn-primary btn-large">⚔️ Post a Quest</a>
       <a href="#board" class="btn btn-ghost btn-large">📋 Browse Board</a>
@@ -691,24 +713,31 @@
               </select>
             </div>
             <div class="field">
-              <label>Reward (₹)</label>
+              <label>Reward in ₹ (0 = free)</label>
               <input type="number" id="reward" min="0" value="0" required>
+            </div>
+            <div class="field">
+              <label>Fairy Coins (optional)</label>
+              <input type="number" id="fairyReward" min="0" value="0" placeholder="Extra fairy coin reward">
             </div>
             <div class="field">
               <label>Deadline (optional)</label>
               <input type="datetime-local" id="deadline">
             </div>
-            <div class="field">
-              <label>Your UPI ID</label>
-              <input type="text" id="upiId" placeholder="yourname@okbank" required>
-            </div>
+          </div>
+          <div class="field" style="margin-top:1rem;">
+            <label>Your UPI ID (for ₹ payments)</label>
+            <input type="text" id="upiId" placeholder="yourname@okbank">
           </div>
           <div class="field" style="margin-top:1rem;">
             <label>Quest Image (optional)</label>
             <input type="file" id="questImage" accept="image/*">
           </div>
           <div class="fee-notice">
-            💰 Guild Fee: <strong>10%</strong> automatically deducted on paid quests. Free quests are always free.
+            💰 ₹ Reward: Guild takes 10% fee. Free quests (₹0) are always free.
+          </div>
+          <div class="fairy-notice">
+            🧚 Fairy Coins: Isolated guild currency. Earn by completing quests, spend by posting them. Can go down to -100.
           </div>
           <button type="submit" class="btn btn-primary" style="margin-top:1rem; width:100%;">Publish Quest</button>
         </form>
@@ -723,14 +752,15 @@
     </div>
   </div>
 
-  <button class="admin-fab" id="adminToggle">👑</button>
+  <button class="admin-fab" id="adminToggle" title="Guild Master Dashboard">👑</button>
   <div class="admin-panel" id="adminPanel">
     <h4>Guild Master Dashboard</h4>
-    <div class="admin-stat"><span>Total Revenue</span><span id="adminRevenue">₹ 0</span></div>
+    <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem;">Only you can see this</div>
+    <div class="admin-stat"><span>Total ₹ Revenue</span><span id="adminRevenue">₹ 0</span></div>
     <div class="admin-stat"><span>Active Users</span><span id="adminUsers">0</span></div>
     <div class="admin-stat"><span>Total Quests</span><span id="adminTotalQuests">0</span></div>
     <div class="admin-stat"><span>Pending Payments</span><span id="adminPending">0</span></div>
-    <div class="admin-stat"><span>Fairy Coins</span><span id="adminCoins">0</span></div>
+    <div class="admin-stat"><span>Fairy Coins in Circulation</span><span id="adminCoins">0</span></div>
     <button onclick="toggleAdmin()" class="btn btn-ghost" style="margin-top:1rem;width:100%;">Close</button>
   </div>
 
@@ -748,7 +778,10 @@
         <div class="deadline-display"></div>
         <p class="quest-desc">Description goes here.</p>
         <div class="quest-meta-bar">
-          <span class="reward-tag">₹ 0</span>
+          <div>
+            <span class="reward-tag">₹ 0</span>
+            <span class="fairy-tag" style="display:none;"></span>
+          </div>
           <div class="quest-actions">
             <button class="btn btn-action btn-accept">Accept</button>
             <button class="btn btn-action btn-complete">Complete</button>
