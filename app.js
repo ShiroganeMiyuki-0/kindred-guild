@@ -341,6 +341,7 @@ async function deleteQuest(id) {
 
 async function confirmPayment(questId, field) {
   if (!currentUser) return;
+  if (!['poster_paid', 'acceptor_received'].includes(field)) return;
   const updateObj = {}; updateObj[field] = true;
   const { error } = await supabaseClient.from('quests').update(updateObj).eq('id', questId);
   if (error) alert('Error: ' + error.message);
@@ -358,6 +359,9 @@ async function submitRating(questId, toUser, toEmail, ratingValue) {
 }
 
 async function addStrike(userId, userEmail, questId, reason) {
+  if (!currentUser) return;
+  const quest = quests.find(q => q.id === questId);
+  if (!quest || currentUser.id !== quest.accepted_by || quest.posted_by !== userId) return;
   const { error } = await supabaseClient.from('strikes').insert({
     user_id: userId, user_email: userEmail, quest_id: questId, reason: reason
   });
@@ -398,6 +402,23 @@ function setFilter(filter) {
 function setTab(tab) {
   currentTab = tab;
   renderQuests();
+}
+
+function createPaymentCheckbox(labelText, onChange) {
+  const label = document.createElement('label');
+  label.style.cssText = 'display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0; cursor:pointer; color:var(--text-muted); font-size:0.9rem;';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.addEventListener('change', onChange);
+  label.append(checkbox, document.createTextNode(` ${labelText}`));
+  return label;
+}
+
+function createPaymentStatus(text) {
+  const status = document.createElement('div');
+  status.style.cssText = 'color:var(--success); font-size:0.9rem;';
+  status.textContent = text;
+  return status;
 }
 
 function renderQuests() {
@@ -477,44 +498,59 @@ function renderQuests() {
       box.className = 'payment-box';
 
       if (quest.poster_paid && quest.acceptor_received) {
-        box.innerHTML = '<div class="payment-settled">✅ Payment Settled</div>';
+        const settled = document.createElement('div');
+        settled.className = 'payment-settled';
+        settled.textContent = '✅ Payment Settled';
+        box.appendChild(settled);
       } else {
-        let html = '<div style="color:var(--accent); font-weight:600; margin-bottom:0.5rem;">Payment Confirmation</div>';
+        const heading = document.createElement('div');
+        heading.style.cssText = 'color:var(--accent); font-weight:600; margin-bottom:0.5rem;';
+        heading.textContent = 'Payment Confirmation';
+        box.appendChild(heading);
         
         if (currentUser?.id === quest.posted_by && !quest.poster_paid) {
-          html += `<label style="display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0; cursor:pointer; color:var(--text-muted); font-size:0.9rem;">
-            <input type="checkbox" onchange="confirmPayment('${quest.id}', 'poster_paid')"> I have paid ₹${quest.reward}
-          </label>`;
+          box.appendChild(createPaymentCheckbox(`I have paid ₹${quest.reward}`, () => confirmPayment(quest.id, 'poster_paid')));
         } else if (quest.poster_paid) {
-          html += '<div style="color:var(--success); font-size:0.9rem;">✅ Poster confirmed payment sent</div>';
+          box.appendChild(createPaymentStatus('✅ Poster confirmed payment sent'));
         }
 
         if (currentUser?.id === quest.accepted_by && !quest.acceptor_received) {
-          html += `<label style="display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0; cursor:pointer; color:var(--text-muted); font-size:0.9rem;">
-            <input type="checkbox" onchange="confirmPayment('${quest.id}', 'acceptor_received')"> I have received ₹${quest.reward}
-          </label>`;
+          box.appendChild(createPaymentCheckbox(`I have received ₹${quest.reward}`, () => confirmPayment(quest.id, 'acceptor_received')));
         } else if (quest.acceptor_received) {
-          html += '<div style="color:var(--success); font-size:0.9rem;">✅ Acceptor confirmed payment received</div>';
+          box.appendChild(createPaymentStatus('✅ Acceptor confirmed payment received'));
         }
 
         if ((!quest.poster_paid || !quest.acceptor_received) && currentUser && (currentUser.id === quest.posted_by || currentUser.id === quest.accepted_by)) {
-          html += '<div style="color:var(--warning); font-size:0.85rem; margin-top:0.5rem;">Waiting for both confirmations...</div>';
+          const waiting = document.createElement('div');
+          waiting.style.cssText = 'color:var(--warning); font-size:0.85rem; margin-top:0.5rem;';
+          waiting.textContent = 'Waiting for both confirmations...';
+          box.appendChild(waiting);
         }
 
         if (currentUser?.id === quest.accepted_by && !quest.poster_paid && quest.reward > 0) {
-          html += `<button onclick="if(confirm('Report non-payment?')) addStrike('${quest.posted_by}', '${quest.poster_email}', '${quest.id}', 'Non-payment')" 
-            style="background:var(--danger); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-size:0.8rem; cursor:pointer; margin-top:0.5rem;">⚠️ Report Non-Payment</button>`;
+          const reportButton = document.createElement('button');
+          reportButton.style.cssText = 'background:var(--danger); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-size:0.8rem; cursor:pointer; margin-top:0.5rem;';
+          reportButton.textContent = '⚠️ Report Non-Payment';
+          reportButton.addEventListener('click', () => {
+            if (confirm('Report non-payment?')) addStrike(quest.posted_by, quest.poster_email, quest.id, 'Non-payment');
+          });
+          box.appendChild(reportButton);
         }
 
-        box.innerHTML = html;
-
         if (quest.reward > 0 && quest.poster_upi && currentUser?.id === quest.accepted_by && !quest.poster_paid) {
-          box.innerHTML += `
-            <div class="upi-display">
-              <div class="label">📱 Scan or Pay UPI</div>
-              <div class="id">${quest.poster_upi}</div>
-              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">Google Pay · PhonePe · Paytm</div>
-            </div>`;
+          const upiDisplay = document.createElement('div');
+          upiDisplay.className = 'upi-display';
+          const label = document.createElement('div');
+          label.className = 'label';
+          label.textContent = '📱 Scan or Pay UPI';
+          const id = document.createElement('div');
+          id.className = 'id';
+          id.textContent = quest.poster_upi;
+          const hint = document.createElement('div');
+          hint.style.cssText = 'font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;';
+          hint.textContent = 'Google Pay · PhonePe · Paytm';
+          upiDisplay.append(label, id, hint);
+          box.appendChild(upiDisplay);
         }
       }
       paymentSection.appendChild(box);
@@ -534,11 +570,17 @@ function renderQuests() {
         const ratingBox = document.createElement('div');
         ratingBox.className = 'payment-box';
         ratingBox.style.marginTop = '0.75rem';
-        let html = '<div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Ratings</div>';
+        const title = document.createElement('div');
+        title.style.cssText = 'color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;';
+        title.textContent = 'Ratings';
+        ratingBox.appendChild(title);
         questRatings.forEach(r => {
-          html += `<div style="font-size:0.9rem; color:var(--text); margin:0.25rem 0;">${r.from_email}: ${'⭐'.repeat(r.rating)}</div>`;
+          const line = document.createElement('div');
+          line.style.cssText = 'font-size:0.9rem; color:var(--text); margin:0.25rem 0;';
+          const safeRating = Math.max(1, Math.min(5, Number(r.rating) || 1));
+          line.textContent = `${r.from_email}: ${'⭐'.repeat(safeRating)}`;
+          ratingBox.appendChild(line);
         });
-        ratingBox.innerHTML = html;
         paymentSection.appendChild(ratingBox);
       }
 
@@ -592,7 +634,10 @@ function renderQuests() {
         questComments.forEach(c => {
           const item = document.createElement('div');
           item.className = 'comment-item';
-          item.innerHTML = `<strong style="color:var(--text);">${c.user_email}:</strong> ${c.message}`;
+          const author = document.createElement('strong');
+          author.style.color = 'var(--text)';
+          author.textContent = `${c.user_email}:`;
+          item.append(author, document.createTextNode(` ${c.message}`));
           commentList.appendChild(item);
         });
       }

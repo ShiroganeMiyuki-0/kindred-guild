@@ -1,13 +1,36 @@
 # Kindred Guild
 
-Fairy Tail-inspired guild board website where users can:
+Fairy Tail-inspired guild board website where members can post free or paid quests, accept work, confirm completion, rate each other, and track a small guild fee on paid missions.
 
-- Join and post quests/jobs/tasks.
-- Set missions as free (`$0`) or paid.
-- Accept and complete posted quests.
-- Apply a guild fee percentage for paid missions so the platform owner earns revenue.
+## What works today
 
-## Deploy on GitHub Pages (no local runtime required)
+- Supabase email/password authentication.
+- Persistent quests, comments, ratings, strikes, and Fairy Coin ledger rows through Supabase tables.
+- Free quests and paid UPI quests with a visible 10% guild-fee calculation.
+- Quest images through a Supabase Storage bucket named `quest-images`.
+- A basic PWA manifest so the browser install button has a valid manifest file.
+
+## Production/business readiness
+
+This code can become a real deployed MVP, but it is **not yet a fully safe profit-making marketplace**. Before charging real users, prioritize these changes:
+
+1. **Use a proper payment flow.** UPI IDs and manual confirmation are fine for a prototype, but platform revenue needs verifiable payment collection, fee splitting, refunds, and dispute handling through a payment provider or escrow-like backend.
+2. **Move business rules to a backend.** The current fee percentage, admin email, strike logic, and Fairy Coin accounting are browser-side. A real marketplace should enforce these rules with server-side functions, database constraints, and audit logs.
+3. **Tighten Supabase security.** Start with `supabase-schema.sql`, then review row-level-security policies carefully for your exact launch rules. Do not rely on client-only admin checks.
+4. **Add identity, trust, and moderation.** Paid work needs user profiles, KYC/verification if required in your region, dispute workflows, abuse reporting, admin review screens, and clear terms/privacy pages.
+5. **Add conversion features.** To become profitable, add landing-page copy for a specific niche, featured quests, paid boosts, subscriptions for power users, invoice/receipt emails, and analytics for funnel tracking.
+
+## Supabase setup
+
+1. Create a Supabase project.
+2. Open the Supabase SQL editor and run `supabase-schema.sql`.
+3. Create a public Storage bucket named `quest-images`.
+4. Enable email/password authentication in Supabase Auth.
+5. Replace `SUPABASE_URL` and `SUPABASE_KEY` in `app.js` with your own project's public anon settings.
+
+> Important: the anon key is public by design, but your database must be protected by row-level security policies.
+
+## Deploy on GitHub Pages
 
 ### 1) Push your code to GitHub
 
@@ -61,5 +84,6 @@ git push origin main
 
 ## Notes
 
-- This is a static front-end app (`index.html`, `styles.css`, `app.js`), so GitHub Pages works out of the box.
-- Current data is in-memory only (refreshing the page resets quests).
+- This is a static front-end app (`index.html`, `styles.css`, `app.js`), so GitHub Pages can host the UI.
+- Real persistence requires Supabase tables, RLS policies, and the `quest-images` bucket.
+- For a real business, treat the current version as an MVP/prototype until payment, legal, moderation, and backend enforcement are complete.
