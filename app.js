@@ -4,7 +4,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const GUILD_FEE_PERCENT = 10;
-const ADMIN_EMAIL = 'yashwanthrangaswamy72@gmail.com'; // Using your email as admin identifier
+const ADMIN_EMAIL = 'yashwanthrangaswamy72@gmail.com';
 
 let currentUser = null;
 let quests = [];
@@ -24,7 +24,10 @@ function handleCommentEnter(event, input) {
   if (event.key === 'Enter') {
     const card = input.closest('.quest-card');
     const questId = card?.dataset?.questId;
-    if (questId) { sendComment(questId, input.value); input.value = ''; }
+    if (questId && input.value.trim()) {
+      sendComment(questId, input.value);
+      input.value = '';
+    }
   }
 }
 
@@ -34,10 +37,11 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   if (currentUser) loadQuests();
 });
 
+// ─── FIX 1: Sign-up — handle immediate-session vs email-confirmation cases ───
 async function signUp() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value.trim();
-  
+
   if (!email || !password) {
     alert('Please enter both email and password');
     return;
@@ -52,23 +56,27 @@ async function signUp() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin  // Better redirect
+        emailRedirectTo: window.location.origin
       }
     });
 
     if (error) {
-      console.error(error);
       if (error.message.includes('already registered')) {
         alert('This email is already registered. Try logging in instead.');
       } else if (error.message.includes('rate limit')) {
         alert('Too many attempts. Please wait a minute and try again.');
+      } else if (error.message.includes('invalid')) {
+        alert('Please enter a valid email address (e.g. yourname@gmail.com).');
       } else {
         alert('Signup error: ' + error.message);
       }
+    } else if (data.session) {
+      // Email confirmation is OFF — user is already logged in.
+      // onAuthStateChange fires automatically and updates the UI.
+      // No alert needed; the UI switches to the logged-in view on its own.
     } else {
-      alert('✅ Account created successfully! You can now Login.');
-      // Auto switch to login mode if you want
-      document.getElementById('authEmail').focus();
+      // Email confirmation is ON — user must check their inbox.
+      alert('📧 Account created! Check your email inbox for a confirmation link, then come back and log in.');
     }
   } catch (err) {
     alert('Unexpected error: ' + err.message);
@@ -122,8 +130,7 @@ function hasRated(questId, toUserId) {
 
 function isBanned(userId) { return getUserStrikes(userId) >= 3; }
 
-function isAdmin() { 
-  // Check if current user email matches admin or if user ID matches
+function isAdmin() {
   return currentUser?.email === ADMIN_EMAIL || currentUser?.email?.includes('yashwanth');
 }
 
@@ -166,10 +173,7 @@ function updateUI() {
       strikeBadge.style.display = 'none';
     }
 
-    // DEBUG: Always show admin button for now to test
     const adminToggle = document.getElementById('adminToggle');
-    console.log('Is admin?', isAdmin(), 'Email:', currentUser?.email);
-    
     if (isAdmin()) {
       adminToggle.style.display = 'block';
       updateAdminPanel();
@@ -205,12 +209,12 @@ function updateAdminPanel() {
   const totalRevenue = quests
     .filter(q => q.status === 'completed' && q.reward > 0)
     .reduce((sum, q) => sum + (q.reward * (GUILD_FEE_PERCENT / 100)), 0);
-  
+
   const uniqueUsers = new Set();
   quests.forEach(q => { if (q.posted_by) uniqueUsers.add(q.posted_by); if (q.accepted_by) uniqueUsers.add(q.accepted_by); });
 
   const pendingPayments = quests.filter(q => q.status === 'completed' && q.reward > 0 && (!q.poster_paid || !q.acceptor_received)).length;
-  
+
   const totalCoins = fairyLedger.reduce((sum, t) => {
     if (t.to_user && t.amount > 0) return sum + t.amount;
     return sum;
@@ -258,11 +262,10 @@ questForm.addEventListener('submit', async (e) => {
   const upiId = document.getElementById('upiId').value.trim();
   const deadlineVal = document.getElementById('deadline').value;
   const imageFile = document.getElementById('questImage').files[0];
-  
+
   if (!title || !description) { alert('Fill in title and description'); return; }
   if (reward > 0 && !upiId) { alert('UPI ID required for paid quests'); return; }
 
-  // Check fairy coin balance if posting a fairy coin quest
   if (fairyReward > 0) {
     const balance = getFairyBalance(currentUser.id);
     if (balance - fairyReward < -100) {
@@ -274,27 +277,34 @@ questForm.addEventListener('submit', async (e) => {
   let deadline = deadlineVal ? new Date(deadlineVal).toISOString() : null;
   let imageUrl = '';
 
+  // ─── FIX 2: Image upload — show error if upload fails instead of silently ignoring ───
   if (imageFile) {
     const fileName = `${currentUser.id}_${Date.now()}.${imageFile.name.split('.').pop()}`;
-    const { error: uploadError } = await supabaseClient.storage.from('quest-images').upload(fileName, imageFile);
-    if (!uploadError) {
-      const { data: urlData } = supabaseClient.storage.from('quest-images').getPublicUrl(fileName);
+    const { error: uploadError } = await supabaseClient.storage
+      .from('quest-images')
+      .upload(fileName, imageFile);
+
+    if (uploadError) {
+      alert('⚠️ Image upload failed: ' + uploadError.message + '\nThe quest will be posted without the image.');
+    } else {
+      const { data: urlData } = supabaseClient.storage
+        .from('quest-images')
+        .getPublicUrl(fileName);
       imageUrl = urlData?.publicUrl || '';
     }
   }
 
   const { error } = await supabaseClient.from('quests').insert({
-    title, description, reward, fairy_coin_reward: fairyReward, fee_percent: GUILD_FEE_PERCENT, 
-    status: 'pending', category, posted_by: currentUser.id, poster_email: currentUser.email, 
+    title, description, reward, fairy_coin_reward: fairyReward, fee_percent: GUILD_FEE_PERCENT,
+    status: 'pending', category, posted_by: currentUser.id, poster_email: currentUser.email,
     poster_upi: upiId, deadline, image_url: imageUrl
   });
-  
+
   if (error) {
     alert('Error: ' + error.message);
     return;
   }
 
-  // Deduct fairy coins if quest has fairy coin reward
   if (fairyReward > 0) {
     await supabaseClient.from('fairy_ledger').insert({
       from_user: currentUser.id,
@@ -316,8 +326,8 @@ questForm.addEventListener('submit', async (e) => {
 async function acceptQuest(id) {
   if (!currentUser) return;
   if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
-  const { error } = await supabaseClient.from('quests').update({ 
-    status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email 
+  const { error } = await supabaseClient.from('quests').update({
+    status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email
   }).eq('id', id);
   if (error) alert('Error: ' + error.message);
   else await loadQuests();
@@ -327,14 +337,13 @@ async function completeQuest(id) {
   if (!currentUser) return;
   const quest = quests.find(q => q.id === id);
   if (!quest) return;
-  
+
   const { error } = await supabaseClient.from('quests').update({ status: 'completed' }).eq('id', id);
   if (error) {
     alert('Error: ' + error.message);
     return;
   }
 
-  // Award fairy coins to acceptor
   if (quest.fairy_coin_reward > 0 && quest.accepted_by) {
     await supabaseClient.from('fairy_ledger').insert({
       from_user: quest.posted_by,
@@ -354,8 +363,8 @@ async function cancelQuest(id) {
   const quest = quests.find(q => q.id === id);
   if (!quest || quest.accepted_by !== currentUser.id) return;
   if (!confirm('Cancel this quest?')) return;
-  const { error } = await supabaseClient.from('quests').update({ 
-    status: 'pending', accepted_by: null, acceptor_email: null 
+  const { error } = await supabaseClient.from('quests').update({
+    status: 'pending', accepted_by: null, acceptor_email: null
   }).eq('id', id);
   if (error) alert('Error: ' + error.message);
   else await loadQuests();
@@ -416,7 +425,7 @@ function formatDeadline(deadlineStr) {
   const now = new Date();
   const diff = d - now;
   const hours = Math.floor(diff / (1000 * 60 * 60));
-  
+
   if (diff < 0) return `<span class="deadline-overdue">⏰ OVERDUE by ${Math.abs(hours)}h</span>`;
   if (hours < 24) return `<span class="deadline-urgent">⏰ Due in ${hours}h</span>`;
   return `<span style="color:var(--success);">⏰ Due in ${Math.floor(hours/24)}d</span>`;
@@ -456,7 +465,7 @@ function createPaymentStatus(text) {
 function renderQuests() {
   const list = document.getElementById('questList');
   list.innerHTML = '';
-  
+
   let display = quests;
   if (currentTab === 'posted') display = display.filter(q => q.posted_by === currentUser?.id);
   else if (currentTab === 'accepted') display = display.filter(q => q.accepted_by === currentUser?.id);
@@ -491,7 +500,7 @@ function renderQuests() {
 
     const rewardTag = card.querySelector('.reward-tag');
     const fairyTag = card.querySelector('.fairy-tag');
-    
+
     if (quest.reward > 0) {
       rewardTag.textContent = `₹ ${quest.reward} • ${GUILD_FEE_PERCENT}% fee`;
       rewardTag.classList.remove('free');
@@ -515,177 +524,4 @@ function renderQuests() {
     if (quest.status !== 'pending' || quest.posted_by === currentUser?.id) acceptBtn.style.display = 'none';
     if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) completeBtn.style.display = 'none';
     if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) cancelBtn.style.display = 'none';
-    if (quest.posted_by !== currentUser?.id || quest.status !== 'pending') deleteBtn.style.display = 'none';
-
-    acceptBtn.addEventListener('click', () => acceptQuest(quest.id));
-    completeBtn.addEventListener('click', () => completeQuest(quest.id));
-    cancelBtn.addEventListener('click', () => cancelQuest(quest.id));
-    deleteBtn.addEventListener('click', () => deleteQuest(quest.id));
-
-    const extras = card.querySelector('.extras');
-    const paymentSection = extras.querySelector('.payment-section');
-
-    if (quest.status === 'completed') {
-      const box = document.createElement('div');
-      box.className = 'payment-box';
-
-      if (quest.poster_paid && quest.acceptor_received) {
-        const settled = document.createElement('div');
-        settled.className = 'payment-settled';
-        settled.textContent = '✅ Payment Settled';
-        box.appendChild(settled);
-      } else {
-        const heading = document.createElement('div');
-        heading.style.cssText = 'color:var(--accent); font-weight:600; margin-bottom:0.5rem;';
-        heading.textContent = 'Payment Confirmation';
-        box.appendChild(heading);
-        
-        if (currentUser?.id === quest.posted_by && !quest.poster_paid) {
-          box.appendChild(createPaymentCheckbox(`I have paid ₹${quest.reward}`, () => confirmPayment(quest.id, 'poster_paid')));
-        } else if (quest.poster_paid) {
-          box.appendChild(createPaymentStatus('✅ Poster confirmed payment sent'));
-        }
-
-        if (currentUser?.id === quest.accepted_by && !quest.acceptor_received) {
-          box.appendChild(createPaymentCheckbox(`I have received ₹${quest.reward}`, () => confirmPayment(quest.id, 'acceptor_received')));
-        } else if (quest.acceptor_received) {
-          box.appendChild(createPaymentStatus('✅ Acceptor confirmed payment received'));
-        }
-
-        if ((!quest.poster_paid || !quest.acceptor_received) && currentUser && (currentUser.id === quest.posted_by || currentUser.id === quest.accepted_by)) {
-          const waiting = document.createElement('div');
-          waiting.style.cssText = 'color:var(--warning); font-size:0.85rem; margin-top:0.5rem;';
-          waiting.textContent = 'Waiting for both confirmations...';
-          box.appendChild(waiting);
-        }
-
-        if (currentUser?.id === quest.accepted_by && !quest.poster_paid && quest.reward > 0) {
-          const reportButton = document.createElement('button');
-          reportButton.style.cssText = 'background:var(--danger); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.8rem; font-size:0.8rem; cursor:pointer; margin-top:0.5rem;';
-          reportButton.textContent = '⚠️ Report Non-Payment';
-          reportButton.addEventListener('click', () => {
-            if (confirm('Report non-payment?')) addStrike(quest.posted_by, quest.poster_email, quest.id, 'Non-payment');
-          });
-          box.appendChild(reportButton);
-        }
-
-        if (quest.reward > 0 && quest.poster_upi && currentUser?.id === quest.accepted_by && !quest.poster_paid) {
-          const upiDisplay = document.createElement('div');
-          upiDisplay.className = 'upi-display';
-          const label = document.createElement('div');
-          label.className = 'label';
-          label.textContent = '📱 Scan or Pay UPI';
-          const id = document.createElement('div');
-          id.className = 'id';
-          id.textContent = quest.poster_upi;
-          const hint = document.createElement('div');
-          hint.style.cssText = 'font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;';
-          hint.textContent = 'Google Pay · PhonePe · Paytm';
-          upiDisplay.append(label, id, hint);
-          box.appendChild(upiDisplay);
-        }
-      }
-      paymentSection.appendChild(box);
-
-      // Show fairy coin reward notice
-      if (quest.fairy_coin_reward > 0) {
-        const fairyBox = document.createElement('div');
-        fairyBox.className = 'payment-box';
-        fairyBox.style.marginTop = '0.75rem';
-        fairyBox.style.borderColor = 'var(--fairy)';
-        fairyBox.innerHTML = `<div style="color:var(--fairy); font-size:0.9rem;">🧚 Fairy Coins Earned: +${quest.fairy_coin_reward}</div>`;
-        paymentSection.appendChild(fairyBox);
-      }
-
-      const questRatings = ratings.filter(r => r.quest_id === quest.id);
-      if (questRatings.length > 0) {
-        const ratingBox = document.createElement('div');
-        ratingBox.className = 'payment-box';
-        ratingBox.style.marginTop = '0.75rem';
-        const title = document.createElement('div');
-        title.style.cssText = 'color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;';
-        title.textContent = 'Ratings';
-        ratingBox.appendChild(title);
-        questRatings.forEach(r => {
-          const line = document.createElement('div');
-          line.style.cssText = 'font-size:0.9rem; color:var(--text); margin:0.25rem 0;';
-          const safeRating = Math.max(1, Math.min(5, Number(r.rating) || 1));
-          line.textContent = `${r.from_email}: ${'⭐'.repeat(safeRating)}`;
-          ratingBox.appendChild(line);
-        });
-        paymentSection.appendChild(ratingBox);
-      }
-
-      if (currentUser?.id === quest.posted_by && quest.accepted_by && !hasRated(quest.id, quest.accepted_by)) {
-        const rateBox = document.createElement('div');
-        rateBox.className = 'payment-box';
-        rateBox.style.marginTop = '0.75rem';
-        rateBox.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Rate your partner</div>';
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex; gap:0.3rem;';
-        [1,2,3,4,5].forEach(n => {
-          const btn = document.createElement('button');
-          btn.textContent = '⭐';
-          btn.style.cssText = 'background:var(--surface-hover); border:1px solid var(--border); color:var(--warning); border-radius:6px; padding:0.3rem 0.6rem; cursor:pointer;';
-          btn.addEventListener('click', () => submitRating(quest.id, quest.accepted_by, quest.acceptor_email, n));
-          row.appendChild(btn);
-        });
-        rateBox.appendChild(row);
-        paymentSection.appendChild(rateBox);
-      }
-
-      if (currentUser?.id === quest.accepted_by && !hasRated(quest.id, quest.posted_by)) {
-        const rateBox = document.createElement('div');
-        rateBox.className = 'payment-box';
-        rateBox.style.marginTop = '0.75rem';
-        rateBox.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Rate your partner</div>';
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex; gap:0.3rem;';
-        [1,2,3,4,5].forEach(n => {
-          const btn = document.createElement('button');
-          btn.textContent = '⭐';
-          btn.style.cssText = 'background:var(--surface-hover); border:1px solid var(--border); color:var(--warning); border-radius:6px; padding:0.3rem 0.6rem; cursor:pointer;';
-          btn.addEventListener('click', () => submitRating(quest.id, quest.posted_by, quest.poster_email, n));
-          row.appendChild(btn);
-        });
-        rateBox.appendChild(row);
-        paymentSection.appendChild(rateBox);
-      }
-    }
-
-    const commentSection = extras.querySelector('.comment-section');
-    if (quest.status !== 'pending' || quest.posted_by === currentUser?.id) {
-      commentSection.style.display = 'block';
-      const commentList = commentSection.querySelector('.comment-list');
-      const questComments = comments.filter(c => c.quest_id === quest.id);
-      
-      commentList.innerHTML = '';
-      if (questComments.length === 0) {
-        commentList.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;">No comments yet</div>';
-      } else {
-        questComments.forEach(c => {
-          const item = document.createElement('div');
-          item.className = 'comment-item';
-          const author = document.createElement('strong');
-          author.style.color = 'var(--text)';
-          author.textContent = `${c.user_email}:`;
-          item.append(author, document.createTextNode(` ${c.message}`));
-          commentList.appendChild(item);
-        });
-      }
-    }
-
-    list.appendChild(card);
-  });
-
-  computeStats(display);
-}
-
-function computeStats(displayList) {
-  document.getElementById('totalQuests').textContent = displayList.length;
-  document.getElementById('paidQuests').textContent = displayList.filter(q => q.reward > 0).length;
-  document.getElementById('completedQuests').textContent = quests.filter(q => q.status === 'completed').length;
-}
-
-updateUI();
-renderQuests();
+    if (quest.posted_by !== currentUser?.id || quest.st
