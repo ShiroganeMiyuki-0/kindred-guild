@@ -35,12 +35,44 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 });
 
 async function signUp() {
-  const email = document.getElementById('authEmail').value;
-  const password = document.getElementById('authPassword').value;
-  if (!email || !password) { alert('Enter email and password'); return; }
-  const { error } = await supabaseClient.auth.signUp({ email, password });
-  if (error) alert('Error: ' + error.message);
-  else alert('Account created! Now click Login.');
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  
+  if (!email || !password) {
+    alert('Please enter both email and password');
+    return;
+  }
+  if (password.length < 6) {
+    alert('Password must be at least 6 characters');
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin  // Better redirect
+      }
+    });
+
+    if (error) {
+      console.error(error);
+      if (error.message.includes('already registered')) {
+        alert('This email is already registered. Try logging in instead.');
+      } else if (error.message.includes('rate limit')) {
+        alert('Too many attempts. Please wait a minute and try again.');
+      } else {
+        alert('Signup error: ' + error.message);
+      }
+    } else {
+      alert('✅ Account created successfully! You can now Login.');
+      // Auto switch to login mode if you want
+      document.getElementById('authEmail').focus();
+    }
+  } catch (err) {
+    alert('Unexpected error: ' + err.message);
+  }
 }
 
 async function signIn() {
