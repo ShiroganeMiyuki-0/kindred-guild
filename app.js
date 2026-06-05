@@ -37,7 +37,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   if (currentUser) loadQuests();
 });
 
-// ─── FIXED: Sign-up with better reliability ───
+// â”€â”€â”€ FIXED: Sign-up with better reliability â”€â”€â”€
 async function signUp() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
@@ -78,13 +78,13 @@ async function signUp() {
       currentUser = data.session.user;
       updateUI();
       loadQuests();
-      alert('✅ Account created and logged in!');
+      alert('âœ… Account created and logged in!');
     } else if (data.user && data.user.identities && data.user.identities.length === 0) {
       // User already exists
       alert('This email is already registered. Try logging in instead.');
     } else {
-      // Email confirmation is ON — user must check their inbox
-      alert('📧 Account created! Check your email inbox for a confirmation link, then come back and log in.');
+      // Email confirmation is ON â€” user must check their inbox
+      alert('ðŸ“§ Account created! Check your email inbox for a confirmation link, then come back and log in.');
     }
   } catch (err) {
     alert('Unexpected error: ' + err.message);
@@ -180,11 +180,11 @@ function updateUI() {
     badge.style.color = info.color;
 
     const avg = getUserRating(currentUser.id);
-    document.getElementById('userRating').textContent = avg ? `${avg} ⭐` : '';
+    document.getElementById('userRating').textContent = avg ? `${avg} â­` : '';
 
     const fairyBalance = getFairyBalance(currentUser.id);
     const fairyBadge = document.getElementById('userFairy');
-    fairyBadge.textContent = `🧚 ${fairyBalance}`;
+    fairyBadge.textContent = `ðŸ§š ${fairyBalance}`;
     fairyBadge.style.display = 'inline';
 
     const strikeCount = getUserStrikes(currentUser.id);
@@ -206,7 +206,7 @@ function updateUI() {
     }
 
     if (isBanned(currentUser.id)) {
-      alert('🚫 You are banned! 3+ unpaid quests.');
+      alert('ðŸš« You are banned! 3+ unpaid quests.');
       signOut();
     }
   } else {
@@ -243,7 +243,7 @@ function updateAdminPanel() {
     return sum;
   }, 0);
 
-  document.getElementById('adminRevenue').textContent = '₹ ' + Math.round(totalRevenue).toLocaleString('en-IN');
+  document.getElementById('adminRevenue').textContent = 'â‚¹ ' + Math.round(totalRevenue).toLocaleString('en-IN');
   document.getElementById('adminUsers').textContent = uniqueUsers.size;
   document.getElementById('adminTotalQuests').textContent = quests.length;
   document.getElementById('adminPending').textContent = pendingPayments;
@@ -285,7 +285,7 @@ async function loadQuests() {
 questForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentUser) { alert('Login first!'); return; }
-  if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
+  if (isBanned(currentUser.id)) { alert('ðŸš« Banned!'); return; }
 
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
@@ -302,7 +302,7 @@ questForm.addEventListener('submit', async (e) => {
   if (fairyReward > 0) {
     const balance = getFairyBalance(currentUser.id);
     if (balance - fairyReward < -100) {
-      alert(`🚫 Not enough Fairy Coins! Your balance: ${balance}, Minimum allowed: -100`);
+      alert(`ðŸš« Not enough Fairy Coins! Your balance: ${balance}, Minimum allowed: -100`);
       return;
     }
   }
@@ -310,7 +310,7 @@ questForm.addEventListener('submit', async (e) => {
   let deadline = deadlineVal ? new Date(deadlineVal).toISOString() : null;
   let imageUrl = '';
 
-  // ─── FIXED: Image upload with better error handling ───
+  // â”€â”€â”€ FIXED: Image upload with better error handling â”€â”€â”€
   if (imageFile) {
     try {
       const fileExt = imageFile.name.split('.').pop().toLowerCase();
@@ -324,7 +324,7 @@ questForm.addEventListener('submit', async (e) => {
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        alert('⚠️ Image upload failed: ' + uploadError.message + '\nThe quest will be posted without the image.');
+        alert('âš ï¸ Image upload failed: ' + uploadError.message + '\nThe quest will be posted without the image.');
       } else {
         const { data: urlData } = supabaseClient.storage
           .from('quest-images')
@@ -334,7 +334,7 @@ questForm.addEventListener('submit', async (e) => {
       }
     } catch (uploadErr) {
       console.error('Image upload exception:', uploadErr);
-      alert('⚠️ Image upload failed. The quest will be posted without the image.');
+      alert('âš ï¸ Image upload failed. The quest will be posted without the image.');
     }
   }
 
@@ -373,7 +373,7 @@ questForm.addEventListener('submit', async (e) => {
 
 async function acceptQuest(id) {
   if (!currentUser) return;
-  if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
+  if (isBanned(currentUser.id)) { alert('ðŸš« Banned!'); return; }
   try {
     const { error } = await supabaseClient.from('quests').update({
       status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email
@@ -509,9 +509,9 @@ function formatDeadline(deadlineStr) {
   const diff = d - now;
   const hours = Math.floor(diff / (1000 * 60 * 60));
 
-  if (diff < 0) return `<span class="deadline-overdue">⏰ OVERDUE by ${Math.abs(hours)}h</span>`;
-  if (hours < 24) return `<span class="deadline-urgent">⏰ Due in ${hours}h</span>`;
-  return `<span style="color:var(--success);">⏰ Due in ${Math.floor(hours/24)}d</span>`;
+  if (diff < 0) return `<span class="deadline-overdue">â° OVERDUE by ${Math.abs(hours)}h</span>`;
+  if (hours < 24) return `<span class="deadline-urgent">â° Due in ${hours}h</span>`;
+  return `<span style="color:var(--success);">â° Due in ${Math.floor(hours/24)}d</span>`;
 }
 
 function setFilter(filter) {
@@ -545,373 +545,10 @@ function createPaymentStatus(text) {
   return status;
 }
 
-// ─── FIXED: Complete renderQuests function with comments, images, and ratings ───
+// â”€â”€â”€ FIXED: Complete renderQuests function with comments, images, and ratings â”€â”€â”€
 function renderQuests() {
   const list = document.getElementById('questList');
   if (!list) return;
-  list.innerHTML = '';
-
-  let display = quests;
-  if (currentTab === 'posted') display = display.filter(q => q.posted_by === currentUser?.id);
-  elfunction getUserRating(userId) {
-  const userRatings = ratings.filter(r => r.to_user === userId);
-  if (userRatings.length === 0) return null;
-  return (userRatings.reduce((sum, r) => sum + r.rating, 0) / userRatings.length).toFixed(1);
-}
-
-function getUserStrikes(userId) {
-  return strikes.filter(s => s.user_id === userId && !s.resolved).length;
-}
-
-function getFairyBalance(userId) {
-  const userTransactions = fairyLedger.filter(t => t.from_user === userId || t.to_user === userId);
-  return userTransactions.reduce((sum, t) => {
-    if (t.to_user === userId) return sum + t.amount;
-    if (t.from_user === userId) return sum - t.amount;
-    return sum;
-  }, 0);
-}
-
-function hasRated(questId, toUserId) {
-  return ratings.some(r => r.quest_id === questId && r.from_user === currentUser?.id && r.to_user === toUserId);
-}
-
-function isBanned(userId) { return getUserStrikes(userId) >= 3; }
-
-function isAdmin() {
-  return currentUser?.email === ADMIN_EMAIL || currentUser?.email?.includes('yashwanth');
-}
-
-function updateUI() {
-  const navAuth = document.getElementById('navAuth');
-  const userBar = document.getElementById('userBar');
-  const questBoard = document.getElementById('questBoard');
-  const lockedMessage = document.getElementById('lockedMessage');
-  const sidebar = document.getElementById('sidebar');
-
-  if (currentUser) {
-    navAuth.style.display = 'none';
-    userBar.style.display = 'flex';
-    questBoard.style.display = 'block';
-    lockedMessage.style.display = 'none';
-    sidebar.style.display = 'flex';
-    document.getElementById('userEmail').textContent = currentUser.email;
-
-    const completed = quests.filter(q => q.accepted_by === currentUser.id && q.status === 'completed').length;
-    const info = getRankInfo(completed);
-    const badge = document.getElementById('userRank');
-    badge.textContent = info.rank;
-    badge.style.background = info.bg;
-    badge.style.color = info.color;
-
-    const avg = getUserRating(currentUser.id);
-    document.getElementById('userRating').textContent = avg ? `${avg} ⭐` : '';
-
-    const fairyBalance = getFairyBalance(currentUser.id);
-    const fairyBadge = document.getElementById('userFairy');
-    fairyBadge.textContent = `🧚 ${fairyBalance}`;
-    fairyBadge.style.display = 'inline';
-
-    const strikeCount = getUserStrikes(currentUser.id);
-    const strikeBadge = document.getElementById('userStrikes');
-    if (strikeCount > 0) {
-      strikeBadge.textContent = `${strikeCount} STRIKES`;
-      strikeBadge.style.display = 'inline';
-    } else {
-      strikeBadge.style.display = 'none';
-    }
-
-    const adminToggle = document.getElementById('adminToggle');
-    if (isAdmin()) {
-      adminToggle.style.display = 'block';
-      updateAdminPanel();
-    } else {
-      adminToggle.style.display = 'none';
-      document.getElementById('adminPanel').style.display = 'none';
-    }
-
-    if (isBanned(currentUser.id)) {
-      alert('🚫 You are banned! 3+ unpaid quests.');
-      signOut();
-    }
-  } else {
-    navAuth.style.display = 'flex';
-    userBar.style.display = 'none';
-    questBoard.style.display = 'none';
-    lockedMessage.style.display = 'block';
-    sidebar.style.display = 'none';
-    document.getElementById('adminToggle').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'none';
-  }
-}
-
-function toggleAdmin() {
-  const panel = document.getElementById('adminPanel');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  if (panel.style.display === 'block') updateAdminPanel();
-}
-
-document.getElementById('adminToggle').addEventListener('click', toggleAdmin);
-
-function updateAdminPanel() {
-  const totalRevenue = quests
-    .filter(q => q.status === 'completed' && q.reward > 0)
-    .reduce((sum, q) => sum + (q.reward * (GUILD_FEE_PERCENT / 100)), 0);
-
-  const uniqueUsers = new Set();
-  quests.forEach(q => { if (q.posted_by) uniqueUsers.add(q.posted_by); if (q.accepted_by) uniqueUsers.add(q.accepted_by); });
-
-  const pendingPayments = quests.filter(q => q.status === 'completed' && q.reward > 0 && (!q.poster_paid || !q.acceptor_received)).length;
-
-  const totalCoins = fairyLedger.reduce((sum, t) => {
-    if (t.to_user && t.amount > 0) return sum + t.amount;
-    return sum;
-  }, 0);
-
-  document.getElementById('adminRevenue').textContent = '₹ ' + Math.round(totalRevenue).toLocaleString('en-IN');
-  document.getElementById('adminUsers').textContent = uniqueUsers.size;
-  document.getElementById('adminTotalQuests').textContent = quests.length;
-  document.getElementById('adminPending').textContent = pendingPayments;
-  document.getElementById('adminCoins').textContent = totalCoins;
-}
-
-async function loadQuests() {
-  const [{ data: questData }, { data: ratingData }, { data: strikeData }, { data: commentData }, { data: ledgerData }] = await Promise.all([
-    supabaseClient.from('quests').select('*').order('created_at', { ascending: false }),
-    supabaseClient.from('ratings').select('*'),
-    supabaseClient.from('strikes').select('*'),
-    supabaseClient.from('comments').select('*').order('created_at', { ascending: true }),
-    supabaseClient.from('fairy_ledger').select('*').order('created_at', { ascending: false })
-  ]);
-
-  quests = questData || [];
-  ratings = ratingData || [];
-  strikes = strikeData || [];
-  comments = commentData || [];
-  fairyLedger = ledgerData || [];
-  updateUI();
-  renderQuests();
-}
-
-['quests', 'ratings', 'strikes', 'comments', 'fairy_ledger'].forEach(table => {
-  supabaseClient.channel(`public:${table}`).on('postgres_changes', { event: '*', schema: 'public', table }, () => loadQuests()).subscribe();
-});
-
-questForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (!currentUser) { alert('Login first!'); return; }
-  if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
-
-  const title = document.getElementById('title').value.trim();
-  const description = document.getElementById('description').value.trim();
-  const reward = Number(document.getElementById('reward').value) || 0;
-  const fairyReward = Number(document.getElementById('fairyReward').value) || 0;
-  const category = document.getElementById('category').value;
-  const upiId = document.getElementById('upiId').value.trim();
-  const deadlineVal = document.getElementById('deadline').value;
-  const imageFile = document.getElementById('questImage').files[0];
-
-  if (!title || !description) { alert('Fill in title and description'); return; }
-  if (reward > 0 && !upiId) { alert('UPI ID required for paid quests'); return; }
-
-  if (fairyReward > 0) {
-    const balance = getFairyBalance(currentUser.id);
-    if (balance - fairyReward < -100) {
-      alert(`🚫 Not enough Fairy Coins! Your balance: ${balance}, Minimum allowed: -100`);
-      return;
-    }
-  }
-
-  let deadline = deadlineVal ? new Date(deadlineVal).toISOString() : null;
-  let imageUrl = '';
-
-  // ─── FIX 2: Image upload — show error if upload fails instead of silently ignoring ───
-  if (imageFile) {
-    const fileName = `${currentUser.id}_${Date.now()}.${imageFile.name.split('.').pop()}`;
-    const { error: uploadError } = await supabaseClient.storage
-      .from('quest-images')
-      .upload(fileName, imageFile);
-
-    if (uploadError) {
-      alert('⚠️ Image upload failed: ' + uploadError.message + '\nThe quest will be posted without the image.');
-    } else {
-      const { data: urlData } = supabaseClient.storage
-        .from('quest-images')
-        .getPublicUrl(fileName);
-      imageUrl = urlData?.publicUrl || '';
-    }
-  }
-
-  const { error } = await supabaseClient.from('quests').insert({
-    title, description, reward, fairy_coin_reward: fairyReward, fee_percent: GUILD_FEE_PERCENT,
-    status: 'pending', category, posted_by: currentUser.id, poster_email: currentUser.email,
-    poster_upi: upiId, deadline, image_url: imageUrl
-  });
-
-  if (error) {
-    alert('Error: ' + error.message);
-    return;
-  }
-
-  if (fairyReward > 0) {
-    await supabaseClient.from('fairy_ledger').insert({
-      from_user: currentUser.id,
-      to_user: null,
-      quest_id: null,
-      amount: fairyReward,
-      type: 'quest_post',
-      description: `Posted quest: ${title}`
-    });
-  }
-
-  questForm.reset();
-  document.getElementById('reward').value = 0;
-  document.getElementById('fairyReward').value = 0;
-  document.getElementById('category').value = 'Misc';
-  await loadQuests();
-});
-
-async function acceptQuest(id) {
-  if (!currentUser) return;
-  if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
-  const { error } = await supabaseClient.from('quests').update({
-    status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email
-  }).eq('id', id);
-  if (error) alert('Error: ' + error.message);
-  else await loadQuests();
-}
-
-async function completeQuest(id) {
-  if (!currentUser) return;
-  const quest = quests.find(q => q.id === id);
-  if (!quest) return;
-
-  const { error } = await supabaseClient.from('quests').update({ status: 'completed' }).eq('id', id);
-  if (error) {
-    alert('Error: ' + error.message);
-    return;
-  }
-
-  if (quest.fairy_coin_reward > 0 && quest.accepted_by) {
-    await supabaseClient.from('fairy_ledger').insert({
-      from_user: quest.posted_by,
-      to_user: quest.accepted_by,
-      quest_id: quest.id,
-      amount: quest.fairy_coin_reward,
-      type: 'quest_complete',
-      description: `Completed quest: ${quest.title}`
-    });
-  }
-
-  await loadQuests();
-}
-
-async function cancelQuest(id) {
-  if (!currentUser) return;
-  const quest = quests.find(q => q.id === id);
-  if (!quest || quest.accepted_by !== currentUser.id) return;
-  if (!confirm('Cancel this quest?')) return;
-  const { error } = await supabaseClient.from('quests').update({
-    status: 'pending', accepted_by: null, acceptor_email: null
-  }).eq('id', id);
-  if (error) alert('Error: ' + error.message);
-  else await loadQuests();
-}
-
-async function deleteQuest(id) {
-  if (!currentUser) return;
-  const quest = quests.find(q => q.id === id);
-  if (!quest || quest.posted_by !== currentUser.id) return;
-  if (!confirm('Delete forever?')) return;
-  const { error } = await supabaseClient.from('quests').delete().eq('id', id);
-  if (error) alert('Error: ' + error.message);
-  else await loadQuests();
-}
-
-async function confirmPayment(questId, field) {
-  if (!currentUser) return;
-  if (!['poster_paid', 'acceptor_received'].includes(field)) return;
-  const updateObj = {}; updateObj[field] = true;
-  const { error } = await supabaseClient.from('quests').update(updateObj).eq('id', questId);
-  if (error) alert('Error: ' + error.message);
-  else await loadQuests();
-}
-
-async function submitRating(questId, toUser, toEmail, ratingValue) {
-  if (!currentUser) return;
-  const { error } = await supabaseClient.from('ratings').insert({
-    quest_id: questId, from_user: currentUser.id, to_user: toUser,
-    from_email: currentUser.email, to_email: toEmail, rating: ratingValue
-  });
-  if (error) alert('Error: ' + error.message);
-  else await loadQuests();
-}
-
-async function addStrike(userId, userEmail, questId, reason) {
-  if (!currentUser) return;
-  const quest = quests.find(q => q.id === questId);
-  if (!quest || currentUser.id !== quest.accepted_by || quest.posted_by !== userId) return;
-  const { error } = await supabaseClient.from('strikes').insert({
-    user_id: userId, user_email: userEmail, quest_id: questId, reason: reason
-  });
-  if (error) alert('Error: ' + error.message);
-  else { alert('Strike added!'); await loadQuests(); }
-}
-
-async function sendComment(questId, message) {
-  if (!currentUser || !message.trim()) return;
-  const { error } = await supabaseClient.from('comments').insert({
-    quest_id: questId, user_id: currentUser.id, user_email: currentUser.email, message: message.trim()
-  });
-  if (error) alert('Error: ' + error.message);
-  else await loadQuests();
-}
-
-function formatDeadline(deadlineStr) {
-  if (!deadlineStr) return '';
-  const d = new Date(deadlineStr);
-  const now = new Date();
-  const diff = d - now;
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-
-  if (diff < 0) return `<span class="deadline-overdue">⏰ OVERDUE by ${Math.abs(hours)}h</span>`;
-  if (hours < 24) return `<span class="deadline-urgent">⏰ Due in ${hours}h</span>`;
-  return `<span style="color:var(--success);">⏰ Due in ${Math.floor(hours/24)}d</span>`;
-}
-
-function setFilter(filter) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-item').forEach(btn => {
-    const text = btn.textContent.toLowerCase();
-    btn.classList.toggle('active', (filter === 'all' && text.includes('all') && !text.includes('my')) || text.includes(filter.toLowerCase()));
-  });
-  renderQuests();
-}
-
-function setTab(tab) {
-  currentTab = tab;
-  renderQuests();
-}
-
-function createPaymentCheckbox(labelText, onChange) {
-  const label = document.createElement('label');
-  label.style.cssText = 'display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0; cursor:pointer; color:var(--text-muted); font-size:0.9rem;';
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.addEventListener('change', onChange);
-  label.append(checkbox, document.createTextNode(` ${labelText}`));
-  return label;
-}
-
-function createPaymentStatus(text) {
-  const status = document.createElement('div');
-  status.style.cssText = 'color:var(--success); font-size:0.9rem;';
-  status.textContent = text;
-  return status;
-}
-
-function renderQuests() {
-  const list = document.getElementById('questList');
   list.innerHTML = '';
 
   let display = quests;
@@ -926,50 +563,277 @@ function renderQuests() {
   }
 
   display.forEach(quest => {
-    const node = document.getElementById('questTemplate').content.cloneNode(true);
+    const node = document.getElementById('questTemplate')?.content?.cloneNode(true);
+    if (!node) return;
+
     const card = node.querySelector('.quest-card');
+    if (!card) return;
     card.dataset.questId = quest.id;
 
+    // â”€â”€â”€ Image handling â”€â”€â”€
     const img = card.querySelector('.quest-image');
-    if (quest.image_url) { img.src = quest.image_url; img.classList.add('visible'); }
+    if (img && quest.image_url) {
+      img.src = quest.image_url;
+      img.classList.add('visible');
+      img.onerror = () => {
+        console.error('Failed to load image:', quest.image_url);
+        img.classList.remove('visible');
+        img.style.display = 'none';
+      };
+    }
 
     const statusBadge = card.querySelector('.status-badge');
-    statusBadge.className = `status-badge status-${quest.status}`;
-    statusBadge.textContent = quest.status;
+    if (statusBadge) {
+      statusBadge.className = `status-badge status-${quest.status}`;
+      statusBadge.textContent = quest.status;
+    }
 
-    card.querySelector('.cat-badge').textContent = quest.category || 'Misc';
-    card.querySelector('.quest-title').textContent = quest.title;
+    const catBadge = card.querySelector('.cat-badge');
+    if (catBadge) catBadge.textContent = quest.category || 'Misc';
+
+    const titleEl = card.querySelector('.quest-title');
+    if (titleEl) titleEl.textContent = quest.title;
 
     const deadlineEl = card.querySelector('.deadline-display');
-    if (quest.deadline) deadlineEl.innerHTML = formatDeadline(quest.deadline);
-    else deadlineEl.style.display = 'none';
+    if (deadlineEl) {
+      if (quest.deadline) deadlineEl.innerHTML = formatDeadline(quest.deadline);
+      else deadlineEl.style.display = 'none';
+    }
 
-    card.querySelector('.quest-desc').textContent = quest.description;
+    const descEl = card.querySelector('.quest-desc');
+    if (descEl) descEl.textContent = quest.description;
 
     const rewardTag = card.querySelector('.reward-tag');
     const fairyTag = card.querySelector('.fairy-tag');
 
-    if (quest.reward > 0) {
-      rewardTag.textContent = `₹ ${quest.reward} • ${GUILD_FEE_PERCENT}% fee`;
-      rewardTag.classList.remove('free');
-    } else {
-      rewardTag.textContent = 'FREE QUEST';
-      rewardTag.classList.add('free');
+    if (rewardTag) {
+      if (quest.reward > 0) {
+        rewardTag.textContent = `â‚¹ ${quest.reward} â€¢ ${GUILD_FEE_PERCENT}% fee`;
+        rewardTag.classList.remove('free');
+      } else {
+        rewardTag.textContent = 'FREE QUEST';
+        rewardTag.classList.add('free');
+      }
     }
 
-    if (quest.fairy_coin_reward > 0) {
-      fairyTag.textContent = `+🧚 ${quest.fairy_coin_reward}`;
-      fairyTag.style.display = 'inline';
+    if (fairyTag) {
+      if (quest.fairy_coin_reward > 0) {
+        fairyTag.textContent = `+ðŸ§š ${quest.fairy_coin_reward}`;
+        fairyTag.style.display = 'inline';
+      }
     }
 
-    card.querySelector('.poster-email').textContent = quest.poster_email || 'Unknown';
+    const posterEl = card.querySelector('.poster-email');
+    if (posterEl) posterEl.textContent = quest.poster_email || 'Unknown';
 
+    // â”€â”€â”€ Buttons â”€â”€â”€
     const acceptBtn = card.querySelector('.btn-accept');
     const completeBtn = card.querySelector('.btn-complete');
     const cancelBtn = card.querySelector('.btn-cancel');
     const deleteBtn = card.querySelector('.btn-delete');
 
-    if (quest.status !== 'pending' || quest.posted_by === currentUser?.id) acceptBtn.style.display = 'none';
-    if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) completeBtn.style.display = 'none';
-    if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) cancelBtn.style.display = 'none';
-    if (quest.posted_by !== currentUser?.id || quest.st
+    if (acceptBtn) {
+      if (quest.status !== 'pending' || quest.posted_by === currentUser?.id) {
+        acceptBtn.style.display = 'none';
+      } else {
+        acceptBtn.addEventListener('click', () => acceptQuest(quest.id));
+      }
+    }
+
+    if (completeBtn) {
+      if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) {
+        completeBtn.style.display = 'none';
+      } else {
+        completeBtn.addEventListener('click', () => completeQuest(quest.id));
+      }
+    }
+
+    if (cancelBtn) {
+      if (quest.status !== 'accepted' || quest.accepted_by !== currentUser?.id) {
+        cancelBtn.style.display = 'none';
+      } else {
+        cancelBtn.addEventListener('click', () => cancelQuest(quest.id));
+      }
+    }
+
+    if (deleteBtn) {
+      if (quest.posted_by !== currentUser?.id || quest.status === 'accepted') {
+        deleteBtn.style.display = 'none';
+      } else {
+        deleteBtn.addEventListener('click', () => deleteQuest(quest.id));
+      }
+    }
+
+    // â”€â”€â”€ Payment section for paid quests â”€â”€â”€
+    const paymentSection = card.querySelector('.payment-section');
+    if (paymentSection && quest.reward > 0) {
+      const fee = Math.round(quest.reward * (GUILD_FEE_PERCENT / 100));
+      const net = quest.reward - fee;
+
+      const paymentInfo = document.createElement('div');
+      paymentInfo.style.cssText = 'background:var(--accent-glow); border:1px solid var(--accent); border-radius:8px; padding:0.75rem; margin:0.5rem 0; font-size:0.85rem;';
+      paymentInfo.innerHTML = `
+        <div style="color:var(--accent); font-weight:700; margin-bottom:0.3rem;">ðŸ’° Payment Info</div>
+        <div style="color:var(--text-muted);">Total: â‚¹${quest.reward} | Guild Fee (${GUILD_FEE_PERCENT}%): â‚¹${fee} | Net: â‚¹${net}</div>
+        ${quest.poster_upi ? `<div style="color:var(--text-muted); margin-top:0.3rem;">Poster UPI: ${quest.poster_upi}</div>` : ''}
+      `;
+      paymentSection.appendChild(paymentInfo);
+
+      // Show payment checkboxes for involved parties
+      if (currentUser && (currentUser.id === quest.posted_by || currentUser.id === quest.accepted_by) && quest.status === 'completed') {
+        if (!quest.poster_paid && currentUser.id === quest.posted_by) {
+          paymentSection.appendChild(createPaymentCheckbox('I have paid â‚¹' + quest.reward + ' to the acceptor', () => confirmPayment(quest.id, 'poster_paid')));
+        }
+        if (quest.poster_paid) {
+          paymentSection.appendChild(createPaymentStatus('âœ… Poster has paid'));
+        }
+        if (!quest.acceptor_received && currentUser.id === quest.accepted_by) {
+          paymentSection.appendChild(createPaymentCheckbox('I have received â‚¹' + net + ' (after guild fee)', () => confirmPayment(quest.id, 'acceptor_received')));
+        }
+        if (quest.acceptor_received) {
+          paymentSection.appendChild(createPaymentStatus('âœ… Acceptor has received payment'));
+        }
+      }
+    }
+
+    // â”€â”€â”€ FIXED: Comments section â”€â”€â”€
+    const commentSection = card.querySelector('.comment-section');
+    const commentList = card.querySelector('.comment-list');
+    const sendCommentBtn = card.querySelector('.send-comment');
+    const commentInput = card.querySelector('.comment-field');
+
+    if (commentSection && commentList) {
+      // Always show comment section for logged-in users
+      if (currentUser) {
+        commentSection.style.display = 'block';
+      }
+
+      // Get comments for this quest
+      const questComments = comments.filter(c => c.quest_id === quest.id);
+
+      if (questComments.length === 0) {
+        commentList.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; padding:0.5rem 0;">No comments yet. Be the first to comment!</p>';
+      } else {
+        commentList.innerHTML = '';
+        questComments.forEach(comment => {
+          const commentEl = document.createElement('div');
+          commentEl.style.cssText = 'padding:0.5rem; margin:0.25rem 0; background:var(--surface-hover); border-radius:8px; font-size:0.85rem;';
+          const timeAgo = comment.created_at ? new Date(comment.created_at).toLocaleString() : 'Just now';
+          commentEl.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
+              <span style="color:var(--accent); font-weight:600; font-size:0.8rem;">${comment.user_email || 'Anonymous'}</span>
+              <span style="color:var(--text-muted); font-size:0.7rem;">${timeAgo}</span>
+            </div>
+            <div style="color:var(--text);">${escapeHtml(comment.message)}</div>
+          `;
+          commentList.appendChild(commentEl);
+        });
+      }
+
+      // Attach send button listener
+      if (sendCommentBtn && commentInput) {
+        sendCommentBtn.addEventListener('click', () => {
+          const msg = commentInput.value.trim();
+          if (msg) {
+            sendComment(quest.id, msg);
+            commentInput.value = '';
+          }
+        });
+      }
+    }
+
+    // â”€â”€â”€ Rating section for completed quests â”€â”€â”€
+    if (quest.status === 'completed' && currentUser) {
+      const extras = card.querySelector('.extras');
+      if (extras) {
+        const canRatePoster = currentUser.id === quest.accepted_by && quest.posted_by && !hasRated(quest.id, quest.posted_by);
+        const canRateAcceptor = currentUser.id === quest.posted_by && quest.accepted_by && !hasRated(quest.id, quest.accepted_by);
+
+        if (canRatePoster || canRateAcceptor) {
+          const ratingDiv = document.createElement('div');
+          ratingDiv.style.cssText = 'margin-top:0.75rem; padding:0.75rem; background:var(--surface-hover); border-radius:8px;';
+          ratingDiv.innerHTML = '<div style="color:var(--warning); font-size:0.85rem; font-weight:600; margin-bottom:0.5rem;">â­ Rate this quest</div>';
+
+          if (canRatePoster) {
+            const ratePosterRow = createRatingRow(quest.id, quest.posted_by, quest.poster_email, 'Rate Poster');
+            ratingDiv.appendChild(ratePosterRow);
+          }
+          if (canRateAcceptor) {
+            const rateAcceptorRow = createRatingRow(quest.id, quest.accepted_by, quest.acceptor_email, 'Rate Acceptor');
+            ratingDiv.appendChild(rateAcceptorRow);
+          }
+          extras.appendChild(ratingDiv);
+        }
+      }
+    }
+
+    // â”€â”€â”€ Strike button (for acceptor on completed quests) â”€â”€â”€
+    if (quest.status === 'completed' && currentUser && currentUser.id === quest.accepted_by && quest.posted_by) {
+      const extras = card.querySelector('.extras');
+      if (extras && !document.getElementById(`strike-${quest.id}`)) {
+        const strikeDiv = document.createElement('div');
+        strikeDiv.id = `strike-${quest.id}`;
+        strikeDiv.style.cssText = 'margin-top:0.5rem;';
+        const strikeBtn = document.createElement('button');
+        strikeBtn.className = 'btn btn-ghost btn-sm';
+        strikeBtn.textContent = 'ðŸš¨ Report Issue (Strike)';
+        strikeBtn.style.cssText = 'color:var(--danger); border-color:var(--danger); font-size:0.8rem;';
+        strikeBtn.addEventListener('click', () => {
+          const reason = prompt('Why are you giving a strike? (e.g., "Did not pay", "Rude behavior")');
+          if (reason && reason.trim()) {
+            addStrike(quest.posted_by, quest.poster_email, quest.id, reason.trim());
+          }
+        });
+        strikeDiv.appendChild(strikeBtn);
+        extras.appendChild(strikeDiv);
+      }
+    }
+
+    list.appendChild(card);
+  });
+
+  computeStats(display);
+}
+
+function createRatingRow(questId, toUserId, toEmail, label) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0; flex-wrap:wrap;';
+  row.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">${label}:</span>`;
+
+  for (let i = 1; i <= 5; i++) {
+    const star = document.createElement('button');
+    star.textContent = 'â­';
+    star.style.cssText = 'background:none; border:none; cursor:pointer; font-size:1rem; padding:0.1rem; opacity:0.5; transition:opacity 0.2s;';
+    star.addEventListener('mouseenter', () => {
+      Array.from(row.querySelectorAll('button')).forEach((s, idx) => {
+        s.style.opacity = idx < i ? '1' : '0.5';
+      });
+    });
+    star.addEventListener('mouseleave', () => {
+      Array.from(row.querySelectorAll('button')).forEach(s => s.style.opacity = '0.5');
+    });
+    star.addEventListener('click', () => submitRating(questId, toUserId, toEmail, i));
+    row.appendChild(star);
+  }
+  return row;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function computeStats(displayQuests) {
+  const total = quests.length;
+  const paid = quests.filter(q => q.reward > 0).length;
+  const completed = quests.filter(q => q.status === 'completed').length;
+
+  const totalEl = document.getElementById('totalQuests');
+  const paidEl = document.getElementById('paidQuests');
+  const completedEl = document.getElementById('completedQuests');
+
+  if (totalEl) totalEl.textContent = total;
+  if (paidEl) paidEl.textContent = paid;
+  if (completedEl) completedEl.textContent = completed;
+}
