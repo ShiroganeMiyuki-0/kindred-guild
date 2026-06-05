@@ -14,12 +14,19 @@ let comments = [];
 let fairyLedger = [];
 let currentFilter = 'all';
 let currentTab = 'all';
+let lastAuthAction = 'signin';
 
-document.getElementById('btnSignUp').addEventListener('click', signUp);
-document.getElementById('btnSignIn').addEventListener('click', signIn);
+document.getElementById('btnSignUp').addEventListener('click', () => { lastAuthAction = 'signup'; signUp(); });
+document.getElementById('btnSignIn').addEventListener('click', () => { lastAuthAction = 'signin'; signIn(); });
 document.getElementById('btnSignOut').addEventListener('click', signOut);
 
-function handleEnter(event) { if (event.key === 'Enter') signIn(); }
+function handleEnter(event) {
+  if (event.key === 'Enter') {
+    if (lastAuthAction === 'signup') signUp();
+    else signIn();
+  }
+}
+
 function handleCommentEnter(event, input) {
   if (event.key === 'Enter') {
     const card = input.closest('.quest-card');
@@ -37,19 +44,45 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   if (currentUser) loadQuests();
 });
 
-// â”€â”€â”€ FIXED: Sign-up with better reliability â”€â”€â”€
+// ─── Helpers ───
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function setAuthLoading(isLoading, buttonId) {
+  const btn = document.getElementById(buttonId);
+  if (btn) {
+    btn.disabled = isLoading;
+    btn.textContent = isLoading ? 'Please wait...' : (buttonId === 'btnSignUp' ? 'Sign Up' : 'Sign In');
+  }
+  const otherId = buttonId === 'btnSignUp' ? 'btnSignIn' : 'btnSignUp';
+  const otherBtn = document.getElementById(otherId);
+  if (otherBtn) otherBtn.disabled = isLoading;
+}
+
+// ─── FIXED: Sign-up with better reliability ───
 async function signUp() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
 
   if (!email || !password) {
-    alert('Please enter both email and password');
+    alert('Please enter both email and password.');
+    return;
+  }
+  if (!validateEmail(email)) {
+    alert('Please enter a valid email address (e.g., yourname@gmail.com).');
     return;
   }
   if (password.length < 6) {
-    alert('Password must be at least 6 characters');
+    alert('Password must be at least 6 characters long.');
     return;
   }
+  if (password.length > 72) {
+    alert('Password is too long. Please use 72 characters or less.');
+    return;
+  }
+
+  setAuthLoading(true, 'btnSignUp');
 
   try {
     const { data, error } = await supabaseClient.auth.signUp({
@@ -61,54 +94,75 @@ async function signUp() {
     });
 
     if (error) {
-      if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists')) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already')) {
         alert('This email is already registered. Try logging in instead.');
-      } else if (error.message.toLowerCase().includes('rate limit')) {
+      } else if (msg.includes('rate limit') || msg.includes('too many')) {
         alert('Too many attempts. Please wait a minute and try again.');
-      } else if (error.message.toLowerCase().includes('invalid') || error.message.toLowerCase().includes('valid email')) {
-        alert('Please enter a valid email address (e.g. yourname@gmail.com).');
+      } else if (msg.includes('invalid') || msg.includes('valid email')) {
+        alert('Please enter a valid email address.');
+      } else if (msg.includes('password')) {
+        alert('Password error: ' + error.message);
       } else {
         alert('Signup error: ' + error.message);
       }
       return;
     }
 
-    // Check if we got a session (email confirmation is OFF)
     if (data.session) {
       currentUser = data.session.user;
       updateUI();
       loadQuests();
-      alert('âœ… Account created and logged in!');
+      alert('✅ Account created! You got 100 free Fairy Coins. Welcome to the Guild!');
     } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-      // User already exists
       alert('This email is already registered. Try logging in instead.');
     } else {
-      // Email confirmation is ON â€” user must check their inbox
-      alert('ðŸ“§ Account created! Check your email inbox for a confirmation link, then come back and log in.');
+      alert('📧 Account created! Check your email inbox for a confirmation link, then come back and log in.');
     }
   } catch (err) {
-    alert('Unexpected error: ' + err.message);
+    console.error('Signup exception:', err);
+    alert('Unexpected error. Please check your internet connection and try again.');
+  } finally {
+    setAuthLoading(false, 'btnSignUp');
   }
 }
 
+// ─── FIXED: Sign-in with better reliability ───
 async function signIn() {
-  const email = document.getElementById('authEmail').value;
+  const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
-  if (!email || !password) { alert('Enter email and password'); return; }
+
+  if (!email || !password) {
+    alert('Enter email and password.');
+    return;
+  }
+  if (!validateEmail(email)) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+
+  setAuthLoading(true, 'btnSignIn');
 
   try {
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) {
-      if (error.message.toLowerCase().includes('invalid')) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('wrong')) {
         alert('Invalid email or password. Please check your credentials.');
+      } else if (msg.includes('email not confirmed') || msg.includes('confirmed')) {
+        alert('Please confirm your email first. Check your inbox for the confirmation link.');
+      } else if (msg.includes('rate limit')) {
+        alert('Too many attempts. Please wait a minute.');
       } else {
         alert('Login error: ' + error.message);
       }
       return;
     }
-    // Session is handled by onAuthStateChange
   } catch (err) {
-    alert('Unexpected error: ' + err.message);
+    console.error('Login exception:', err);
+    alert('Unexpected error. Please check your internet connection.');
+  } finally {
+    setAuthLoading(false, 'btnSignIn');
   }
 }
 
@@ -124,7 +178,7 @@ function getRankInfo(count) {
   if (count >= 50) return { rank: 'S-Rank', color: '#ff6b35', bg: '#ff6b3522' };
   if (count >= 30) return { rank: 'A-Rank', color: '#ffd700', bg: '#ffd70022' };
   if (count >= 15) return { rank: 'B-Rank', color: '#6b8cff', bg: '#6b8cff22' };
-  if (count >= 5)  return { rank: 'C-Rank', color: '#cd7f32', bg: '#cd7f3222' };
+  if (count >= 5) return { rank: 'C-Rank', color: '#cd7f32', bg: '#cd7f3222' };
   return { rank: 'D-Rank', color: '#888', bg: '#88888822' };
 }
 
@@ -154,7 +208,7 @@ function hasRated(questId, toUserId) {
 function isBanned(userId) { return getUserStrikes(userId) >= 3; }
 
 function isAdmin() {
-  return currentUser?.email === ADMIN_EMAIL || currentUser?.email?.includes('yashwanth');
+  return currentUser?.email === ADMIN_EMAIL;
 }
 
 function updateUI() {
@@ -180,11 +234,11 @@ function updateUI() {
     badge.style.color = info.color;
 
     const avg = getUserRating(currentUser.id);
-    document.getElementById('userRating').textContent = avg ? `${avg} â­` : '';
+    document.getElementById('userRating').textContent = avg ? `${avg} ⭐` : '';
 
     const fairyBalance = getFairyBalance(currentUser.id);
     const fairyBadge = document.getElementById('userFairy');
-    fairyBadge.textContent = `ðŸ§š ${fairyBalance}`;
+    fairyBadge.textContent = `🧚 ${fairyBalance}`;
     fairyBadge.style.display = 'inline';
 
     const strikeCount = getUserStrikes(currentUser.id);
@@ -206,7 +260,7 @@ function updateUI() {
     }
 
     if (isBanned(currentUser.id)) {
-      alert('ðŸš« You are banned! 3+ unpaid quests.');
+      alert('🚫 You are banned! 3+ unpaid quests.');
       signOut();
     }
   } else {
@@ -243,7 +297,7 @@ function updateAdminPanel() {
     return sum;
   }, 0);
 
-  document.getElementById('adminRevenue').textContent = 'â‚¹ ' + Math.round(totalRevenue).toLocaleString('en-IN');
+  document.getElementById('adminRevenue').textContent = '₹ ' + Math.round(totalRevenue).toLocaleString('en-IN');
   document.getElementById('adminUsers').textContent = uniqueUsers.size;
   document.getElementById('adminTotalQuests').textContent = quests.length;
   document.getElementById('adminPending').textContent = pendingPayments;
@@ -285,7 +339,7 @@ async function loadQuests() {
 questForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentUser) { alert('Login first!'); return; }
-  if (isBanned(currentUser.id)) { alert('ðŸš« Banned!'); return; }
+  if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
 
   const title = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
@@ -299,10 +353,11 @@ questForm.addEventListener('submit', async (e) => {
   if (!title || !description) { alert('Fill in title and description'); return; }
   if (reward > 0 && !upiId) { alert('UPI ID required for paid quests'); return; }
 
+  // FIXED: Minimum balance is 0, not -100
   if (fairyReward > 0) {
     const balance = getFairyBalance(currentUser.id);
-    if (balance - fairyReward < -100) {
-      alert(`ðŸš« Not enough Fairy Coins! Your balance: ${balance}, Minimum allowed: -100`);
+    if (balance - fairyReward < 0) {
+      alert(`🚫 Not enough Fairy Coins! Your balance: ${balance}. You need at least ${fairyReward} coins.`);
       return;
     }
   }
@@ -310,7 +365,7 @@ questForm.addEventListener('submit', async (e) => {
   let deadline = deadlineVal ? new Date(deadlineVal).toISOString() : null;
   let imageUrl = '';
 
-  // â”€â”€â”€ FIXED: Image upload with better error handling â”€â”€â”€
+  // ─── FIXED: Image upload with better error handling ───
   if (imageFile) {
     try {
       const fileExt = imageFile.name.split('.').pop().toLowerCase();
@@ -324,7 +379,7 @@ questForm.addEventListener('submit', async (e) => {
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        alert('âš ï¸ Image upload failed: ' + uploadError.message + '\nThe quest will be posted without the image.');
+        alert('⚠️ Image upload failed: ' + uploadError.message + '\nThe quest will be posted without the image.');
       } else {
         const { data: urlData } = supabaseClient.storage
           .from('quest-images')
@@ -334,7 +389,7 @@ questForm.addEventListener('submit', async (e) => {
       }
     } catch (uploadErr) {
       console.error('Image upload exception:', uploadErr);
-      alert('âš ï¸ Image upload failed. The quest will be posted without the image.');
+      alert('⚠️ Image upload failed. The quest will be posted without the image.');
     }
   }
 
@@ -373,7 +428,7 @@ questForm.addEventListener('submit', async (e) => {
 
 async function acceptQuest(id) {
   if (!currentUser) return;
-  if (isBanned(currentUser.id)) { alert('ðŸš« Banned!'); return; }
+  if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
   try {
     const { error } = await supabaseClient.from('quests').update({
       status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email
@@ -397,16 +452,8 @@ async function completeQuest(id) {
       return;
     }
 
-    if (quest.fairy_coin_reward > 0 && quest.accepted_by) {
-      await supabaseClient.from('fairy_ledger').insert({
-        from_user: quest.posted_by,
-        to_user: quest.accepted_by,
-        quest_id: quest.id,
-        amount: quest.fairy_coin_reward,
-        type: 'quest_complete',
-        description: `Completed quest: ${quest.title}`
-      });
-    }
+    // NOTE: Fairy Coin transfer is now handled by database trigger (more reliable)
+    // The trigger fires automatically when status changes from 'accepted' to 'completed'
 
     await loadQuests();
   } catch (err) {
@@ -509,9 +556,9 @@ function formatDeadline(deadlineStr) {
   const diff = d - now;
   const hours = Math.floor(diff / (1000 * 60 * 60));
 
-  if (diff < 0) return `<span class="deadline-overdue">â° OVERDUE by ${Math.abs(hours)}h</span>`;
-  if (hours < 24) return `<span class="deadline-urgent">â° Due in ${hours}h</span>`;
-  return `<span style="color:var(--success);">â° Due in ${Math.floor(hours/24)}d</span>`;
+  if (diff < 0) return `⏰ OVERDUE by ${Math.abs(hours)}h`;
+  if (hours < 24) return `⏰ Due in ${hours}h`;
+  return `⏰ Due in ${Math.floor(hours/24)}d`;
 }
 
 function setFilter(filter) {
@@ -545,7 +592,7 @@ function createPaymentStatus(text) {
   return status;
 }
 
-// â”€â”€â”€ FIXED: Complete renderQuests function with comments, images, and ratings â”€â”€â”€
+// ─── FIXED: Complete renderQuests function with comments, images, and ratings ───
 function renderQuests() {
   const list = document.getElementById('questList');
   if (!list) return;
@@ -557,7 +604,7 @@ function renderQuests() {
   if (currentFilter !== 'all') display = display.filter(q => q.category === currentFilter);
 
   if (display.length === 0) {
-    list.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:3rem;">No quests here.</p>';
+    list.innerHTML = '<p style="text-align:center; color:var(--muted);">No quests here.</p>';
     computeStats(display);
     return;
   }
@@ -570,7 +617,7 @@ function renderQuests() {
     if (!card) return;
     card.dataset.questId = quest.id;
 
-    // â”€â”€â”€ Image handling â”€â”€â”€
+    // ─── Image handling ───
     const img = card.querySelector('.quest-image');
     if (img && quest.image_url) {
       img.src = quest.image_url;
@@ -608,7 +655,7 @@ function renderQuests() {
 
     if (rewardTag) {
       if (quest.reward > 0) {
-        rewardTag.textContent = `â‚¹ ${quest.reward} â€¢ ${GUILD_FEE_PERCENT}% fee`;
+        rewardTag.textContent = `₹ ${quest.reward} • ${GUILD_FEE_PERCENT}% fee`;
         rewardTag.classList.remove('free');
       } else {
         rewardTag.textContent = 'FREE QUEST';
@@ -618,7 +665,7 @@ function renderQuests() {
 
     if (fairyTag) {
       if (quest.fairy_coin_reward > 0) {
-        fairyTag.textContent = `+ðŸ§š ${quest.fairy_coin_reward}`;
+        fairyTag.textContent = `+🧚 ${quest.fairy_coin_reward}`;
         fairyTag.style.display = 'inline';
       }
     }
@@ -626,7 +673,7 @@ function renderQuests() {
     const posterEl = card.querySelector('.poster-email');
     if (posterEl) posterEl.textContent = quest.poster_email || 'Unknown';
 
-    // â”€â”€â”€ Buttons â”€â”€â”€
+    // ─── Buttons ───
     const acceptBtn = card.querySelector('.btn-accept');
     const completeBtn = card.querySelector('.btn-complete');
     const cancelBtn = card.querySelector('.btn-cancel');
@@ -664,7 +711,7 @@ function renderQuests() {
       }
     }
 
-    // â”€â”€â”€ Payment section for paid quests â”€â”€â”€
+    // ─── Payment section for paid quests ───
     const paymentSection = card.querySelector('.payment-section');
     if (paymentSection && quest.reward > 0) {
       const fee = Math.round(quest.reward * (GUILD_FEE_PERCENT / 100));
@@ -673,46 +720,44 @@ function renderQuests() {
       const paymentInfo = document.createElement('div');
       paymentInfo.style.cssText = 'background:var(--accent-glow); border:1px solid var(--accent); border-radius:8px; padding:0.75rem; margin:0.5rem 0; font-size:0.85rem;';
       paymentInfo.innerHTML = `
-        <div style="color:var(--accent); font-weight:700; margin-bottom:0.3rem;">ðŸ’° Payment Info</div>
-        <div style="color:var(--text-muted);">Total: â‚¹${quest.reward} | Guild Fee (${GUILD_FEE_PERCENT}%): â‚¹${fee} | Net: â‚¹${net}</div>
-        ${quest.poster_upi ? `<div style="color:var(--text-muted); margin-top:0.3rem;">Poster UPI: ${quest.poster_upi}</div>` : ''}
+        <strong>💰 Payment Info</strong><br>
+        Total: ₹${quest.reward} | Guild Fee (${GUILD_FEE_PERCENT}%): ₹${fee} | Net: ₹${net}
+        ${quest.poster_upi ? `<br>Poster UPI: ${quest.poster_upi}` : ''}
       `;
       paymentSection.appendChild(paymentInfo);
 
       // Show payment checkboxes for involved parties
       if (currentUser && (currentUser.id === quest.posted_by || currentUser.id === quest.accepted_by) && quest.status === 'completed') {
         if (!quest.poster_paid && currentUser.id === quest.posted_by) {
-          paymentSection.appendChild(createPaymentCheckbox('I have paid â‚¹' + quest.reward + ' to the acceptor', () => confirmPayment(quest.id, 'poster_paid')));
+          paymentSection.appendChild(createPaymentCheckbox('I have paid ₹' + quest.reward + ' to the acceptor', () => confirmPayment(quest.id, 'poster_paid')));
         }
         if (quest.poster_paid) {
-          paymentSection.appendChild(createPaymentStatus('âœ… Poster has paid'));
+          paymentSection.appendChild(createPaymentStatus('✅ Poster has paid'));
         }
         if (!quest.acceptor_received && currentUser.id === quest.accepted_by) {
-          paymentSection.appendChild(createPaymentCheckbox('I have received â‚¹' + net + ' (after guild fee)', () => confirmPayment(quest.id, 'acceptor_received')));
+          paymentSection.appendChild(createPaymentCheckbox('I have received ₹' + net + ' (after guild fee)', () => confirmPayment(quest.id, 'acceptor_received')));
         }
         if (quest.acceptor_received) {
-          paymentSection.appendChild(createPaymentStatus('âœ… Acceptor has received payment'));
+          paymentSection.appendChild(createPaymentStatus('✅ Acceptor has received payment'));
         }
       }
     }
 
-    // â”€â”€â”€ FIXED: Comments section â”€â”€â”€
+    // ─── FIXED: Comments section ───
     const commentSection = card.querySelector('.comment-section');
     const commentList = card.querySelector('.comment-list');
     const sendCommentBtn = card.querySelector('.send-comment');
     const commentInput = card.querySelector('.comment-field');
 
     if (commentSection && commentList) {
-      // Always show comment section for logged-in users
       if (currentUser) {
         commentSection.style.display = 'block';
       }
 
-      // Get comments for this quest
       const questComments = comments.filter(c => c.quest_id === quest.id);
 
       if (questComments.length === 0) {
-        commentList.innerHTML = '<p style="color:var(--text-muted); font-size:0.8rem; padding:0.5rem 0;">No comments yet. Be the first to comment!</p>';
+        commentList.innerHTML = '<p style="color:var(--muted); font-size:0.85rem;">No comments yet. Be the first to comment!</p>';
       } else {
         commentList.innerHTML = '';
         questComments.forEach(comment => {
@@ -720,17 +765,16 @@ function renderQuests() {
           commentEl.style.cssText = 'padding:0.5rem; margin:0.25rem 0; background:var(--surface-hover); border-radius:8px; font-size:0.85rem;';
           const timeAgo = comment.created_at ? new Date(comment.created_at).toLocaleString() : 'Just now';
           commentEl.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
-              <span style="color:var(--accent); font-weight:600; font-size:0.8rem;">${comment.user_email || 'Anonymous'}</span>
-              <span style="color:var(--text-muted); font-size:0.7rem;">${timeAgo}</span>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+              <strong style="font-size:0.8rem;">${comment.user_email || 'Anonymous'}</strong>
+              <span style="font-size:0.75rem; color:var(--muted);">${timeAgo}</span>
             </div>
-            <div style="color:var(--text);">${escapeHtml(comment.message)}</div>
+            <div>${escapeHtml(comment.message)}</div>
           `;
           commentList.appendChild(commentEl);
         });
       }
 
-      // Attach send button listener
       if (sendCommentBtn && commentInput) {
         sendCommentBtn.addEventListener('click', () => {
           const msg = commentInput.value.trim();
@@ -742,7 +786,7 @@ function renderQuests() {
       }
     }
 
-    // â”€â”€â”€ Rating section for completed quests â”€â”€â”€
+    // ─── Rating section for completed quests ───
     if (quest.status === 'completed' && currentUser) {
       const extras = card.querySelector('.extras');
       if (extras) {
@@ -752,7 +796,7 @@ function renderQuests() {
         if (canRatePoster || canRateAcceptor) {
           const ratingDiv = document.createElement('div');
           ratingDiv.style.cssText = 'margin-top:0.75rem; padding:0.75rem; background:var(--surface-hover); border-radius:8px;';
-          ratingDiv.innerHTML = '<div style="color:var(--warning); font-size:0.85rem; font-weight:600; margin-bottom:0.5rem;">â­ Rate this quest</div>';
+          ratingDiv.innerHTML = '<strong>⭐ Rate this quest</strong><br>';
 
           if (canRatePoster) {
             const ratePosterRow = createRatingRow(quest.id, quest.posted_by, quest.poster_email, 'Rate Poster');
@@ -767,7 +811,7 @@ function renderQuests() {
       }
     }
 
-    // â”€â”€â”€ Strike button (for acceptor on completed quests) â”€â”€â”€
+    // ─── Strike button (for acceptor on completed quests) ───
     if (quest.status === 'completed' && currentUser && currentUser.id === quest.accepted_by && quest.posted_by) {
       const extras = card.querySelector('.extras');
       if (extras && !document.getElementById(`strike-${quest.id}`)) {
@@ -776,7 +820,7 @@ function renderQuests() {
         strikeDiv.style.cssText = 'margin-top:0.5rem;';
         const strikeBtn = document.createElement('button');
         strikeBtn.className = 'btn btn-ghost btn-sm';
-        strikeBtn.textContent = 'ðŸš¨ Report Issue (Strike)';
+        strikeBtn.textContent = '🚨 Report Issue (Strike)';
         strikeBtn.style.cssText = 'color:var(--danger); border-color:var(--danger); font-size:0.8rem;';
         strikeBtn.addEventListener('click', () => {
           const reason = prompt('Why are you giving a strike? (e.g., "Did not pay", "Rude behavior")');
@@ -798,11 +842,11 @@ function renderQuests() {
 function createRatingRow(questId, toUserId, toEmail, label) {
   const row = document.createElement('div');
   row.style.cssText = 'display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0; flex-wrap:wrap;';
-  row.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">${label}:</span>`;
+  row.innerHTML = `${label}:`;
 
   for (let i = 1; i <= 5; i++) {
     const star = document.createElement('button');
-    star.textContent = 'â­';
+    star.textContent = '⭐';
     star.style.cssText = 'background:none; border:none; cursor:pointer; font-size:1rem; padding:0.1rem; opacity:0.5; transition:opacity 0.2s;';
     star.addEventListener('mouseenter', () => {
       Array.from(row.querySelectorAll('button')).forEach((s, idx) => {
