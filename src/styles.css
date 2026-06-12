@@ -105,3 +105,34 @@ input, textarea {
   .actions { width: 100%; }
   .actions .btn { flex: 1; }
 }
+
+/* Auth styles */
+.auth-card {
+  max-width: 400px;
+  margin: 2rem auto;
+}
+.error {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+.auth-toggle {
+  margin-top: 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+.login-prompt {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
