@@ -88,11 +88,12 @@ function setupEventListeners() {
 }
 
 function setupAuthStateListener() {
-    supabaseClient.auth.onAuthStateChange((event, session) => {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
         currentUser = session?.user ?? null;
         if (currentUser) {
-            ensureSignupBonus();
-            loadQuests();
+            await loadQuests({ render: false });
+            await ensureSignupBonus();
+            await loadQuests();
         }
         updateUI();
     });
@@ -102,8 +103,9 @@ async function checkExistingSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         currentUser = session.user;
-        ensureSignupBonus();
-        loadQuests();
+        await loadQuests({ render: false });
+        await ensureSignupBonus();
+        await loadQuests();
         updateUI();
     }
 }
@@ -432,12 +434,19 @@ function clearAuthError() {
 async function ensureSignupBonus() {
     if (!currentUser) return;
 
-    // Check if user already received signup bonus
-    const hasBonus = fairyLedger.some(t =>
-        t.to_user === currentUser.id && t.type === 'signup_bonus'
-    );
+    const { data: existingBonus, error: lookupError } = await supabaseClient
+        .from('fairy_ledger')
+        .select('id')
+        .eq('to_user', currentUser.id)
+        .eq('type', 'signup_bonus')
+        .maybeSingle();
 
-    if (!hasBonus) {
+    if (lookupError) {
+        console.error('Signup bonus lookup error:', lookupError);
+        return;
+    }
+
+    if (!existingBonus) {
         try {
             const { error } = await supabaseClient.from('fairy_ledger').insert({
                 from_user: null,
@@ -449,7 +458,7 @@ async function ensureSignupBonus() {
             });
 
             if (error) {
-                console.error('Signup bonus error:', error);
+                if (error.code !== '23505') console.error('Signup bonus error:', error);
             } else {
                 // Refresh ledger
                 await loadQuests();
@@ -481,7 +490,9 @@ function getFairyEscrow(userId) {
 }
 
 function getAvailableFairyBalance(userId) {
-    return getFairyBalance(userId) - getFairyEscrow(userId);
+    // Quest rewards are deducted into ledger escrow when posted, so the ledger
+    // balance is already the spendable balance. Keep this at zero or above.
+    return Math.max(MIN_FAIRY_BALANCE, getFairyBalance(userId));
 }
 
 function hasEnoughFairyCoins(userId, amount) {
@@ -785,8 +796,12 @@ async function confirmPaymentReceived(questId) {
 }
 
 async function checkBothConfirmed(questId) {
-    const quest = quests.find(q => q.id === questId);
-    if (!quest) return;
+    const { data: quest, error } = await supabaseClient
+        .from('quests')
+        .select('*')
+        .eq('id', questId)
+        .single();
+    if (error || !quest) return;
 
     // If both parties confirmed (or no payment needed and poster confirmed), finalize
     const paymentConfirmed = quest.reward === 0 || quest.acceptor_confirmed_complete;
@@ -1353,7 +1368,7 @@ async function resolveDispute(questId, favor) {
 }
 
 // ─── DATA LOADING ───
-async function loadQuests() {
+async function loadQuests(options = {}) {
     try {
         const [
             { data: questData, error: qErr },
@@ -1393,8 +1408,10 @@ async function loadQuests() {
         fairyPurchases = purchaseData || [];
         userProfiles = profileData || [];
 
-        updateUI();
-        renderQuests();
+        if (options.render !== false) {
+            updateUI();
+            renderQuests();
+        }
     } catch (err) {
         console.error('Error loading quests:', err);
     }
