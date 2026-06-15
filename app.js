@@ -79,12 +79,17 @@ function setupEventListeners() {
     if (adminToggle) adminToggle.addEventListener('click', toggleAdmin);
 
     // Enter key handlers
-    const authEmail = document.getElementById('authEmail');
-    const authPassword = document.getElementById('authPassword');
-    const authConfirmPassword = document.getElementById('authConfirmPassword');
-    if (authEmail) authEmail.addEventListener('keypress', handleEnter);
-    if (authPassword) authPassword.addEventListener('keypress', handleEnter);
-    if (authConfirmPassword) authConfirmPassword.addEventListener('keypress', handleEnter);
+    const signInEmail = document.getElementById('signInEmail');
+    const signInPassword = document.getElementById('signInPassword');
+    const signUpEmail = document.getElementById('signUpEmail');
+    const signUpPassword = document.getElementById('signUpPassword');
+    const signUpConfirmPassword = document.getElementById('signUpConfirmPassword');
+
+    if (signInEmail) signInEmail.addEventListener('keypress', handleEnter);
+    if (signInPassword) signInPassword.addEventListener('keypress', handleEnter);
+    if (signUpEmail) signUpEmail.addEventListener('keypress', handleEnter);
+    if (signUpPassword) signUpPassword.addEventListener('keypress', handleEnter);
+    if (signUpConfirmPassword) signUpConfirmPassword.addEventListener('keypress', handleEnter);
 }
 
 function setupAuthStateListener() {
@@ -362,8 +367,8 @@ async function checkEmailConfirmed() {
 
 // ─── SIGN IN ───
 async function signIn() {
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
+    const email = document.getElementById('signInEmail').value.trim();
+    const password = document.getElementById('signInPassword').value;
 
     if (!email || !password) {
         showAuthError('Enter email and password.');
