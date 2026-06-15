@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<base target="_blank">
+<!-- <base target="_blank"> removed for better internal navigation -->
 </head>
 <body>
 
@@ -34,14 +34,14 @@
             <p class="auth-subtitle">Welcome back, adventurer!</p>
             <div class="auth-input-group">
                 <label>Email</label>
-                <input type="email" id="authEmail" placeholder="yourname@gmail.com" />
+                <input type="email" id="signInEmail" placeholder="yourname@gmail.com" />
             </div>
             <div class="auth-input-group">
                 <label>Password</label>
-                <input type="password" id="authPassword" placeholder="••••••••" />
+                <input type="password" id="signInPassword" placeholder="••••••••" />
             </div>
-            <div class="auth-error" id="authError"></div>
-            <div class="auth-success" id="authSuccess"></div>
+            <div class="auth-error" id="signInError"></div>
+            <div class="auth-success" id="signInSuccess"></div>
             <button id="btnSignIn" class="btn primary auth-btn">⚡ Sign In</button>
             <p class="auth-switch">New here? <button id="btnShowSignUp" class="btn-link">Create Account</button></p>
         </div>
@@ -51,18 +51,18 @@
             <p class="auth-subtitle">Begin your journey!</p>
             <div class="auth-input-group">
                 <label>Email</label>
-                <input type="email" id="authEmail" placeholder="yourname@gmail.com" />
+                <input type="email" id="signUpEmail" placeholder="yourname@gmail.com" />
             </div>
             <div class="auth-input-group">
                 <label>Password</label>
-                <input type="password" id="authPassword" placeholder="Min 6 characters" />
+                <input type="password" id="signUpPassword" placeholder="Min 6 characters" />
             </div>
             <div class="auth-input-group">
                 <label>Confirm Password</label>
-                <input type="password" id="authConfirmPassword" placeholder="Repeat password" />
+                <input type="password" id="signUpConfirmPassword" placeholder="Repeat password" />
             </div>
-            <div class="auth-error" id="authError"></div>
-            <div class="auth-success" id="authSuccess"></div>
+            <div class="auth-error" id="signUpError"></div>
+            <div class="auth-success" id="signUpSuccess"></div>
             <button id="btnSignUp" class="btn primary auth-btn">🚀 Create Account</button>
             <p class="auth-switch">Already have an account? <button id="btnShowSignIn" class="btn-link">Sign In</button></p>
         </div>
@@ -72,8 +72,8 @@
             <div class="verify-icon">📧</div>
             <h3>Verify Your Email</h3>
             <p class="auth-subtitle">We sent a confirmation link to your email.<br>Click the link, then press the button below.</p>
-            <div class="auth-error" id="authError"></div>
-            <div class="auth-success" id="authSuccess"></div>
+            <div class="auth-error" id="verifyError"></div>
+            <div class="auth-success" id="verifySuccess"></div>
             <button id="btnVerifyEmail" class="btn primary auth-btn">✅ I've Confirmed My Email</button>
             <button id="btnResendCode" class="btn ghost auth-btn">Resend Verification Email</button>
             <p id="resendCountdown" style="display:none;color:var(--muted);font-size:0.85rem;"></p>

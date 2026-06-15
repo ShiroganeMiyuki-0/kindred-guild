@@ -416,18 +416,20 @@ async function signOut() {
 }
 
 function showAuthError(msg) {
-    const el = document.getElementById('authError');
-    if (el) { el.textContent = msg; el.style.display = 'block'; }
+    const currentStep = document.querySelector('.auth-step:not([style*="display: none"])');
+    const err = currentStep ? currentStep.querySelector('.auth-error') : document.getElementById('signInError');
+    if (err) { err.textContent = msg; err.style.display = 'block'; }
 }
 
 function showAuthSuccess(msg) {
-    const el = document.getElementById('authSuccess');
-    if (el) { el.textContent = msg; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 5000); }
+    const currentStep = document.querySelector('.auth-step:not([style*="display: none"])');
+    const success = currentStep ? currentStep.querySelector('.auth-success') : document.getElementById('signInSuccess');
+    if (success) { success.textContent = msg; success.style.display = 'block'; setTimeout(() => success.style.display = 'none', 5000); }
 }
 
 function clearAuthError() {
-    const el = document.getElementById('authError');
-    if (el) el.style.display = 'none';
+    document.querySelectorAll('.auth-error').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+    document.querySelectorAll('.auth-success').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
 }
 
 // ─── FAIRY COIN SYSTEM ───
@@ -500,6 +502,19 @@ function hasEnoughFairyCoins(userId, amount) {
 }
 
 // ─── FAIRY COIN SHOP (UPI PURCHASE) ───
+function selectShopPackage(amount) {
+    const select = document.getElementById('fairyPurchaseAmount');
+    if (select) {
+        select.value = amount;
+        updateFairyShopPreview();
+    }
+    
+    // Update visual selection
+    document.querySelectorAll('.shop-package').forEach(pkg => {
+        pkg.classList.toggle('selected', parseInt(pkg.dataset.amount) === amount);
+    });
+}
+
 function openFairyShop() {
     const modal = document.getElementById('fairyShopModal');
     if (modal) modal.style.display = 'flex';
