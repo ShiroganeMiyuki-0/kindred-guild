@@ -34,7 +34,6 @@ alter table public.quests add column if not exists poster_confirmed_complete boo
 alter table public.quests add column if not exists acceptor_confirmed_complete boolean not null default false;
 alter table public.quests add column if not exists dispute_raised boolean not null default false;
 alter table public.quests add column if not exists completion_reported_at timestamptz;
-
 do $$
 begin
   if exists (select 1 from pg_constraint where conname = 'quests_status_check') then
@@ -119,6 +118,7 @@ create table if not exists public.user_profiles (
   created_at timestamptz not null default now()
 );
 
+
 create or replace function public.get_fairy_balance(p_user_id uuid)
 returns integer
 language sql
@@ -173,59 +173,8 @@ begin
 end;
 $$;
 
--- ─── ATOMIC TRANSACTION SECURITY RPC FUNCTION ───
-create or replace function public.post_quest_with_escrow(
-  p_title text,
-  p_description text,
-  p_reward numeric,
-  p_fairy_coin_reward integer,
-  p_category text,
-  p_poster_upi text,
-  p_deadline timestamptz,
-  p_image_url text
-)
-returns uuid
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_user_id uuid := auth.uid();
-  v_user_email text := auth.jwt() ->> 'email';
-  v_quest_id uuid;
-begin
-  if v_user_id is null then
-    raise exception 'Authentication required' using errcode = '28000';
-  end if;
-
-  if p_fairy_coin_reward > 0 and (public.get_fairy_balance(v_user_id) - p_fairy_coin_reward < 0) then
-    raise exception 'Insufficient Fairy Coin balance' using errcode = '23514';
-  end if;
-
-  insert into public.quests (
-    title, description, reward, fairy_coin_reward, fee_percent,
-    status, category, posted_by, poster_email, poster_upi,
-    deadline, image_url, poster_confirmed_complete, acceptor_confirmed_complete, dispute_raised
-  )
-  values (
-    p_title, p_description, p_reward, p_fairy_coin_reward, 10,
-    'pending', p_category, v_user_id, v_user_email, p_poster_upi,
-    p_deadline, p_image_url, false, false, false
-  )
-  returning id into v_quest_id;
-
-  if p_fairy_coin_reward > 0 then
-    insert into public.fairy_ledger (from_user, to_user, quest_id, amount, type, description)
-    values (v_user_id, null, v_quest_id, p_fairy_coin_reward, 'quest_escrow', 'Escrow for quest: ' || p_title);
-  end if;
-
-  return v_quest_id;
-end;
-$$;
-
 revoke all on function public.grant_signup_bonus() from public;
 grant execute on function public.grant_signup_bonus() to authenticated;
-grant execute on function public.post_quest_with_escrow to authenticated;
 
 alter table public.quests enable row level security;
 alter table public.ratings enable row level security;
