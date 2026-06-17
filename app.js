@@ -209,9 +209,9 @@ function handleEnter(event) {
 
 // ─── GAMING-STYLE SIGN UP WITH VERIFICATION ───
 async function signUp() {
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
-    const confirmPassword = document.getElementById('authConfirmPassword')?.value;
+    const email = document.getElementById('signUpEmail')?.value.trim() || '';
+    const password = document.getElementById('signUpPassword')?.value || '';
+    const confirmPassword = document.getElementById('signUpConfirmPassword')?.value;
 
     if (!email || !password) {
         showAuthError('Please enter both email and password.');
@@ -280,7 +280,7 @@ async function signUp() {
 }
 
 async function sendVerificationEmail() {
-    const email = document.getElementById('authEmail').value.trim();
+    const email = document.getElementById('signUpEmail')?.value.trim() || '';
     if (!email || !validateEmail(email)) {
         showAuthError('Please enter a valid email first.');
         return;
@@ -292,7 +292,7 @@ async function sendVerificationEmail() {
 async function resendVerificationEmail() {
     if (resendCooldown > 0) return;
 
-    const email = document.getElementById('authEmail').value.trim();
+    const email = document.getElementById('signUpEmail')?.value.trim() || '';
     if (!email) return;
 
     setAuthLoading(true, 'btnResendCode');
@@ -455,21 +455,14 @@ async function ensureSignupBonus() {
 
     if (!existingBonus) {
         try {
-            const { error } = await supabaseClient.from('fairy_ledger').insert({
-                from_user: null,
-                to_user: currentUser.id,
-                quest_id: null,
-                amount: SIGNUP_BONUS,
-                type: 'signup_bonus',
-                description: 'Welcome bonus for joining the Guild!'
-            });
+            const { error } = await supabaseClient.rpc('grant_signup_bonus');
 
             if (error) {
-                if (error.code !== '23505') console.error('Signup bonus error:', error);
+                console.error('Signup bonus error:', error);
             } else {
                 // Refresh ledger
                 await loadQuests();
-                showToast('🎉 Welcome! You received 100 Fairy Coins!');
+                showToast(`🎉 Welcome! You received ${SIGNUP_BONUS} Fairy Coins!`);
             }
         } catch (err) {
             console.error('Failed to grant signup bonus:', err);
