@@ -16,7 +16,7 @@ This code can become a real deployed MVP, but it is **not yet a fully safe profi
 
 1. **Use a proper payment flow.** UPI IDs and manual confirmation are fine for a prototype, but platform revenue needs verifiable payment collection, fee splitting, refunds, and dispute handling through a payment provider or escrow-like backend.
 2. **Move business rules to a backend.** The current fee percentage, admin email, strike logic, and Fairy Coin accounting are browser-side. A real marketplace should enforce these rules with server-side functions, database constraints, and audit logs.
-3. **Tighten Supabase security.** The included `supabase-schema.sql` now has improved RLS policies, but it still allows authenticated users to mint "system" Fairy Coins (ledger rows where `from_user` is null). In a real production app, this logic MUST be moved to a secure backend (Supabase Edge Functions or a Node.js server) to prevent users from manipulating their balances via the browser console.
+3. **Tighten Supabase security.** The included `supabase-schema.sql` uses RLS, a signup-bonus RPC, and a negative-balance trigger to reduce obvious Fairy Coin abuse. For a real production app, keep moving privileged Fairy Coin and payment-confirmation logic into secure backend code (Supabase Edge Functions or a Node.js server) with audit logs.
 4. **Add identity, trust, and moderation.** Paid work needs user profiles, KYC/verification if required in your region, dispute workflows, abuse reporting, admin review screens, and clear terms/privacy pages.
 5. **Add conversion features.** To become profitable, add landing-page copy for a specific niche, featured quests, paid boosts, subscriptions for power users, invoice/receipt emails, and analytics for funnel tracking.
 

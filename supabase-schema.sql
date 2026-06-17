@@ -118,6 +118,64 @@ create table if not exists public.user_profiles (
   created_at timestamptz not null default now()
 );
 
+
+create or replace function public.get_fairy_balance(p_user_id uuid)
+returns integer
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce(sum(
+    case
+      when to_user = p_user_id then amount
+      when from_user = p_user_id then -amount
+      else 0
+    end
+  ), 0)::integer
+  from public.fairy_ledger
+  where from_user = p_user_id or to_user = p_user_id;
+$$;
+
+create or replace function public.prevent_negative_fairy_balance()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.from_user is not null and public.get_fairy_balance(new.from_user) - new.amount < 0 then
+    raise exception 'Insufficient Fairy Coin balance' using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_negative_fairy_balance_before_insert on public.fairy_ledger;
+create trigger prevent_negative_fairy_balance_before_insert
+before insert on public.fairy_ledger
+for each row execute function public.prevent_negative_fairy_balance();
+
+create or replace function public.grant_signup_bonus()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid := auth.uid();
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+
+  insert into public.fairy_ledger (from_user, to_user, quest_id, amount, type, description)
+  values (null, v_user_id, null, 100, 'signup_bonus', 'Welcome bonus for joining the Guild!')
+  on conflict do nothing;
+end;
+$$;
+
+revoke all on function public.grant_signup_bonus() from public;
+grant execute on function public.grant_signup_bonus() to authenticated;
+
 alter table public.quests enable row level security;
 alter table public.ratings enable row level security;
 alter table public.strikes enable row level security;
@@ -144,10 +202,8 @@ begin
   if not exists (select 1 from pg_policies where schemaname='public' and tablename='comments' and policyname='Authenticated users can add own comments') then create policy "Authenticated users can add own comments" on public.comments for insert to authenticated with check (auth.uid() = user_id); end if;
 
   if not exists (select 1 from pg_policies where schemaname='public' and tablename='fairy_ledger' and policyname='Authenticated users can read fairy ledger') then create policy "Authenticated users can read fairy ledger" on public.fairy_ledger for select to authenticated using (true); end if;
-  if not exists (select 1 from pg_policies where schemaname='public' and tablename='fairy_ledger' and policyname='Authenticated users can add fairy ledger rows') then create policy "Authenticated users can add fairy ledger rows" on public.fairy_ledger for insert to authenticated with check (auth.uid() = from_user or auth.uid() = to_user); end if;
-  -- Removed overly permissive system ledger row policy. Ledger rows with null from_user should only be created by system/admin logic.
-  -- For a pure client-side demo, we might need a more restricted version or handle it via database functions.
-  -- For now, we'll keep it but warn the user in README.
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='fairy_ledger' and policyname='Users can spend own fairy coins') then create policy "Users can spend own fairy coins" on public.fairy_ledger for insert to authenticated with check (auth.uid() = from_user and from_user is not null); end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='fairy_ledger' and policyname='Admins can credit fairy coins') then create policy "Admins can credit fairy coins" on public.fairy_ledger for insert to authenticated with check (from_user is null and auth.jwt() ->> 'email' = 'yashwanthrangaswamy72@gmail.com'); end if;
 
   if not exists (select 1 from pg_policies where schemaname='public' and tablename='reports' and policyname='Authenticated users can read reports') then create policy "Authenticated users can read reports" on public.reports for select to authenticated using (true); end if;
   if not exists (select 1 from pg_policies where schemaname='public' and tablename='reports' and policyname='Authenticated users can submit reports') then create policy "Authenticated users can submit reports" on public.reports for insert to authenticated with check (auth.uid() = reporter_id); end if;
