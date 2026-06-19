@@ -681,13 +681,18 @@ async function handleQuestSubmit(e) {
 // ─── QUEST ACTIONS ───
 async function acceptQuest(id) {
     if (!currentUser) return;
-    if (isBanned(currentUser.id)) { alert('🚫 Banned!'); return; }
+    if (isBanned(currentUser.id)) { alert('🚫 Banned! You cannot accept quests.'); return; }
+    const quest = quests.find(q => q.id === id);
+    if (!quest) { alert('Quest not found'); return; }
+    if (quest.status !== 'pending') { alert('This quest is no longer available'); return; }
+    if (quest.posted_by === currentUser.id) { alert('You cannot accept your own quest'); return; }
+    
     try {
         const { error } = await supabaseClient.from('quests').update({
             status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email
         }).eq('id', id);
         if (error) alert('Error: ' + error.message);
-        else await loadQuests();
+        else { await loadQuests(); showToast('✅ Quest accepted!'); }
     } catch (err) {
         alert('Unexpected error: ' + err.message);
     }
@@ -1768,4 +1773,15 @@ function computeStats(displayQuests) {
     if (totalEl) totalEl.textContent = total;
     if (paidEl) paidEl.textContent = paid;
     if (completedEl) completedEl.textContent = completed;
+}
+
+function handleCommentEnter(event, input) {
+    if (event.key === 'Enter') {
+        const questId = input.closest('.quest-card').dataset.questId;
+        const msg = input.value.trim();
+        if (msg) {
+            sendComment(questId, msg);
+            input.value = '';
+        }
+    }
 }
