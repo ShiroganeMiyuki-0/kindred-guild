@@ -4,32 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kindred Guild — Quest Board</title>
-<meta name="description" content="A guild for everyone — communist, socialist, capitalist — but with one rule: no double standards. Want money for your work? Pay others fairly for theirs.">
+<meta name="description" content="A guild for everyone. Want work? Confirm execution. Want deliverables? Pay fairly.">
 <link rel="stylesheet" href="styles.css">
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- <base target="_blank"> removed for better internal navigation -->
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- TOAST NOTIFICATION -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 <div id="toast" class="toast" style="display:none;"></div>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- AUTH MODAL -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 <div id="authModal" class="modal" style="display:none;">
     <div class="modal-content auth-modal">
         <div class="auth-header">
-            <h2>🧚 Join the Guild</h2>
+            <h2>🛡️ Join the Guild</h2>
             <div class="auth-progress">
                 <div class="auth-progress-bar" id="authProgressBar"></div>
             </div>
         </div>
 
-        <!-- Step 1: Sign In -->
         <div id="stepSignIn" class="auth-step">
             <p class="auth-subtitle">Welcome back, adventurer!</p>
             <div class="auth-input-group">
@@ -46,7 +38,6 @@
             <p class="auth-switch">New here? <button id="btnShowSignUp" class="btn-link">Create Account</button></p>
         </div>
 
-        <!-- Step 2: Sign Up -->
         <div id="stepSignUp" class="auth-step" style="display:none;">
             <p class="auth-subtitle">Begin your journey!</p>
             <div class="auth-input-group">
@@ -67,7 +58,6 @@
             <p class="auth-switch">Already have an account? <button id="btnShowSignIn" class="btn-link">Sign In</button></p>
         </div>
 
-        <!-- Step 3: Verify Email -->
         <div id="stepVerify" class="auth-step" style="display:none;">
             <div class="verify-icon">📧</div>
             <h3>Verify Your Email</h3>
@@ -80,75 +70,15 @@
             <p class="auth-switch"><button id="btnBackToSignIn" class="btn-link">← Back to Sign In</button></p>
         </div>
 
-        <!-- Step 4: Welcome -->
         <div id="stepWelcome" class="auth-step" style="display:none;">
             <div class="welcome-icon">🎉</div>
             <h3>Welcome to the Guild!</h3>
-            <p class="auth-subtitle">You received <strong>100 🧚 Fairy Coins</strong> as a welcome gift!</p>
+            <p class="auth-subtitle">Your identity has been verified successfully.</p>
             <p style="color:var(--muted);font-size:0.9rem;">Redirecting to quest board...</p>
         </div>
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- FAIRY COIN SHOP MODAL -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<div id="fairyShopModal" class="modal" style="display:none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>🧚 Fairy Coin Shop</h2>
-            <button id="btnCloseFairyShop" class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-            <p style="color:var(--muted);margin-bottom:1rem;">Buy Fairy Coins with UPI to post premium quests!</p>
-
-            <div class="shop-packages">
-                <div class="shop-package" data-amount="50" onclick="selectShopPackage(50)">
-                    <div class="package-coins">🧚 50</div>
-                    <div class="package-price">₹50</div>
-                </div>
-                <div class="shop-package" data-amount="100" onclick="selectShopPackage(100)">
-                    <div class="package-coins">🧚 100</div>
-                    <div class="package-price">₹100</div>
-                </div>
-                <div class="shop-package" data-amount="250" onclick="selectShopPackage(250)">
-                    <div class="package-coins">🧚 250</div>
-                    <div class="package-price">₹250</div>
-                </div>
-                <div class="shop-package" data-amount="500" onclick="selectShopPackage(500)">
-                    <div class="package-coins">🧚 500</div>
-                    <div class="package-price">₹500</div>
-                </div>
-            </div>
-
-            <div class="shop-form">
-                <label>Amount to Purchase</label>
-                <select id="fairyPurchaseAmount" onchange="updateFairyShopPreview()">
-                    <option value="50">50 Coins - ₹50</option>
-                    <option value="100" selected>100 Coins - ₹100</option>
-                    <option value="250">250 Coins - ₹250</option>
-                    <option value="500">500 Coins - ₹500</option>
-                    <option value="1000">1000 Coins - ₹1000</option>
-                </select>
-
-                <p id="fairyPurchasePreview" style="margin:0.5rem 0;color:var(--success);"></p>
-                <p id="fairyShopUpiId" style="font-weight:600;color:var(--primary);"></p>
-
-                <label>UPI Transaction ID (after payment)</label>
-                <input type="text" id="fairyUpiTxnId" placeholder="e.g., UPI123456789" />
-
-                <label>Payment Screenshot (optional but recommended)</label>
-                <input type="file" id="fairyPaymentScreenshot" accept="image/*" />
-
-                <button id="btnBuyFairy" class="btn primary" style="width:100%;margin-top:1rem;">💰 Submit Purchase Request</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- REPORT MODAL -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 <div id="reportModal" class="modal" style="display:none;">
     <div class="modal-content">
         <div class="modal-header">
@@ -179,9 +109,6 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- VERIFY QUEST MODAL -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 <div id="verifyModal" class="modal" style="display:none;">
     <div class="modal-content">
         <div class="modal-header">
@@ -199,29 +126,24 @@
             </div>
 
             <div class="verify-info" style="margin-top:1rem;padding:1rem;background:var(--surface-hover);border-radius:8px;font-size:0.9rem;">
-                <p><strong>How verification works:</strong></p>
+                <p><strong>Reputation Metrics Workflow:</strong></p>
                 <ul style="margin:0.5rem 0;padding-left:1.2rem;color:var(--muted);">
-                    <li>Acceptor marks quest complete → enters pending confirmation</li>
-                    <li>Poster confirms work received</li>
-                    <li>Acceptor confirms payment received (for paid quests)</li>
-                    <li>Both confirmed → Quest completed, Fairy Coins released</li>
-                    <li>If dispute → Admin reviews evidence and decides</li>
+                    <li>Acceptor flags execution finished $\rightarrow$ quest enters verification stage.</li>
+                    <li>Poster updates state upon payload validation.</li>
+                    <li>Failure to pay or submit works will trigger a strike assignment.</li>
+                    <li>Accounts catching 3 strikes are banned globally by the network runtime.</li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- HERO SECTION -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 <header class="hero">
     <div class="overlay"></div>
     <div class="hero-content container">
         <span class="tag">Fairy Tail Inspired</span>
         <h1>Kindred Guild</h1>
-        <p class="subtitle">A guild for everyone — communist, socialist, capitalist — but with one rule: no double standards. Want money for your work? Pay others fairly for theirs. This world is shaped by YOU, the guild members. Make it a heaven.</p>
-        <p class="subtitle" style="font-size:0.9rem;margin-top:0.5rem;">The Guild is always here to help. You can donate or collect funds freely. But since we don't want people to misuse this offer, we charge a small fee whenever money moves between members. Free quests remain truly free — no fees, no strings.</p>
+        <p class="subtitle">A guild built on explicit accountability framework. Free of complex coin rules. Deliver tasks cleanly, process direct off-chain payments, and protect your rating score.</p>
 
         <div class="hero-cta">
             <div id="navAuth" style="display:flex;gap:0.8rem;">
@@ -232,7 +154,6 @@
                 <span id="userEmail" style="font-weight:600;"></span>
                 <span id="userRank" class="badge" style="font-size:0.75rem;">D-Rank</span>
                 <span id="userRating" style="font-size:0.85rem;color:#ffd700;"></span>
-                <span id="userFairy" style="display:none;cursor:pointer;" onclick="openFairyShop()" title="Click to buy more!">🧚 0</span>
                 <span id="userStrikes" style="display:none;color:var(--danger);font-weight:700;font-size:0.8rem;"></span>
                 <button id="btnSignOut" class="btn ghost" style="font-size:0.8rem;padding:0.4rem 0.8rem;">Sign Out</button>
             </div>
@@ -240,52 +161,31 @@
     </div>
 </header>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- MAIN CONTENT -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 <main class="container">
-
-    <!-- Stats -->
     <section class="stats">
-        <article>
-            <h2 id="totalQuests">0</h2>
-            <p>Total Quests</p>
-        </article>
-        <article>
-            <h2 id="paidQuests">0</h2>
-            <p>Paid Quests</p>
-        </article>
-        <article>
-            <h2 id="completedQuests">0</h2>
-            <p>Completed</p>
-        </article>
+        <article><h2 id="totalQuests">0</h2><p>Total Quests</p></article>
+        <article><h2 id="paidQuests">0</h2><p>Paid Quests</p></article>
+        <article><h2 id="completedQuests">0</h2><p>Completed</p></article>
     </section>
 
-    <!-- Locked Message (for non-logged-in users) -->
     <div id="lockedMessage" style="display:block;text-align:center;padding:3rem 1rem;">
         <p style="font-size:1.2rem;color:var(--muted);">🔒 Sign in to view and post quests</p>
         <button class="btn primary" onclick="showAuthStep('signin')" style="margin-top:1rem;">Sign In to Enter</button>
     </div>
 
-    <!-- Quest Board -->
     <div id="questBoard" style="display:none;">
-
-        <!-- Post Quest Form -->
         <section class="card form-card">
             <h2 style="margin-top:0;">📜 Post a New Quest</h2>
             <form id="questForm">
                 <label>Title
-                    <input type="text" id="title" placeholder="e.g., Design a logo for my cafe" required />
+                    <input type="text" id="title" placeholder="e.g., Design a logo for my cafe" maxlength="200" required />
                 </label>
                 <label>Description
-                    <textarea id="description" rows="3" placeholder="Describe the task in detail..." required></textarea>
+                    <textarea id="description" rows="3" placeholder="Describe the task in detail..." maxlength="2000" required></textarea>
                 </label>
                 <div class="row">
                     <label>₹ Reward (0 = free)
                         <input type="number" id="reward" min="0" value="0" />
-                    </label>
-                    <label>🧚 Fairy Coin Reward
-                        <input type="number" id="fairyReward" min="0" value="0" />
                     </label>
                     <label>Category
                         <select id="category">
@@ -315,10 +215,7 @@
             </form>
         </section>
 
-        <!-- Sidebar + Quest List -->
-        <div style="display:flex;gap:1.5rem;align-items:flex-start;" id="sidebar" style="display:none;">
-
-            <!-- Filters Sidebar -->
+        <div style="display:flex;gap:1.5rem;align-items:flex-start;" id="sidebar">
             <aside style="min-width:180px;position:sticky;top:1rem;">
                 <div class="card" style="padding:1rem;">
                     <h3 style="margin-top:0;font-size:1rem;">Filters</h3>
@@ -343,17 +240,15 @@
                 </div>
             </aside>
 
-            <!-- Quest List -->
             <div style="flex:1;">
                 <div class="section-header" style="margin-bottom:1rem;">
                     <h2 style="margin:0;">Quest Board</h2>
-                    <p style="margin:0.3rem 0 0;color:var(--muted);font-size:0.9rem;">Accept quests, complete work, earn rewards!</p>
+                    <p style="margin:0.3rem 0 0;color:var(--muted);font-size:0.9rem;">Accept work, execute safely, and trace metrics.</p>
                 </div>
                 <div id="questList" class="quest-list"></div>
             </div>
         </div>
 
-        <!-- Admin Panel -->
         <div id="adminToggle" style="display:none;margin-top:2rem;">
             <button class="btn primary" onclick="toggleAdmin()" style="width:100%;">⚙️ Admin Dashboard</button>
         </div>
@@ -361,46 +256,15 @@
             <div class="card" style="padding:1.5rem;">
                 <h2 style="margin-top:0;">⚙️ Admin Dashboard</h2>
                 <div class="stats" style="margin-top:1rem;">
-                    <article>
-                        <h2 id="adminRevenue">₹ 0</h2>
-                        <p>Guild Revenue</p>
-                    </article>
-                    <article>
-                        <h2 id="adminUsers">0</h2>
-                        <p>Active Users</p>
-                    </article>
-                    <article>
-                        <h2 id="adminTotalQuests">0</h2>
-                        <p>Total Quests</p>
-                    </article>
-                    <article>
-                        <h2 id="adminPending">0</h2>
-                        <p>Pending Payments</p>
-                    </article>
-                    <article>
-                        <h2 id="adminCoins">0</h2>
-                        <p>Total Fairy Coins</p>
-                    </article>
-                    <article>
-                        <h2 id="adminDisputed">0</h2>
-                        <p>Disputed Quests</p>
-                    </article>
-                    <article>
-                        <h2 id="adminPurchases">0</h2>
-                        <p>Pending Purchases</p>
-                    </article>
-                    <article>
-                        <h2 id="adminReports">0</h2>
-                        <p>Pending Reports</p>
-                    </article>
-                </div>
-
-                <div class="admin-section">
-                    <h3>🧚 Pending Fairy Purchases</h3>
-                    <div id="adminPurchasesTable"></div>
+                    <article><h2 id="adminRevenue">₹ 0</h2><p>Guild Revenue Traveled</p></article>
+                    <article><h2 id="adminUsers">0</h2><p>Active Users</p></article>
+                    <article><h2 id="adminTotalQuests">0</h2><p>Total Quests</p></article>
+                    <article><h2 id="adminPending">0</h2><p>Pending Confirmations</p></article>
+                    <article><h2 id="adminDisputed">0</h2><p>Disputed Nodes</p></article>
+                    <article><h2 id="adminReports">0</h2><p>Pending Reports</p></article>
                 </div>
                 <div class="admin-section">
-                    <h3>🚨 Pending Reports</h3>
+                    <h3>🚨 Pending Fraud Reports</h3>
                     <div id="adminReportsTable"></div>
                 </div>
                 <div class="admin-section">
@@ -412,12 +276,9 @@
     </div>
 </main>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- QUEST CARD TEMPLATE -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 <template id="questTemplate">
     <article class="card quest-card" style="padding:1.2rem;">
-        <img class="quest-image" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:0.75rem;" alt="Quest image" />
+        <img class="quest-image" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:0.75rem;" alt="Quest payload" />
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
             <span class="badge status-badge pending">pending</span>
             <span class="badge cat-badge">Misc</span>
@@ -427,7 +288,6 @@
         <p class="quest-desc" style="color:var(--muted);margin:0.5rem 0;line-height:1.5;"></p>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin:0.75rem 0;">
             <span class="badge reward-tag free">FREE QUEST</span>
-            <span class="badge fairy-tag" style="display:none;background:#6b8cff33;color:#6b8cff;"></span>
         </div>
         <p class="quest-meta" style="font-size:0.85rem;color:#d5c9f3;margin-bottom:0.5rem;">
             Posted by: <span class="poster-email"></span>
