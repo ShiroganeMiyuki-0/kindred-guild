@@ -36,6 +36,7 @@ function setupEventListeners() {
     const btnBackToSignIn = document.getElementById('btnBackToSignIn');
     const btnResendCode = document.getElementById('btnResendCode');
     const btnVerifyEmail = document.getElementById('btnVerifyEmail');
+    const btnCloseAuth = document.getElementById('btnCloseAuth'); // Fixed close component track
     const btnCloseReport = document.getElementById('btnCloseReport');
     const btnSubmitReport = document.getElementById('btnSubmitReport');
     const btnCloseVerify = document.getElementById('btnCloseVerify');
@@ -51,12 +52,23 @@ function setupEventListeners() {
     if (btnBackToSignIn) btnBackToSignIn.addEventListener('click', () => showAuthStep('signin'));
     if (btnResendCode) btnResendCode.addEventListener('click', resendVerificationEmail);
     if (btnVerifyEmail) btnVerifyEmail.addEventListener('click', checkEmailConfirmed);
+    if (btnCloseAuth) btnCloseAuth.addEventListener('click', closeAuthModal);
     if (btnCloseReport) btnCloseReport.addEventListener('click', closeReportModal);
     if (btnSubmitReport) btnSubmitReport.addEventListener('click', submitReport);
     if (btnCloseVerify) btnCloseVerify.addEventListener('click', closeVerifyModal);
     if (btnConfirmWork) btnConfirmWork.addEventListener('click', () => confirmWorkReceived(currentVerifyQuestId));
     if (btnConfirmPayment) btnConfirmPayment.addEventListener('click', () => confirmPaymentReceived(currentVerifyQuestId));
     if (btnRaiseDispute) btnRaiseDispute.addEventListener('click', () => raiseDispute(currentVerifyQuestId));
+
+    // FIXED: Background listener dismisses windows when clicking the outside background overlay
+    window.addEventListener('click', (event) => {
+        const authModal = document.getElementById('authModal');
+        const reportModal = document.getElementById('reportModal');
+        const verifyModal = document.getElementById('verifyModal');
+        if (event.target === authModal) closeAuthModal();
+        if (event.target === reportModal) closeReportModal();
+        if (event.target === verifyModal) closeVerifyModal();
+    });
 
     const questForm = document.getElementById('questForm');
     if (questForm) questForm.addEventListener('submit', handleQuestSubmit);
@@ -338,22 +350,6 @@ async function signOut() {
     renderQuests();
 }
 
-function showAuthError(msg) {
-    const currentStep = document.querySelector('.auth-step:not([style*="display: none"])');
-    const err = currentStep ? currentStep.querySelector('.auth-error') : document.getElementById('signInError');
-    if (err) { err.textContent = msg; err.style.display = 'block'; }
-}
-
-function showAuthSuccess(msg) {
-    const currentStep = document.querySelector('.auth-step:not([style*="display: none"])');
-    const success = currentStep ? currentStep.querySelector('.auth-success') : document.getElementById('signInSuccess');
-    if (success) { success.textContent = msg; success.style.display = 'block'; setTimeout(() => success.style.display = 'none', 5000); }
-}
-
-function clearAuthError() {
-    document.querySelectorAll('.auth-error').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
-}
-
 // ─── QUEST LIFECYCLE ROUTINES ───
 async function handleQuestSubmit(e) {
     e.preventDefault();
@@ -510,7 +506,6 @@ async function raiseDispute(questId) {
         const { error } = await supabaseClient.from('quests').update({ dispute_raised: true, status: 'disputed' }).eq('id', questId);
         if (error) { showErrorToast(error.message); return; }
 
-        // Also create a report
         const reportedId = currentUser.id === quest.posted_by ? quest.accepted_by : quest.posted_by;
         await supabaseClient.from('reports').insert({
             quest_id: questId, reporter_id: currentUser.id, reported_id: reportedId, report_type: 'other', description: escapeHtml(reason.trim())
@@ -550,7 +545,7 @@ async function deleteQuest(id) {
     } catch (err) { showErrorToast(err.message); }
 }
 
-// ─── COMPLIANCE ENGINE: STRIKE AND ACCOUNT SUSPENSION ───
+// ─── COMPLIANCE ENGINE ───
 let currentReportQuestId = null;
 
 function openReportModal(questId) {
