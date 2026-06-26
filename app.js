@@ -1,5 +1,6 @@
-const SUPABASE_URL = import.meta.env?.VITE_SUPABASE_URL || 'https://owpyqeubmfvtuqjaxauo.supabase.co';
-const SUPABASE_KEY = import.meta.env?.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
+// ===== BROWSER-SAFE DATABASE CONFIGURATION =====
+const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -103,7 +104,7 @@ async function checkExistingSession() {
     }
 }
 
-// ─── REPUTATION SECURITY GATE ───
+// ─── REPUTATION MONITORING CONTROL ───
 async function checkBanStatus(userId) {
     if (!userId) return false;
     const { data } = await supabaseClient
@@ -113,25 +114,27 @@ async function checkBanStatus(userId) {
         .maybeSingle();
 
     if (data?.is_banned) {
-        alert("🚫 ACCESS TERMINATED: This identity profile is banned globally for strike rules violations.");
+        alert("🚫 ACCESS TERMINATED: This identity profile has been banned for strike rule violations.");
         await signOut();
         return true;
     }
     return false;
 }
 
-// ─── INPUT DATA SANITIZATION UTILITIES ───
+// ─── DATA SANITIZATION UTILITIES ───
 function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 }
 
 function escapeHtml(text) {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
 function escapeHtmlAttribute(text) {
+    if (!text) return '';
     return text
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -141,7 +144,7 @@ function escapeHtmlAttribute(text) {
 }
 
 function showErrorToast(message) {
-    console.error('❌ Guild runtime fault:', message);
+    console.error('❌ Guild engine fault:', message);
     showToast(`❌ ${message}`);
 }
 
@@ -219,22 +222,22 @@ function handleEnter(event) {
     }
 }
 
-// ─── AUTH CONTROLLERS ───
+// ─── IDENTITY FLOW CONTROL ───
 async function signUp() {
     const email = document.getElementById('signUpEmail')?.value.trim() || '';
     const password = document.getElementById('signUpPassword')?.value || '';
     const confirmPassword = document.getElementById('signUpConfirmPassword')?.value;
 
-    if (!email || !password) { showAuthError('Provide identity attributes.'); return; }
-    if (!validateEmail(email)) { showAuthError('Invalid email configuration rule.'); return; }
-    if (password.length < 6) { showAuthError('Identity secret string length must be >= 6.'); return; }
-    if (password !== confirmPassword) { showAuthError('Secret vectors conflict.'); return; }
+    if (!email || !password) { showAuthError('Provide registration attributes.'); return; }
+    if (!validateEmail(email)) { showAuthError('Invalid email domain rules.'); return; }
+    if (password.length < 6) { showAuthError('Identity password string length must be >= 6.'); return; }
+    if (password !== confirmPassword) { showAuthError('Password configurations conflict.'); return; }
 
     setAuthLoading(true, 'btnSignUp');
     clearAuthError();
 
     try {
-        const { data, error } = await supabaseClient.auth.signUp({
+        const { error } = await supabaseClient.auth.signUp({
             email, password, options: { emailRedirectTo: window.location.origin }
         });
 
@@ -242,7 +245,7 @@ async function signUp() {
         showAuthStep('verify');
         startResendCooldown();
     } catch (err) {
-        showAuthError('Identity registration runtime exception.');
+        showAuthError('Identity transaction validation exception.');
     } finally {
         setAuthLoading(false, 'btnSignUp');
     }
@@ -259,9 +262,9 @@ async function resendVerificationEmail() {
             type: 'signup', email: email, options: { emailRedirectTo: window.location.origin }
         });
         if (error) showAuthError(error.message);
-        else { showAuthSuccess('📧 Token transaction dispatched. Review parameters inside your mailbox.'); startResendCooldown(); }
+        else { showAuthSuccess('📧 Verification token dispatched. Check your mailbox parameters.'); startResendCooldown(); }
     } catch (err) {
-        showAuthError('Resend runtime crash.');
+        showAuthError('Resend mechanism runtime error.');
     } finally {
         setAuthLoading(false, 'btnResendCode');
     }
@@ -299,10 +302,10 @@ async function checkEmailConfirmed() {
                 await loadQuests();
             }, 2000);
         } else {
-            showAuthError('Email pending confirmation metadata update.');
+            showAuthError('Email pending confirmation flag sync.');
         }
     } catch (err) {
-        showAuthError('Handshake verify tracking failed.');
+        showAuthError('Handshake lookup failed.');
     } finally {
         setAuthLoading(false, 'btnVerifyEmail');
     }
@@ -312,7 +315,7 @@ async function signIn() {
     const email = document.getElementById('signInEmail').value.trim();
     const password = document.getElementById('signInPassword').value;
 
-    if (!email || !password) { showAuthError('Empty vector.'); return; }
+    if (!email || !password) { showAuthError('Provide validation parameters.'); return; }
     setAuthLoading(true, 'btnSignIn');
     clearAuthError();
 
@@ -321,7 +324,7 @@ async function signIn() {
         if (error) { showAuthError(error.message); return; }
         closeAuthModal();
     } catch (err) {
-        showAuthError('Identity payload matching down.');
+        showAuthError('Login profile lookup error.');
     } finally {
         setAuthLoading(false, 'btnSignIn');
     }
@@ -351,10 +354,10 @@ function clearAuthError() {
     document.querySelectorAll('.auth-error').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
 }
 
-// ─── QUEST STRUCT ARCHITECTURE CONTROLLERS ───
+// ─── QUEST LIFECYCLE ROUTINES ───
 async function handleQuestSubmit(e) {
     e.preventDefault();
-    if (!currentUser) { alert('Unauthorized node context execution.'); return; }
+    if (!currentUser) { alert('Unauthorized node security context.'); return; }
 
     const title = escapeHtml(document.getElementById('title').value.trim());
     const description = escapeHtml(document.getElementById('description').value.trim());
@@ -364,7 +367,7 @@ async function handleQuestSubmit(e) {
     const deadlineVal = document.getElementById('deadline').value;
     const imageFile = document.getElementById('questImage').files[0];
 
-    if (reward > 0 && !upiId) { alert('UPI ID configuration missing.'); return; }
+    if (reward > 0 && !upiId) { alert('UPI pointer identification required for paid missions.'); return; }
 
     let deadline = deadlineVal ? new Date(deadlineVal).toISOString() : null;
     let imageUrl = '';
@@ -395,7 +398,7 @@ async function handleQuestSubmit(e) {
 
         document.getElementById('questForm').reset();
         await loadQuests();
-        showToast('✅ Quest payload set loaded inside ecosystem!');
+        showToast('✅ Quest payload cataloged inside registry.');
     } catch (err) {
         showErrorToast(err.message);
     }
@@ -411,7 +414,7 @@ async function acceptQuest(id) {
             status: 'accepted', accepted_by: currentUser.id, acceptor_email: currentUser.email
         }).eq('id', id);
         if (error) showErrorToast(error.message);
-        else { await loadQuests(); showToast('✅ Node lock acquisition finished.'); }
+        else { await loadQuests(); showToast('🤝 Quest context successfully accepted.'); }
     } catch (err) { showErrorToast(err.message); }
 }
 
@@ -426,7 +429,7 @@ async function completeQuest(id) {
         }).eq('id', id);
 
         if (error) showErrorToast(error.message);
-        else { await loadQuests(); showToast('✅ Finished work transaction broadcasted.'); }
+        else { await loadQuests(); showToast('✅ Verification request queued for client.'); }
     } catch (err) { showErrorToast(err.message); }
 }
 
@@ -491,7 +494,7 @@ async function checkBothConfirmed(questId) {
 
     if (workConfirmed && paymentConfirmed) {
         await supabaseClient.from('quests').update({ status: 'completed' }).eq('id', questId);
-        showToast('🎉 Verification complete. State sequence matching successful.');
+        showToast('🎉 Transaction sequence completed successfully.');
     }
 }
 
@@ -500,14 +503,13 @@ async function raiseDispute(questId) {
     const quest = quests.find(q => q.id === questId);
     if (!quest) return;
 
-    const reason = prompt('Trace issue context parameters:');
+    const reason = prompt('Specify dispute validation reason:');
     if (!reason || !reason.trim()) return;
 
     try {
         const { error } = await supabaseClient.from('quests').update({ dispute_raised: true, status: 'disputed' }).eq('id', questId);
         if (error) { showErrorToast(error.message); return; }
 
-        // FIXED: Replaced old SQL comment bug syntax from -- to standard JS line syntax
         // Also create a report
         const reportedId = currentUser.id === quest.posted_by ? quest.accepted_by : quest.posted_by;
         await supabaseClient.from('reports').insert({
@@ -516,7 +518,7 @@ async function raiseDispute(questId) {
 
         closeVerifyModal();
         await loadQuests();
-        alert('🚨 Conflict condition mapped to ledger context. Verification block frozen.');
+        alert('🚨 Disputed parameter state tracked. Node lock frozen pending admin evaluation.');
     } catch (err) { showErrorToast(err.message); }
 }
 
@@ -524,7 +526,7 @@ async function cancelQuest(id) {
     if (!currentUser) return;
     const quest = quests.find(q => q.id === id);
     if (!quest || quest.accepted_by !== currentUser.id) return;
-    if (!confirm('Drop pointer lock?')) return;
+    if (!confirm('Drop execution allocation lock?')) return;
 
     try {
         const { error } = await supabaseClient.from('quests').update({
@@ -539,7 +541,7 @@ async function deleteQuest(id) {
     if (!currentUser) return;
     const quest = quests.find(q => q.id === id);
     if (!quest || quest.posted_by !== currentUser.id) return;
-    if (!confirm('Purge structural data block?')) return;
+    if (!confirm('Purge structural ledger block permanently?')) return;
 
     try {
         const { error } = await supabaseClient.from('quests').delete().eq('id', id);
@@ -548,17 +550,7 @@ async function deleteQuest(id) {
     } catch (err) { showErrorToast(err.message); }
 }
 
-async function confirmPayment(questId, field) {
-    if (!currentUser) return;
-    const updateObj = {}; updateObj[field] = true;
-    try {
-        const { error } = await supabaseClient.from('quests').update(updateObj).eq('id', questId);
-        if (error) showErrorToast(error.message);
-        else await loadQuests();
-    } catch (err) { showErrorToast(err.message); }
-}
-
-// ─── REPUTATION ENGINE: STRIKE AND AUTO-BAN ENGINE ───
+// ─── COMPLIANCE ENGINE: STRIKE AND ACCOUNT SUSPENSION ───
 let currentReportQuestId = null;
 
 function openReportModal(questId) {
@@ -590,7 +582,7 @@ async function submitReport() {
         if (error) { alert(error.message); return; }
         closeReportModal();
         await loadQuests();
-        alert('🚨 Incident log frame submitted to network administrators.');
+        alert('🚨 Abuse report registered into database network framework.');
     } catch (err) { alert(err.message); }
 }
 
@@ -627,7 +619,7 @@ async function addStrike(userId, userEmail, questId, reason) {
             .update({ report_count: count, is_banned: isBanned })
             .eq('user_id', userId);
 
-        alert(isBanned ? '🚨 CRITICAL STRATAGEM: Node exceeded strike limits. Target banned globally.' : 'Violation index updated (+1 strike).');
+        alert(isBanned ? '🚨 SECURITY PROTOCOL: User hit maximum strike index and has been banned.' : 'Strike counted inside network registry.');
         await loadQuests();
     } catch (err) { alert(err.message); }
 }
@@ -643,7 +635,7 @@ async function sendComment(questId, message) {
     } catch (err) { alert(err.message); }
 }
 
-// ─── UI CONTROLLER COMPONENT ───
+// ─── USER INTERFACE RUNTIME VISUAL CONTROLLERS ───
 function getRankInfo(count) {
     if (count >= 50) return { rank: 'S-Rank', color: '#ff6b35', bg: '#ff6b3522' };
     if (count >= 30) return { rank: 'A-Rank', color: '#ffd700', bg: '#ffd70022' };
@@ -749,7 +741,7 @@ function renderAdminReports() {
     const container = document.getElementById('adminReportsTable');
     if (!container) return;
     const pending = reports.filter(r => r.status === 'pending');
-    if (pending.length === 0) { container.innerHTML = '<p>No pending logs.</p>'; return; }
+    if (pending.length === 0) { container.innerHTML = '<p>No pending entries found.</p>'; return; }
 
     let html = '<table><tr style="background:var(--card);"><th>Target Profile</th><th>Incident Parameter</th><th>Controls</th></tr>';
     pending.forEach(r => {
@@ -762,11 +754,11 @@ function renderAdminDisputes() {
     const container = document.getElementById('adminDisputesTable');
     if (!container) return;
     const disputed = quests.filter(q => q.status === 'disputed');
-    if (disputed.length === 0) { container.innerHTML = '<p>No conflicting vectors.</p>'; return; }
+    if (disputed.length === 0) { container.innerHTML = '<p>No active disputes.</p>'; return; }
 
     let html = '<table><tr style="background:var(--card);"><th>Title</th><th>Poster</th><th>Acceptor</th><th>Action</th></tr>';
     disputed.forEach(q => {
-        html += `<tr><td>${escapeHtml(q.title)}</td><td>${escapeHtml(q.poster_email)}</td><td>${escapeHtml(q.acceptor_email || 'N/A')}</td><td><button onclick="resolveDispute('${escapeHtmlAttribute(q.id)}', 'poster')">Close</button></td></tr>`;
+        html += `<tr><td>${escapeHtml(q.title)}</td><td>${escapeHtml(q.poster_email)}</td><td>${escapeHtml(q.acceptor_email || 'N/A')}</td><td><button onclick="resolveDispute('${escapeHtmlAttribute(q.id)}', 'poster')">Close Case</button></td></tr>`;
     });
     container.innerHTML = html + '</table>';
 }
@@ -787,7 +779,7 @@ async function resolveDispute(questId, favor) {
     } catch (err) { alert(err.message); }
 }
 
-// ─── DATA SYNC SYNCHRONIZER ENGINE ───
+// ─── DATA ENGINE DATABASE SYNCHRONIZER ───
 async function loadQuests(options = {}) {
     try {
         const [questData, ratingData, strikeData, commentData, reportData, profileData] = await Promise.all([
@@ -810,12 +802,12 @@ async function loadQuests(options = {}) {
     } catch (err) { console.error(err); }
 }
 
-// REALTIME POSTGRES PIPELINE SYNC
+// REALTIME POSTGRES LIVE REFRESH SYNC
 ['quests', 'ratings', 'strikes', 'comments', 'reports'].forEach(table => {
     supabaseClient.channel(`public:${table}`).on('postgres_changes', { event: '*', schema: 'public', table }, () => loadQuests()).subscribe();
 });
 
-// ─── RENDERING DATA VIEW CARDS ───
+// ─── MATRIX VIEW RENDERING CARDS ───
 function renderQuests() {
     const list = document.getElementById('questList');
     if (!list) return;
@@ -826,7 +818,7 @@ function renderQuests() {
     else if (currentTab === 'accepted') display = display.filter(q => q.accepted_by === currentUser?.id);
     if (currentFilter !== 'all') display = display.filter(q => q.category === currentFilter);
 
-    if (display.length === 0) { list.innerHTML = '<p style="text-align:center;color:var(--muted);padding:2rem;">Queue clear.</p>'; computeStats(display); return; }
+    if (display.length === 0) { list.innerHTML = '<p style="text-align:center;color:var(--muted);padding:2rem;">Queue empty.</p>'; computeStats(display); return; }
 
     display.forEach(quest => {
         const node = document.getElementById('questTemplate')?.content?.cloneNode(true);
@@ -835,7 +827,7 @@ function renderQuests() {
         card.dataset.questId = quest.id;
 
         const img = card.querySelector('.quest-image');
-        if (img && quest.image_url) { img.src = quest.image_url; img.classList.add('visible'); }
+        if (img && quest.image_url) { img.src = quest.image_url; img.style.display = 'block'; }
 
         const statusBadge = card.querySelector('.status-badge');
         if (statusBadge) { statusBadge.className = `status-badge status-${quest.status}`; statusBadge.textContent = quest.status.replace('_', ' '); }
@@ -869,7 +861,7 @@ function renderQuests() {
         if (paymentSection && quest.reward > 0) {
             const paymentInfo = document.createElement('div');
             paymentInfo.style.cssText = 'background:var(--accent-glow); border:1px solid var(--accent); border-radius:8px; padding:0.75rem; margin:0.5rem 0; font-size:0.85rem;';
-            paymentInfo.innerHTML = `<strong>💰 UPI Payload Pointer:</strong> ${escapeHtml(quest.poster_upi || 'None')}`;
+            paymentInfo.innerHTML = `<strong>💰 UPI Payment ID:</strong> ${escapeHtml(quest.poster_upi || 'None')}`;
             paymentSection.appendChild(paymentInfo);
         }
 
@@ -898,7 +890,7 @@ function renderQuests() {
             if (canRatePoster || canRateAcceptor) {
                 const rDiv = document.createElement('div');
                 rDiv.style.cssText = 'margin-top:0.75rem; padding:0.75rem; background:var(--surface-hover); border-radius:8px;';
-                rDiv.innerHTML = '<strong>⭐ Evaluation Metrics Matrix</strong><br>';
+                rDiv.innerHTML = '<strong>⭐ Evaluation Performance Metrics</strong><br>';
                 if (canRatePoster) rDiv.appendChild(createRatingRow(quest.id, quest.posted_by, quest.poster_email, 'Rate Client'));
                 if (canRateAcceptor) rDiv.appendChild(createRatingRow(quest.id, quest.accepted_by, quest.acceptor_email, 'Rate Contractor'));
                 extras.appendChild(rDiv);
@@ -915,7 +907,7 @@ function renderQuests() {
                 strikeBtn.className = 'btn btn-ghost btn-sm'; strikeBtn.textContent = '🚨 File Incident Strike';
                 strikeBtn.style.cssText = 'color:var(--danger); border-color:var(--danger); font-size:0.8rem;';
                 strikeBtn.addEventListener('click', () => {
-                    const reason = prompt('Specify violation description rules:');
+                    const reason = prompt('Specify strike violation description:');
                     if (reason && reason.trim()) addStrike(quest.posted_by, quest.poster_email, quest.id, reason.trim());
                 });
                 actionDiv.appendChild(strikeBtn);
