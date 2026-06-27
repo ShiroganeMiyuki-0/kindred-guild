@@ -169,6 +169,49 @@ function setAuthLoading(isLoading, buttonId) {
     }
 }
 
+function showAuthError(message) {
+    const stepSignIn = document.getElementById('stepSignIn');
+    const stepSignUp = document.getElementById('stepSignUp');
+    const stepVerify = document.getElementById('stepVerify');
+    
+    let errorElement;
+    if (stepSignIn && stepSignIn.style.display === 'block') {
+        errorElement = document.getElementById('signInError');
+    } else if (stepSignUp && stepSignUp.style.display === 'block') {
+        errorElement = document.getElementById('signUpError');
+    } else if (stepVerify && stepVerify.style.display === 'block') {
+        errorElement = document.getElementById('verifyError');
+    }
+    
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+    console.error('Auth error:', message);
+}
+
+function clearAuthError() {
+    const signInError = document.getElementById('signInError');
+    const signUpError = document.getElementById('signUpError');
+    const verifyError = document.getElementById('verifyError');
+    const signInSuccess = document.getElementById('signInSuccess');
+    const signUpSuccess = document.getElementById('signUpSuccess');
+    const verifySuccess = document.getElementById('verifySuccess');
+    
+    [signInError, signUpError, verifyError].forEach(el => {
+        if (el) {
+            el.textContent = '';
+            el.style.display = 'none';
+        }
+    });
+    [signInSuccess, signUpSuccess, verifySuccess].forEach(el => {
+        if (el) {
+            el.textContent = '';
+            el.style.display = 'none';
+        }
+    });
+}
+
 function showAuthStep(step) {
     const stepSignIn = document.getElementById('stepSignIn');
     const stepSignUp = document.getElementById('stepSignUp');
