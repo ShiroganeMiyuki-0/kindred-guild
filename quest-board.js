@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — QUEST BOARD (FIXED)
+// KINDRED GUILD — QUEST BOARD (DEBUGGED)
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -24,6 +24,7 @@ const modalContent = document.getElementById('modalContent');
     return;
   }
   currentUser = user;
+  console.log('Current user ID:', user.id);
 
   const { data: profile } = await sb
     .from('user_profiles')
@@ -77,6 +78,7 @@ async function loadQuests() {
   }
 
   quests = data || [];
+  console.log('Loaded quests:', quests.length, quests);
 
   // Client-side sort for "pay"
   if (sort === 'pay') {
@@ -88,6 +90,30 @@ async function loadQuests() {
   }
 
   renderQuests();
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return 'No deadline';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = date - now;
+  const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHrs / 24);
+
+  if (diffMs < 0) return 'Expired';
+  if (diffHrs < 1) return 'Less than 1 hour';
+  if (diffHrs < 24) return diffHrs + ' hours left';
+  if (diffDays === 1) return '1 day left';
+  if (diffDays < 7) return diffDays + ' days left';
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }) + ' at ' + date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 
 function renderQuests() {
@@ -112,9 +138,7 @@ function renderQuests() {
                        quest.payment_type === 'upi' ? '₹' + quest.upi_amount : 'Free';
     const posterName = quest.poster?.display_name || quest.poster?.username || 'Unknown';
     const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '0.0';
-    const deadlineStr = quest.deadline ? new Date(quest.deadline).toLocaleDateString() : 'No deadline';
-
-    console.log('Quest:', quest.title, 'poster_id:', quest.poster_id, 'currentUser:', currentUser?.id, 'isOwn:', isOwn);
+    const deadlineStr = formatDate(quest.deadline);
 
     return `
       <div class="quest-card">
@@ -124,7 +148,7 @@ function renderQuests() {
         <div class="description">${escapeHtml(quest.description)}</div>
         <div class="meta">
           <span class="reward">${rewardText}</span>
-          <span class="deadline">📅 ${deadlineStr}</span>
+          <span class="deadline">⏰ ${deadlineStr}</span>
         </div>
         <button class="accept-btn ${isOwn ? 'own' : ''}" 
                 ${isOwn ? 'disabled' : 'onclick="openAcceptModal(\'' + quest.id + '\')"'}>
@@ -196,9 +220,8 @@ async function confirmAccept() {
   }
 
   closeModal();
-  // Redirect to quest detail or show success
-  alert('Quest accepted! Quest detail page coming soon.');
-  loadQuests();
+  alert('Quest accepted! Redirecting to quest detail...');
+  window.location.href = 'quest-detail.html?id=' + selectedQuestId;
 }
 
 async function logout() {
