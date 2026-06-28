@@ -4,6 +4,8 @@
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
 
+// Replace YOUR_SUPABASE_ANON_KEY above with your actual key
+
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const usernameInput = document.getElementById('username');
@@ -14,6 +16,7 @@ const messageEl = document.getElementById('message');
 function showMessage(text, type) {
   messageEl.textContent = text;
   messageEl.className = 'message ' + (type || 'error');
+  console.log('[' + (type || 'error') + ']', text);
 }
 
 function clearMessage() {
@@ -37,7 +40,7 @@ async function createProfile() {
   username = slugify(username);
 
   if (username.length < 3) {
-    showMessage('Username must be at least 3 characters.', 'error');
+    showMessage('Username must be at least 3 characters (letters, numbers, underscores only).', 'error');
     return;
   }
 
@@ -45,67 +48,96 @@ async function createProfile() {
   createBtn.disabled = true;
   createBtn.textContent = 'Creating...';
 
-  // Get current user
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    showMessage('Session expired. Please log in again.', 'error');
-    setTimeout(() => window.location.href = 'auth.html', 1500);
-    return;
-  }
-
-  // Check if profile already exists
-  const { data: existing } = await supabase
-    .from('user_profiles')
-    .select('id')
-    .eq('id', user.id)
-    .single();
-
-  if (existing) {
-    window.location.href = 'quest-board.html';
-    return;
-  }
-
-  // Insert profile
-  const { error: insertError } = await supabase
-    .from('user_profiles')
-    .insert({
-      id: user.id,
-      username: username,
-      display_name: displayName || username,
-      reputation_score: 0,
-      is_suspended: false
-    });
-
-  if (insertError) {
-    if (insertError.message.includes('duplicate') || insertError.message.includes('unique')) {
-      showMessage('That username is already taken. Try another.', 'error');
-    } else {
-      showMessage(insertError.message, 'error');
+    if (userError) {
+      console.error('Get user error:', userError);
+      showMessage('Session error: ' + userError.message, 'error');
+      createBtn.disabled = false;
+      createBtn.textContent = 'Join the Guild';
+      return;
     }
+
+    if (!user) {
+      showMessage('Not logged in. Redirecting...', 'error');
+      setTimeout(() => window.location.href = 'auth.html', 1500);
+      return;
+    }
+
+    console.log('Creating profile for user:', user.id);
+
+    // Check if profile already exists
+    const { data: existing, error: existingError } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (existing) {
+      console.log('Profile already exists, redirecting');
+      window.location.href = 'quest-board.html';
+      return;
+    }
+
+    // Insert profile
+    const { error: insertError } = await supabase
+      .from('user_profiles')
+      .insert({
+        id: user.id,
+        username: username,
+        display_name: displayName || username,
+        reputation_score: 0,
+        is_suspended: false
+      });
+
+    if (insertError) {
+      console.error('Insert profile error:', insertError);
+      if (insertError.message.includes('duplicate') || insertError.message.includes('unique') || insertError.code === '23505') {
+        showMessage('That username is already taken. Try another.', 'error');
+      } else {
+        showMessage('Error: ' + insertError.message, 'error');
+      }
+      createBtn.disabled = false;
+      createBtn.textContent = 'Join the Guild';
+      return;
+    }
+
+    console.log('Profile created successfully');
+    showMessage('Welcome to the Guild! Redirecting...', 'success');
+    setTimeout(() => window.location.href = 'quest-board.html', 1000);
+
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    showMessage('Something went wrong. Check console (F12).', 'error');
     createBtn.disabled = false;
     createBtn.textContent = 'Join the Guild';
-    return;
   }
-
-  showMessage('Welcome to the Guild! Redirecting...', 'success');
-  setTimeout(() => window.location.href = 'quest-board.html', 1000);
 }
 
 // Guard: if already has profile, redirect
 (async function guard() {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = 'auth.html';
-    return;
-  }
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('id')
-    .eq('id', user.id)
-    .single();
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (profile) {
-    window.location.href = 'quest-board.html';
+    if (userError || !user) {
+      console.log('No user session, redirecting to auth');
+      window.location.href = 'auth.html';
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (profile) {
+      console.log('Profile exists, redirecting to quest board');
+      window.location.href = 'quest-board.html';
+    }
+  } catch (err) {
+    console.error('Guard error:', err);
   }
 })();
