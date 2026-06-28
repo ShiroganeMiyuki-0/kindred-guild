@@ -77,12 +77,15 @@ async function createProfile() {
       return;
     }
 
+    // For Google users, pre-fill display name from Google profile
+    const googleName = user.user_metadata?.full_name || user.user_metadata?.name || '';
+
     const { error: insertError } = await sb
       .from('user_profiles')
       .insert({
         user_id: user.id,
         username: username,
-        display_name: displayName || username,
+        display_name: displayName || googleName || username,
         reputation_score: 0,
         is_suspended: false
       });
