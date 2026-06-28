@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — QUEST POSTING
+// KINDRED GUILD — QUEST POSTING (DEBUGGED)
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -11,7 +11,6 @@ let coinBalance = 0;
 let selectedType = 'coins';
 let pendingFormData = null;
 
-// DOM refs
 const titleInput = document.getElementById('title');
 const descInput = document.getElementById('description');
 const coinAmountInput = document.getElementById('coinAmount');
@@ -33,7 +32,6 @@ function clearMessage() {
   messageEl.textContent = '';
 }
 
-// Load user + balance
 (async function init() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) {
@@ -42,7 +40,6 @@ function clearMessage() {
   }
   currentUser = user;
 
-  // Load profile
   const { data: profile } = await sb
     .from('user_profiles')
     .select('username, display_name')
@@ -52,20 +49,17 @@ function clearMessage() {
   const name = profile?.display_name || profile?.username || 'Guild Member';
   document.getElementById('userName').textContent = name;
 
-  // Load coin balance
   const { data: balanceData } = await sb.rpc('get_coin_balance', { p_user_id: user.id });
   coinBalance = balanceData || 0;
   document.getElementById('coinBalance').textContent = coinBalance;
   document.getElementById('coinBalance2').textContent = coinBalance;
   document.getElementById('coinBalance3').textContent = coinBalance;
 
-  // Set min deadline to now + 1 hour
   const now = new Date();
   now.setHours(now.getHours() + 1);
   deadlineInput.min = now.toISOString().slice(0, 16);
 })();
 
-// Payment type selection
 function selectPayment(type) {
   selectedType = type;
   document.querySelectorAll('.payment-type').forEach(el => el.classList.remove('selected'));
@@ -74,14 +68,12 @@ function selectPayment(type) {
   document.getElementById('coinsInput').classList.toggle('active', type === 'coins');
   document.getElementById('upiInput').classList.toggle('active', type === 'upi');
 
-  // Update required attributes
   coinAmountInput.required = (type === 'coins');
   upiAmountInput.required = (type === 'upi');
 
   updateCommission();
 }
 
-// Commission calculation
 function updateCommission() {
   if (selectedType === 'coins') {
     const amount = parseInt(coinAmountInput.value) || 0;
@@ -97,7 +89,6 @@ function updateCommission() {
 coinAmountInput.addEventListener('input', updateCommission);
 upiAmountInput.addEventListener('input', updateCommission);
 
-// Form submission
 async function handleSubmit() {
   clearMessage();
 
@@ -145,6 +136,7 @@ async function handleSubmit() {
     // Show UPI risk modal
     pendingFormData = { title, description, deadlineDate, coinAmount, upiAmount, commissionCoins };
     document.getElementById('upiModal').classList.add('active');
+    console.log('UPI modal shown, pending data:', pendingFormData);
     return;
   }
 
@@ -153,10 +145,14 @@ async function handleSubmit() {
 }
 
 async function confirmUpiPost() {
+  console.log('confirmUpiPost called, pending data:', pendingFormData);
   closeUpiModal();
   if (pendingFormData) {
     await postQuest(pendingFormData);
     pendingFormData = null;
+  } else {
+    console.error('No pending form data!');
+    showMessage('Something went wrong. Please try again.', 'error');
   }
 }
 
@@ -170,6 +166,10 @@ async function postQuest({ title, description, deadlineDate, coinAmount, upiAmou
   submitBtn.textContent = 'Posting...';
 
   try {
+    console.log('Posting quest:', {
+      title, description, selectedType, coinAmount, upiAmount, commissionCoins, deadline: deadlineDate.toISOString()
+    });
+
     const { data: questId, error } = await sb.rpc('post_quest_with_commission', {
       p_title: title,
       p_description: description,
@@ -188,6 +188,7 @@ async function postQuest({ title, description, deadlineDate, coinAmount, upiAmou
       return;
     }
 
+    console.log('Quest posted successfully, ID:', questId);
     showMessage('Quest posted successfully! Redirecting to board...', 'success');
     setTimeout(() => window.location.href = 'quest-board.html', 1500);
 
