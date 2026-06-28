@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kindred Guild — Enter the Guild</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface-2: #252530;
+      --text: #e8e8f0;
+      --text-dim: #9090a0;
+      --accent: #c9a84c;
+      --accent-glow: rgba(201, 168, 76, 0.2);
+      --error: #e74c3c;
+      --success: #2ecc71;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo h1 {
+      font-size: 1.8rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+    .logo p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--surface-2);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    button {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #0f0f13;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      margin-top: 8px;
+    }
+    button:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.9; }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .message {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .message.error { background: rgba(231, 76, 60, 0.15); color: var(--error); display: block; }
+    .message.success { background: rgba(46, 204, 113, 0.15); color: var(--success); display: block; }
+    .message.info { background: rgba(201, 168, 76, 0.15); color: var(--accent); display: block; }
+    .divider {
+      text-align: center;
+      margin: 24px 0;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 35%;
+      height: 1px;
+      background: var(--surface-2);
+    }
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+    .hidden { display: none !important; }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="auth-card">
+    <div class="logo">
+      <h1>⚔️ Kindred Guild</h1>
+      <p>What goes comes back</p>
+    </div>
+
+    <!-- Step 1: Email -->
+    <div id="emailStep">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <button id="sendOtpBtn" onclick="sendOTP()">Send Magic Code</button>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div id="otpStep" class="hidden">
+      <div class="divider">Check your inbox</div>
+      <div class="form-group">
+        <label for="otp">Enter 6-digit Code</label>
+        <input type="text" id="otp" placeholder="123456" maxlength="6" autocomplete="one-time-code" />
+      </div>
+      <button id="verifyOtpBtn" onclick="verifyOTP()">Enter the Guild</button>
+      <a class="back-link" onclick="backToEmail()">← Use a different email</a>
+    </div>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
