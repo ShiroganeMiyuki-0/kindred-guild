@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — QUEST BOARD
+// KINDRED GUILD — QUEST BOARD (FIXED)
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -41,13 +41,13 @@ const modalContent = document.getElementById('modalContent');
 })();
 
 async function loadQuests() {
-  questGrid.innerHTML = '<div class="empty-state"><h2>Loading quests...</h2></div>';
+  questGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h2>Loading quests...</h2></div>';
 
   let query = sb
     .from('quests')
     .select(`
       id, title, description, payment_type, coin_amount, upi_amount,
-      status, deadline, created_at,
+      status, deadline, created_at, poster_id,
       poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score)
     `)
     .eq('status', 'open');
@@ -65,7 +65,6 @@ async function loadQuests() {
   } else if (sort === 'deadline') {
     query = query.order('deadline', { ascending: true });
   } else if (sort === 'pay') {
-    // Custom sort for pay is tricky in Supabase, we'll sort client-side
     query = query.order('coin_amount', { ascending: false });
   }
 
@@ -73,13 +72,13 @@ async function loadQuests() {
 
   if (error) {
     console.error('Load quests error:', error);
-    questGrid.innerHTML = '<div class="empty-state"><h2>Error loading quests</h2><p>' + error.message + '</p></div>';
+    questGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h2>Error loading quests</h2><p>' + error.message + '</p></div>';
     return;
   }
 
   quests = data || [];
 
-  // Client-side sort for "pay" (handles both coins and upi)
+  // Client-side sort for "pay"
   if (sort === 'pay') {
     quests.sort((a, b) => {
       const aVal = a.payment_type === 'coins' ? a.coin_amount : a.upi_amount;
@@ -115,6 +114,8 @@ function renderQuests() {
     const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '0.0';
     const deadlineStr = quest.deadline ? new Date(quest.deadline).toLocaleDateString() : 'No deadline';
 
+    console.log('Quest:', quest.title, 'poster_id:', quest.poster_id, 'currentUser:', currentUser?.id, 'isOwn:', isOwn);
+
     return `
       <div class="quest-card">
         <span class="badge ${badgeClass}">${badgeText}</span>
@@ -126,8 +127,7 @@ function renderQuests() {
           <span class="deadline">📅 ${deadlineStr}</span>
         </div>
         <button class="accept-btn ${isOwn ? 'own' : ''}" 
-                onclick="${isOwn ? '' : 'openAcceptModal(\'' + quest.id + '\')'}" 
-                ${isOwn ? 'disabled' : ''}>
+                ${isOwn ? 'disabled' : 'onclick="openAcceptModal(\'' + quest.id + '\')"'}>
           ${isOwn ? 'Your Quest' : 'Accept Quest'}
         </button>
       </div>
@@ -196,7 +196,9 @@ async function confirmAccept() {
   }
 
   closeModal();
-  window.location.href = 'quest-detail.html?id=' + selectedQuestId;
+  // Redirect to quest detail or show success
+  alert('Quest accepted! Quest detail page coming soon.');
+  loadQuests();
 }
 
 async function logout() {
