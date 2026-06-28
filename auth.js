@@ -4,10 +4,8 @@
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
 
-// Replace YOUR_SUPABASE_ANON_KEY above with your actual key from:
-// Supabase Dashboard → Project Settings → API → anon public
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Use 'sb' instead of 'supabase' to avoid conflict with CDN global
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const emailInput = document.getElementById('email');
 const otpInput = document.getElementById('otp');
@@ -40,7 +38,7 @@ async function sendOTP() {
   sendBtn.textContent = 'Sending...';
 
   try {
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await sb.auth.signInWithOtp({
       email: email,
       options: { shouldCreateUser: true }
     });
@@ -81,7 +79,7 @@ async function verifyOTP() {
   verifyBtn.textContent = 'Verifying...';
 
   try {
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { data, error } = await sb.auth.verifyOtp({
       email: email,
       token: token,
       type: 'email'
@@ -97,8 +95,7 @@ async function verifyOTP() {
 
     console.log('Login successful:', data.user.id);
 
-    // Check if user has a profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await sb
       .from('user_profiles')
       .select('username')
       .eq('id', data.user.id)
@@ -131,13 +128,12 @@ function backToEmail() {
   otpInput.value = '';
 }
 
-// Check if already logged in
 (async function checkSession() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
     if (session) {
       console.log('Existing session found:', session.user.id);
-      const { data: profile } = await supabase
+      const { data: profile } = await sb
         .from('user_profiles')
         .select('username')
         .eq('id', session.user.id)
