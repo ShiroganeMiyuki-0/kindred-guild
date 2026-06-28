@@ -1,0 +1,205 @@
+// ============================================
+// KINDRED GUILD — QUEST BOARD
+// ============================================
+const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let quests = [];
+let selectedQuestId = null;
+
+const questGrid = document.getElementById('questGrid');
+const filterType = document.getElementById('filterType');
+const sortBy = document.getElementById('sortBy');
+const acceptModal = document.getElementById('acceptModal');
+const modalContent = document.getElementById('modalContent');
+
+// Load user
+(async function init() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) {
+    window.location.href = 'auth.html';
+    return;
+  }
+  currentUser = user;
+
+  const { data: profile } = await sb
+    .from('user_profiles')
+    .select('username, display_name')
+    .eq('user_id', user.id)
+    .single();
+
+  const name = profile?.display_name || profile?.username || 'Guild Member';
+  document.getElementById('userName').textContent = 'Welcome, ' + name;
+
+  const { data: balance } = await sb.rpc('get_coin_balance', { p_user_id: user.id });
+  document.getElementById('coinBalance').textContent = balance || 0;
+
+  loadQuests();
+})();
+
+async function loadQuests() {
+  questGrid.innerHTML = '<div class="empty-state"><h2>Loading quests...</h2></div>';
+
+  let query = sb
+    .from('quests')
+    .select(`
+      id, title, description, payment_type, coin_amount, upi_amount,
+      status, deadline, created_at,
+      poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score)
+    `)
+    .eq('status', 'open');
+
+  // Filter by type
+  const typeFilter = filterType.value;
+  if (typeFilter !== 'all') {
+    query = query.eq('payment_type', typeFilter);
+  }
+
+  // Sort
+  const sort = sortBy.value;
+  if (sort === 'newest') {
+    query = query.order('created_at', { ascending: false });
+  } else if (sort === 'deadline') {
+    query = query.order('deadline', { ascending: true });
+  } else if (sort === 'pay') {
+    // Custom sort for pay is tricky in Supabase, we'll sort client-side
+    query = query.order('coin_amount', { ascending: false });
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Load quests error:', error);
+    questGrid.innerHTML = '<div class="empty-state"><h2>Error loading quests</h2><p>' + error.message + '</p></div>';
+    return;
+  }
+
+  quests = data || [];
+
+  // Client-side sort for "pay" (handles both coins and upi)
+  if (sort === 'pay') {
+    quests.sort((a, b) => {
+      const aVal = a.payment_type === 'coins' ? a.coin_amount : a.upi_amount;
+      const bVal = b.payment_type === 'coins' ? b.coin_amount : b.upi_amount;
+      return bVal - aVal;
+    });
+  }
+
+  renderQuests();
+}
+
+function renderQuests() {
+  if (quests.length === 0) {
+    questGrid.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <h2>No open quests</h2>
+        <p>Be the first to post one! Or check back later.</p>
+        <a href="quest-post.html" class="btn" style="margin-top: 16px;">Post a Quest</a>
+      </div>
+    `;
+    return;
+  }
+
+  questGrid.innerHTML = quests.map(quest => {
+    const isOwn = quest.poster_id === currentUser?.id;
+    const badgeClass = quest.payment_type === 'coins' ? 'badge-coins' :
+                       quest.payment_type === 'upi' ? 'badge-upi' : 'badge-free';
+    const badgeText = quest.payment_type === 'coins' ? '🪙 Fairy Coins' :
+                      quest.payment_type === 'upi' ? '₹ UPI Direct' : '🎁 Free';
+    const rewardText = quest.payment_type === 'coins' ? quest.coin_amount + ' FC' :
+                       quest.payment_type === 'upi' ? '₹' + quest.upi_amount : 'Free';
+    const posterName = quest.poster?.display_name || quest.poster?.username || 'Unknown';
+    const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '0.0';
+    const deadlineStr = quest.deadline ? new Date(quest.deadline).toLocaleDateString() : 'No deadline';
+
+    return `
+      <div class="quest-card">
+        <span class="badge ${badgeClass}">${badgeText}</span>
+        <h3>${escapeHtml(quest.title)}</h3>
+        <div class="poster">by <span>${escapeHtml(posterName)}</span> ⭐ ${rep}/5</div>
+        <div class="description">${escapeHtml(quest.description)}</div>
+        <div class="meta">
+          <span class="reward">${rewardText}</span>
+          <span class="deadline">📅 ${deadlineStr}</span>
+        </div>
+        <button class="accept-btn ${isOwn ? 'own' : ''}" 
+                onclick="${isOwn ? '' : 'openAcceptModal(\'' + quest.id + '\')'}" 
+                ${isOwn ? 'disabled' : ''}>
+          ${isOwn ? 'Your Quest' : 'Accept Quest'}
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function openAcceptModal(questId) {
+  const quest = quests.find(q => q.id === questId);
+  if (!quest) return;
+
+  selectedQuestId = questId;
+  const isFree = quest.payment_type === 'free';
+
+  if (isFree) {
+    modalContent.innerHTML = `
+      <h3>🎁 This is a free quest</h3>
+      <p>No payment, no ratings, no reputation involved. You're doing this purely out of goodwill. The guild thanks you for it.</p>
+      <div class="modal-buttons">
+        <button class="cancel" onclick="closeModal()">Back</button>
+        <button class="confirm" onclick="confirmAccept()">Accept anyway</button>
+      </div>
+    `;
+  } else {
+    modalContent.innerHTML = `
+      <h3>Accept Quest</h3>
+      <p>Once accepted, you'll be responsible for completing this quest by the deadline. The poster will review your work before payment is released.</p>
+      <div class="modal-buttons">
+        <button class="cancel" onclick="closeModal()">Cancel</button>
+        <button class="confirm" onclick="confirmAccept()">Accept</button>
+      </div>
+    `;
+  }
+
+  acceptModal.classList.add('active');
+}
+
+function closeModal() {
+  acceptModal.classList.remove('active');
+  selectedQuestId = null;
+}
+
+async function confirmAccept() {
+  if (!selectedQuestId) return;
+
+  const { error } = await sb
+    .from('quests')
+    .update({
+      worker_id: currentUser.id,
+      status: 'accepted'
+    })
+    .eq('id', selectedQuestId)
+    .eq('status', 'open');
+
+  if (error) {
+    console.error('Accept error:', error);
+    alert('Failed to accept quest: ' + error.message);
+    closeModal();
+    return;
+  }
+
+  closeModal();
+  window.location.href = 'quest-detail.html?id=' + selectedQuestId;
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = 'auth.html';
+}
