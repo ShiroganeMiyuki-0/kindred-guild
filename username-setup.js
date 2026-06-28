@@ -67,8 +67,8 @@ async function createProfile() {
 
     const { data: existing, error: existingError } = await sb
       .from('user_profiles')
-      .select('id')
-      .eq('id', user.id)
+      .select('user_id')
+      .eq('user_id', user.id)
       .single();
 
     if (existing) {
@@ -80,7 +80,7 @@ async function createProfile() {
     const { error: insertError } = await sb
       .from('user_profiles')
       .insert({
-        id: user.id,
+        user_id: user.id,
         username: username,
         display_name: displayName || username,
         reputation_score: 0,
@@ -123,8 +123,8 @@ async function createProfile() {
 
     const { data: profile } = await sb
       .from('user_profiles')
-      .select('id')
-      .eq('id', user.id)
+      .select('user_id')
+      .eq('user_id', user.id)
       .single();
 
     if (profile) {
