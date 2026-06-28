@@ -124,7 +124,7 @@
 
     <div class="form-group">
       <label for="displayName">Display Name (optional)</label>
-      <input type="text" id="displayName" placeholder="e.g. Aria Moonweaver" maxlength="30" />
+      <input type="text" id="displayName" placeholder="e.g. Aria Moonweaver" maxlength="30" onkeydown="if(event.key==='Enter')createProfile()" />
       <p class="hint">How others see you. Leave blank to use your username.</p>
     </div>
 
