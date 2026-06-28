@@ -4,7 +4,6 @@
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
 
-// Use 'sb' instead of 'supabase' to avoid conflict with CDN global
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const emailInput = document.getElementById('email');
@@ -98,7 +97,7 @@ async function verifyOTP() {
     const { data: profile, error: profileError } = await sb
       .from('user_profiles')
       .select('username')
-      .eq('id', data.user.id)
+      .eq('user_id', data.user.id)
       .single();
 
     if (profileError && profileError.code !== 'PGRST116') {
@@ -136,7 +135,7 @@ function backToEmail() {
       const { data: profile } = await sb
         .from('user_profiles')
         .select('username')
-        .eq('id', session.user.id)
+        .eq('user_id', session.user.id)
         .single();
 
       if (profile) {
