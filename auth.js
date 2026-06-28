@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — AUTH LOGIC (OTP MODE)
+// KINDRED GUILD — AUTH LOGIC (MAGIC LINK FLOW)
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -7,7 +7,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const emailInput = document.getElementById('email');
-const otpInput = document.getElementById('otp');
 const emailStep = document.getElementById('emailStep');
 const otpStep = document.getElementById('otpStep');
 const messageEl = document.getElementById('message');
@@ -37,118 +36,101 @@ async function sendOTP() {
   sendBtn.textContent = 'Sending...';
 
   try {
-    // Use OTP flow with channel: 'email' to get a 6-digit code
     const { error } = await sb.auth.signInWithOtp({
       email: email,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: null  // Force OTP instead of magic link
+        emailRedirectTo: 'https://kindred-guild.vercel.app/auth.html'
       }
     });
 
     sendBtn.disabled = false;
-    sendBtn.textContent = 'Send Magic Code';
+    sendBtn.textContent = 'Send Magic Link';
 
     if (error) {
-      console.error('Send OTP error:', error);
+      console.error('Send error:', error);
       showMessage(error.message, 'error');
       return;
     }
 
-    showMessage('Magic code sent! Check your email (and spam folder).', 'success');
+    showMessage('Magic link sent! Click the link in your email to log in.', 'success');
     emailStep.classList.add('hidden');
     otpStep.classList.remove('hidden');
-    otpInput.focus();
+    // Change the OTP step UI to "check email" message
+    otpStep.innerHTML = `
+      <div class="divider">Check your inbox</div>
+      <p style="color: var(--text-dim); text-align: center; margin: 20px 0; line-height: 1.6;">
+        We sent a magic link to <strong style="color: var(--text);">${email}</strong>.<br>
+        Click the link in your email to enter the guild.<br><br>
+        <span style="font-size: 0.85rem;">Didn't receive it? Check your spam folder.</span>
+      </p>
+      <button onclick="backToEmail()" style="margin-top: 8px;">Use a different email</button>
+    `;
 
   } catch (err) {
     console.error('Unexpected error:', err);
     sendBtn.disabled = false;
-    sendBtn.textContent = 'Send Magic Code';
-    showMessage('Something went wrong. Check console (F12) for details.', 'error');
-  }
-}
-
-async function verifyOTP() {
-  const email = emailInput.value.trim().toLowerCase();
-  const token = otpInput.value.trim();
-
-  if (!token || token.length !== 6) {
-    showMessage('Please enter the 6-digit code from your email.', 'error');
-    return;
-  }
-
-  clearMessage();
-  verifyBtn.disabled = true;
-  verifyBtn.textContent = 'Verifying...';
-
-  try {
-    const { data, error } = await sb.auth.verifyOtp({
-      email: email,
-      token: token,
-      type: 'email'
-    });
-
-    if (error) {
-      console.error('Verify OTP error:', error);
-      verifyBtn.disabled = false;
-      verifyBtn.textContent = 'Enter the Guild';
-      showMessage(error.message, 'error');
-      return;
-    }
-
-    console.log('Login successful:', data.user.id);
-
-    const { data: profile, error: profileError } = await sb
-      .from('user_profiles')
-      .select('username')
-      .eq('user_id', data.user.id)
-      .single();
-
-    if (profileError && profileError.code !== 'PGRST116') {
-      console.error('Profile check error:', profileError);
-    }
-
-    if (profile) {
-      console.log('Returning user, redirecting to quest board');
-      window.location.href = 'quest-board.html';
-    } else {
-      console.log('New user, redirecting to username setup');
-      window.location.href = 'username-setup.html';
-    }
-
-  } catch (err) {
-    console.error('Unexpected error:', err);
-    verifyBtn.disabled = false;
-    verifyBtn.textContent = 'Enter the Guild';
-    showMessage('Something went wrong. Check console (F12) for details.', 'error');
+    sendBtn.textContent = 'Send Magic Link';
+    showMessage('Something went wrong. Check console (F12).', 'error');
   }
 }
 
 function backToEmail() {
-  otpStep.classList.add('hidden');
   emailStep.classList.remove('hidden');
+  otpStep.classList.add('hidden');
+  // Restore original OTP step HTML
+  otpStep.innerHTML = `
+    <div class="divider">Check your inbox</div>
+    <div class="form-group">
+      <label for="otp">Enter 6-digit Code</label>
+      <input type="text" id="otp" placeholder="123456" maxlength="6" autocomplete="one-time-code" />
+    </div>
+    <button id="verifyOtpBtn" onclick="verifyOTP()">Enter the Guild</button>
+    <a class="back-link" onclick="backToEmail()">← Use a different email</a>
+  `;
   clearMessage();
-  otpInput.value = '';
 }
 
-(async function checkSession() {
+// ============================================
+// MAIN: Handle magic link return + session check
+// ============================================
+(async function init() {
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session) {
-      console.log('Existing session found:', session.user.id);
-      const { data: profile } = await sb
+    // Supabase automatically processes the token from URL hash when magic link is clicked
+    const { data: { session }, error: sessionError } = await sb.auth.getSession();
+
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+    }
+
+    if (session && session.user) {
+      console.log('Session found:', session.user.id);
+      
+      // Check if user has profile
+      const { data: profile, error: profileError } = await sb
         .from('user_profiles')
         .select('username')
         .eq('user_id', session.user.id)
         .single();
 
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Profile check error:', profileError);
+      }
+
       if (profile) {
+        console.log('Returning user, redirecting...');
         window.location.href = 'quest-board.html';
       } else {
+        console.log('New user, redirecting to setup...');
         window.location.href = 'username-setup.html';
       }
+      return;
     }
+
+    // No session - show login form
+    console.log('No session, showing login form');
+
   } catch (err) {
-    console.error('Session check error:', err);
+    console.error('Init error:', err);
   }
 })();
