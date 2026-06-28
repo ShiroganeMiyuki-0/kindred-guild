@@ -134,7 +134,7 @@
     <div id="emailStep">
       <div class="form-group">
         <label for="email">Email Address</label>
-        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')sendMagicLink()" />
       </div>
       <button id="sendBtn" onclick="sendMagicLink()">Send Magic Link</button>
     </div>
