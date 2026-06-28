@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Quest Board</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface-2: #252530;
+      --text: #e8e8f0;
+      --text-dim: #9090a0;
+      --accent: #c9a84c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 16px;
+      padding: 48px;
+      text-align: center;
+      max-width: 500px;
+    }
+    h1 { color: var(--accent); margin-bottom: 16px; }
+    p { color: var(--text-dim); line-height: 1.6; margin-bottom: 24px; }
+    .btn {
+      display: inline-block;
+      padding: 14px 28px;
+      background: var(--accent);
+      color: #0f0f13;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      margin: 8px;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .logout:hover { color: var(--accent); }
+    .user-info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <span class="logout" onclick="logout()">Logout</span>
+  <div class="user-info" id="userInfo">Loading...</div>
+
+  <div class="card">
+    <h1>⚔️ Quest Board</h1>
+    <p>Welcome to the Kindred Guild! The quest board is being built right now.</p>
+    <p style="font-size: 0.85rem; color: var(--text-dim);">
+      You're authenticated and your profile is ready.<br>
+      Next: Quest posting, browsing, and accepting.
+    </p>
+    <div style="margin-top: 24px;">
+      <a href="#" class="btn" onclick="alert('Coming in next prompt!')">Post a Quest</a>
+      <a href="#" class="btn btn-outline" onclick="alert('Coming in next prompt!')">Browse Quests</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const sb = window.supabase.createClient(
+      'https://owpyqeubmfvtuqjaxauo.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM'
+    );
+
+    async function loadUser() {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        window.location.href = 'auth.html';
+        return;
+      }
+      const { data: profile } = await sb
+        .from('user_profiles')
+        .select('username, display_name')
+        .eq('user_id', user.id)
+        .single();
+
+      const name = profile?.display_name || profile?.username || 'Guild Member';
+      document.getElementById('userInfo').textContent = 'Welcome, ' + name;
+    }
+
+    async function logout() {
+      await sb.auth.signOut();
+      window.location.href = 'auth.html';
+    }
+
+    loadUser();
+  </script>
+</body>
+</html>
