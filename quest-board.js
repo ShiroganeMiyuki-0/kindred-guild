@@ -97,22 +97,23 @@ function formatDate(dateStr) {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = date - now;
+  
+  if (diffMs < 0) return 'Expired';
+  
+  const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHrs / 24);
-
-  if (diffMs < 0) return 'Expired';
-  if (diffHrs < 1) return 'Less than 1 hour';
-  if (diffHrs < 24) return diffHrs + ' hours left';
+  
+  if (diffMins < 60) return diffMins + ' min left';
+  if (diffHrs < 24) return diffHrs + ' hrs left';
   if (diffDays === 1) return '1 day left';
   if (diffDays < 7) return diffDays + ' days left';
-
+  if (diffDays < 30) return Math.floor(diffDays / 7) + ' weeks left';
+  
+  // Far future - show date only
   return date.toLocaleDateString('en-US', {
     month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }) + ' at ' + date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit'
+    day: 'numeric'
   });
 }
 
