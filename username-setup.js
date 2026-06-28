@@ -4,7 +4,7 @@
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const usernameInput = document.getElementById('username');
 const displayNameInput = document.getElementById('displayName');
@@ -47,7 +47,7 @@ async function createProfile() {
   createBtn.textContent = 'Creating...';
 
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await sb.auth.getUser();
 
     if (userError) {
       console.error('Get user error:', userError);
@@ -65,7 +65,7 @@ async function createProfile() {
 
     console.log('Creating profile for user:', user.id);
 
-    const { data: existing, error: existingError } = await supabase
+    const { data: existing, error: existingError } = await sb
       .from('user_profiles')
       .select('id')
       .eq('id', user.id)
@@ -77,7 +77,7 @@ async function createProfile() {
       return;
     }
 
-    const { error: insertError } = await supabase
+    const { error: insertError } = await sb
       .from('user_profiles')
       .insert({
         id: user.id,
@@ -113,7 +113,7 @@ async function createProfile() {
 
 (async function guard() {
   try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await sb.auth.getUser();
 
     if (userError || !user) {
       console.log('No user session, redirecting to auth');
@@ -121,7 +121,7 @@ async function createProfile() {
       return;
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await sb
       .from('user_profiles')
       .select('id')
       .eq('id', user.id)
