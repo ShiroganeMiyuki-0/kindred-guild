@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — AUTH LOGIC
+// KINDRED GUILD — AUTH LOGIC (OTP MODE)
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -37,9 +37,13 @@ async function sendOTP() {
   sendBtn.textContent = 'Sending...';
 
   try {
+    // Use OTP flow with channel: 'email' to get a 6-digit code
     const { error } = await sb.auth.signInWithOtp({
       email: email,
-      options: { shouldCreateUser: true }
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: null  // Force OTP instead of magic link
+      }
     });
 
     sendBtn.disabled = false;
