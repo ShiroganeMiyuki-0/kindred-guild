@@ -4,8 +4,6 @@
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
 
-// Replace YOUR_SUPABASE_ANON_KEY above with your actual key
-
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const usernameInput = document.getElementById('username');
@@ -49,7 +47,6 @@ async function createProfile() {
   createBtn.textContent = 'Creating...';
 
   try {
-    // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
@@ -61,14 +58,13 @@ async function createProfile() {
     }
 
     if (!user) {
-      showMessage('Not logged in. Redirecting...', 'error');
+      showMessage('Not logged in. Redirecting to login...', 'error');
       setTimeout(() => window.location.href = 'auth.html', 1500);
       return;
     }
 
     console.log('Creating profile for user:', user.id);
 
-    // Check if profile already exists
     const { data: existing, error: existingError } = await supabase
       .from('user_profiles')
       .select('id')
@@ -81,7 +77,6 @@ async function createProfile() {
       return;
     }
 
-    // Insert profile
     const { error: insertError } = await supabase
       .from('user_profiles')
       .insert({
@@ -94,7 +89,7 @@ async function createProfile() {
 
     if (insertError) {
       console.error('Insert profile error:', insertError);
-      if (insertError.message.includes('duplicate') || insertError.message.includes('unique') || insertError.code === '23505') {
+      if (insertError.code === '23505' || insertError.message.includes('unique') || insertError.message.includes('duplicate')) {
         showMessage('That username is already taken. Try another.', 'error');
       } else {
         showMessage('Error: ' + insertError.message, 'error');
@@ -116,7 +111,6 @@ async function createProfile() {
   }
 }
 
-// Guard: if already has profile, redirect
 (async function guard() {
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
