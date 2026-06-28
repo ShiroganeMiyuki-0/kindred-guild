@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — AUTH LOGIC (Google + Magic Link)
+// KINDRED GUILD — AUTH LOGIC (Email Magic Link)
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -7,11 +7,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const emailInput = document.getElementById('email');
-const methodStep = document.getElementById('methodStep');
 const emailStep = document.getElementById('emailStep');
+const checkStep = document.getElementById('checkStep');
 const emailDisplay = document.getElementById('emailDisplay');
 const messageEl = document.getElementById('message');
-const sendBtn = document.getElementById('sendOtpBtn');
+const sendBtn = document.getElementById('sendBtn');
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -24,22 +24,7 @@ function clearMessage() {
   messageEl.textContent = '';
 }
 
-async function signInWithGoogle() {
-  clearMessage();
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: 'https://kindred-guild.vercel.app/auth.html'
-    }
-  });
-
-  if (error) {
-    console.error('Google sign-in error:', error);
-    showMessage(error.message, 'error');
-  }
-}
-
-async function sendOTP() {
+async function sendMagicLink() {
   const email = emailInput.value.trim().toLowerCase();
   if (!email || !email.includes('@')) {
     showMessage('Please enter a valid email address.', 'error');
@@ -69,8 +54,8 @@ async function sendOTP() {
     }
 
     emailDisplay.textContent = email;
-    methodStep.classList.add('hidden');
-    emailStep.classList.remove('hidden');
+    emailStep.classList.add('hidden');
+    checkStep.classList.remove('hidden');
 
   } catch (err) {
     console.error('Unexpected error:', err);
@@ -80,18 +65,15 @@ async function sendOTP() {
   }
 }
 
-function backToMethods() {
-  methodStep.classList.remove('hidden');
-  emailStep.classList.add('hidden');
+function backToEmail() {
+  emailStep.classList.remove('hidden');
+  checkStep.classList.add('hidden');
   clearMessage();
 }
 
-// ============================================
-// MAIN: Handle OAuth return + magic link return
-// ============================================
+// Handle OAuth return / magic link return / existing session
 (async function init() {
   try {
-    // Check for active session
     const { data: { session }, error: sessionError } = await sb.auth.getSession();
 
     if (sessionError) {
@@ -104,7 +86,6 @@ function backToMethods() {
       return;
     }
 
-    // No session - show login form
     console.log('No session, showing login form');
 
   } catch (err) {
@@ -113,7 +94,6 @@ function backToMethods() {
 })();
 
 async function handleLoggedInUser(user) {
-  // Check if user has profile
   const { data: profile, error: profileError } = await sb
     .from('user_profiles')
     .select('username')
