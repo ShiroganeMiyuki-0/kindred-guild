@@ -118,7 +118,7 @@
 
     <div class="form-group">
       <label for="username">Username</label>
-      <input type="text" id="username" placeholder="e.g. shadowwalker" maxlength="20" />
+      <input type="text" id="username" placeholder="e.g. shadowwalker" maxlength="20" onkeydown="if(event.key==='Enter')createProfile()" />
       <p class="hint">Letters, numbers, underscores only. This is your public guild name.</p>
     </div>
 
