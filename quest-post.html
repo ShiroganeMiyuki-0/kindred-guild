@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Post a Quest</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface-2: #252530;
+      --text: #e8e8f0;
+      --text-dim: #9090a0;
+      --accent: #c9a84c;
+      --accent-glow: rgba(201, 168, 76, 0.2);
+      --error: #e74c3c;
+      --success: #2ecc71;
+      --info: #3498db;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+    .header a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .header a:hover { color: var(--accent); }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 16px;
+      padding: 32px;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--surface-2);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .payment-types {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .payment-type {
+      flex: 1;
+      min-width: 140px;
+      padding: 16px;
+      background: var(--bg);
+      border: 2px solid var(--surface-2);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .payment-type:hover { border-color: var(--accent); }
+    .payment-type.selected {
+      border-color: var(--accent);
+      background: rgba(201, 168, 76, 0.1);
+    }
+    .payment-type .icon { font-size: 1.5rem; margin-bottom: 8px; }
+    .payment-type .name { font-weight: 600; font-size: 0.95rem; }
+    .payment-type .desc { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; }
+    .amount-input { display: none; }
+    .amount-input.active { display: block; }
+    .commission-note {
+      background: rgba(201, 168, 76, 0.1);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+    .commission-note strong { color: var(--accent); }
+    .coin-balance {
+      text-align: right;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .coin-balance span { color: var(--accent); font-weight: 600; }
+    button[type="submit"] {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #0f0f13;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      margin-top: 8px;
+    }
+    button[type="submit"]:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.9; }
+    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+    .message {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .message.error { background: rgba(231, 76, 60, 0.15); color: var(--error); display: block; }
+    .message.success { background: rgba(46, 204, 113, 0.15); color: var(--success); display: block; }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--surface-2);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+    }
+    .modal h3 {
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+    }
+    .modal p {
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .modal-buttons button {
+      flex: 1;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .modal-buttons .confirm {
+      background: var(--accent);
+      color: #0f0f13;
+    }
+    .modal-buttons .cancel {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+    .user-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .user-bar img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface-2);
+    }
+    .user-bar .name { font-weight: 600; }
+    .user-bar .coins { font-size: 0.85rem; color: var(--text-dim); }
+    .user-bar .coins span { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚔️ Post a Quest</h1>
+      <a href="quest-board.html">← Back to Board</a>
+    </div>
+
+    <div class="user-bar" id="userBar">
+      <div class="name" id="userName">Loading...</div>
+      <div class="coins">💰 <span id="coinBalance">--</span> Fairy Coins</div>
+    </div>
+
+    <div class="card">
+      <form id="questForm" onsubmit="event.preventDefault(); handleSubmit();">
+        <div class="form-group">
+          <label for="title">Quest Title</label>
+          <input type="text" id="title" placeholder="e.g. Design a guild banner" maxlength="100" required onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('description').focus();}" />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="Describe what needs to be done, requirements, deliverables..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Type</label>
+          <div class="payment-types">
+            <div class="payment-type selected" data-type="coins" onclick="selectPayment('coins')">
+              <div class="icon">🪙</div>
+              <div class="name">Fairy Coins</div>
+              <div class="desc">Safest — full platform protection</div>
+            </div>
+            <div class="payment-type" data-type="upi" onclick="selectPayment('upi')">
+              <div class="icon">₹</div>
+              <div class="name">UPI Direct</div>
+              <div class="desc">Pay worker directly via UPI</div>
+            </div>
+            <div class="payment-type" data-type="free" onclick="selectPayment('free')">
+              <div class="icon">🎁</div>
+              <div class="name">Free</div>
+              <div class="desc">No payment, no strings</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group amount-input active" id="coinsInput">
+          <label for="coinAmount">Coin Reward</label>
+          <div class="coin-balance">Your balance: <span id="coinBalance2">--</span> FC</div>
+          <input type="number" id="coinAmount" placeholder="e.g. 500" min="1" required onkeydown="if(event.key==='Enter'){event.key==='Enter';document.getElementById('deadline').focus();}" />
+          <div class="commission-note" id="coinsCommission">
+            <strong>💛 10% Commission:</strong> <span id="commissionCoins">0</span> FC will be locked upfront as your safety net.
+          </div>
+        </div>
+
+        <div class="form-group amount-input" id="upiInput">
+          <label for="upiAmount">UPI Amount (₹)</label>
+          <div class="coin-balance">Your balance: <span id="coinBalance3">--</span> FC</div>
+          <input type="number" id="upiAmount" placeholder="e.g. 500" min="1" />
+          <div class="commission-note" id="upiCommission">
+            <strong>💛 10% Commission:</strong> You need at least <span id="commissionUpi">0</span> FC in your balance (locked upfront). Payment goes directly to worker via UPI.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="deadline">Deadline</label>
+          <input type="datetime-local" id="deadline" required />
+        </div>
+
+        <button type="submit" id="submitBtn">Post Quest</button>
+        <div id="message" class="message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- UPI Risk Modal -->
+  <div class="modal-overlay" id="upiModal">
+    <div class="modal">
+      <h3>⚠️ UPI Direct — Know the risks</h3>
+      <p>Kindred Guild cannot mediate disputes or verify completion for UPI quests. If payment is withheld, only reputation damage and eventual suspension apply. Proceed only if you trust the other party.</p>
+      <div class="modal-buttons">
+        <button class="cancel" onclick="closeUpiModal()">Cancel</button>
+        <button class="confirm" onclick="confirmUpiPost()">I understand, proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="quest-post.js"></script>
+</body>
+</html>
