@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — QUEST POSTING (DEBUGGED)
+// KINDRED GUILD — QUEST POSTING (FIXED UPI MODAL)
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -20,6 +20,7 @@ const submitBtn = document.getElementById('submitBtn');
 const messageEl = document.getElementById('message');
 const commissionCoinsEl = document.getElementById('commissionCoins');
 const commissionUpiEl = document.getElementById('commissionUpi');
+const upiModal = document.getElementById('upiModal');
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -133,10 +134,10 @@ async function handleSubmit() {
       showMessage('Not enough Fairy Coins. You need at least ' + commissionCoins + ' FC for commission (10% of ₹' + upiAmount + '). Purchase more to post this quest.', 'error');
       return;
     }
-    // Show UPI risk modal
+    // Store data and show modal
     pendingFormData = { title, description, deadlineDate, coinAmount, upiAmount, commissionCoins };
-    document.getElementById('upiModal').classList.add('active');
-    console.log('UPI modal shown, pending data:', pendingFormData);
+    console.log('Stored pending data:', pendingFormData);
+    upiModal.classList.add('active');
     return;
   }
 
@@ -144,31 +145,38 @@ async function handleSubmit() {
   await postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins });
 }
 
-async function confirmUpiPost() {
-  console.log('confirmUpiPost called, pending data:', pendingFormData);
-  closeUpiModal();
-  if (pendingFormData) {
-    await postQuest(pendingFormData);
-    pendingFormData = null;
-  } else {
+// These functions are called from the modal buttons in HTML
+// We use window. to make them globally accessible since modal HTML is static
+window.confirmUpiPost = async function() {
+  console.log('confirmUpiPost called, pending data exists:', !!pendingFormData);
+  
+  if (!pendingFormData) {
     console.error('No pending form data!');
     showMessage('Something went wrong. Please try again.', 'error');
+    upiModal.classList.remove('active');
+    return;
   }
-}
 
-function closeUpiModal() {
-  document.getElementById('upiModal').classList.remove('active');
+  // Save data locally before clearing
+  const data = pendingFormData;
   pendingFormData = null;
-}
+  upiModal.classList.remove('active');
+
+  await postQuest(data);
+};
+
+window.closeUpiModal = function() {
+  console.log('closeUpiModal called');
+  pendingFormData = null;
+  upiModal.classList.remove('active');
+};
 
 async function postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins }) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Posting...';
 
   try {
-    console.log('Posting quest:', {
-      title, description, selectedType, coinAmount, upiAmount, commissionCoins, deadline: deadlineDate.toISOString()
-    });
+    console.log('Posting quest with type:', selectedType);
 
     const { data: questId, error } = await sb.rpc('post_quest_with_commission', {
       p_title: title,
@@ -188,7 +196,7 @@ async function postQuest({ title, description, deadlineDate, coinAmount, upiAmou
       return;
     }
 
-    console.log('Quest posted successfully, ID:', questId);
+    console.log('Quest posted, ID:', questId);
     showMessage('Quest posted successfully! Redirecting to board...', 'success');
     setTimeout(() => window.location.href = 'quest-board.html', 1500);
 
