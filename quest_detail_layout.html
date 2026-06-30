@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Quest Detail</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface-2: #252530;
+      --text: #e8e8f0;
+      --text-dim: #9090a0;
+      --accent: #c9a84c;
+      --accent-glow: rgba(201, 168, 76, 0.2);
+      --border: #222230;
+      --success: #2ecc71;
+      --error: #e74c3c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-2);
+      margin-bottom: 24px;
+    }
+    .nav-bar a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .nav-bar a:hover { color: var(--accent); }
+
+    .quest-header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .badge-coins { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
+    .badge-upi { background: rgba(230, 126, 34, 0.15); color: #e67e22; }
+    .badge-free { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+
+    .status-badge {
+      float: right;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .status-open { background: rgba(52, 152, 219, 0.15); color: #3498db; }
+    .status-accepted { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+    .status-submitted { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
+    .status-approved { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+    .status-disputed { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+
+    .quest-title {
+      font-size: 1.8rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+      clear: both;
+    }
+
+    .quest-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+    .quest-meta strong { color: var(--text); }
+
+    .quest-desc {
+      line-height: 1.7;
+      margin-bottom: 24px;
+      font-size: 1rem;
+      white-space: pre-wrap;
+    }
+
+    /* Communication/Comment Section */
+    .comments-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .comments-section h3 {
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+    }
+    .comments-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 8px;
+    }
+    .comment-card {
+      background: var(--bg);
+      border: 1px solid var(--surface-2);
+      padding: 12px 16px;
+      border-radius: 8px;
+    }
+    .comment-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    .comment-meta strong { color: var(--accent); }
+    .comment-content {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .comment-form {
+      display: flex;
+      gap: 12px;
+    }
+    .comment-form input {
+      flex: 1;
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+    }
+    .comment-form input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .comment-form button {
+      padding: 12px 24px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Action sections */
+    .action-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .action-panel h3 {
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .action-panel p {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .file-drop-area {
+      border: 2px dashed var(--surface-2);
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      background: var(--bg);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .file-drop-area:hover { border-color: var(--accent); }
+    .file-drop-area input { display: none; }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-error { background: var(--error); color: #fff; }
+    .btn-accent { background: var(--accent); color: #000; }
+
+    .actions-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Rating panel */
+    .rating-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .rating-widget {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .star {
+      font-size: 2.2rem;
+      cursor: pointer;
+      color: var(--surface-2);
+      transition: color 0.1s;
+    }
+    .star.selected {
+      color: var(--accent);
+    }
+
+    .countdown {
+      font-family: monospace;
+      font-size: 1.1rem;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .message.error { background: rgba(231,76,60,0.15); color: var(--error); display: block; }
+    .message.success { background: rgba(46,204,113,0.15); color: var(--success); display: block; }
+
+    .proof-viewer img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .proof-viewer a {
+      color: var(--accent);
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="nav-bar">
+      <a href="quest-board.html">← Back to Quest Board</a>
+      <span id="userProfileBadge" style="color: var(--text-dim); font-size: 0.9rem;"></span>
+    </div>
+
+    <div id="alertBox" class="message"></div>
+
+    <!-- MAIN QUEST CONTAINER -->
+    <div class="quest-header">
+      <div id="statusBadge" class="status-badge status-open">Loading...</div>
+      <span id="paymentTypeBadge" class="badge">--</span>
+      <h2 id="questTitle" class="quest-title">Loading Quest Details...</h2>
+      
+      <div class="quest-meta">
+        <div>Poster: <strong id="posterName">--</strong> <span id="posterRep"></span></div>
+        <div>Worker: <strong id="workerName">No one yet</strong> <span id="workerRep"></span></div>
+        <div>Deadline: <strong id="deadlineStr">--</strong></div>
+        <div id="rewardContainer">Reward: <strong id="rewardVal" style="color: var(--accent);">--</strong></div>
+      </div>
+
+      <div id="questDesc" class="quest-desc">Loading...</div>
+    </div>
+
+    <!-- WORKER: SUBMIT PROOF PANEL -->
+    <div id="workerProofPanel" class="action-panel" style="display: none;">
+      <h3>Submit Proof of Completion</h3>
+      <p>Upload a supporting image, document, or confirmation file to prove you've executed the task properly. Once submitted, the appraisal countdown will trigger.</p>
+      <div class="file-drop-area" id="dropArea" onclick="document.getElementById('proofFileInput').click()">
+        <span id="dropAreaText">📁 Click to select file for proof submission</span>
+        <input type="file" id="proofFileInput" onchange="handleFileSelected(this)">
+      </div>
+      <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <span id="selectedFileName" style="font-size: 0.9rem; color: var(--accent);"></span>
+        <button id="submitProofBtn" class="btn btn-accent" onclick="uploadProofFile()" style="display: none;">Submit Proof</button>
+      </div>
+    </div>
+
+    <!-- POSTER: APPRAISAL PANEL -->
+    <div id="posterAppraisalPanel" class="action-panel" style="display: none;">
+      <h3>Appraise Submitted Work</h3>
+      <p>Appraise the worker's files and descriptions. If no action is taken within 48 hours, the system auto-approves this quest and pays out the locked reward.</p>
+      
+      <div class="proof-viewer" id="proofViewerContainer">
+        <!-- Proof loaded dynamically -->
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        Auto-approves in: <span id="countdownTimer" class="countdown">--:--:--</span>
+      </div>
+
+      <div class="actions-group">
+        <button class="btn btn-success" onclick="approveSubmittedQuest()">Approve Quest & Pay</button>
+        <button class="btn btn-error" onclick="disputeQuest()">Dispute Submission</button>
+      </div>
+    </div>
+
+    <!-- GENERAL: RATING PANEL -->
+    <div id="ratingPanel" class="rating-panel" style="display: none;">
+      <h3>Exchange Rating Reviews</h3>
+      <p id="ratingExplanation">This quest has finished. Swap feedback scores below to build reputations securely. Ratings are hidden until both parties submit.</p>
+      
+      <div id="activeRatingForm">
+        <div class="rating-widget" id="starContainer">
+          <span class="star" data-score="1" onclick="setRatingValue(1)">★</span>
+          <span class="star" data-score="2" onclick="setRatingValue(2)">★</span>
+          <span class="star" data-score="3" onclick="setRatingValue(3)">★</span>
+          <span class="star" data-score="4" onclick="setRatingValue(4)">★</span>
+          <span class="star" data-score="5" onclick="setRatingValue(5)">★</span>
+        </div>
+        <button class="btn btn-accent" onclick="submitUserRating()">Submit Secure Feedback</button>
+      </div>
+
+      <div id="waitingRatingMessage" style="display: none; color: var(--text-dim); padding: 15px 0;">
+        ⏳ feedback registered. Waiting for the other party to complete their review...
+      </div>
+
+      <div id="ratingResultDisplay" style="display: none; text-align: left; padding: 15px; border-radius: 8px; background: var(--bg); border: 1px solid var(--surface-2); margin-top: 15px;">
+        <h4 style="color: var(--accent); margin-bottom: 8px;">Revealed Rating Details:</h4>
+        <div id="ratingScoreList" style="font-size: 0.95rem; line-height: 1.6;"></div>
+      </div>
+    </div>
+
+    <!-- DISPUTE SETTLEMENT INFORMATION BAR -->
+    <div id="disputePanel" class="action-panel" style="display: none; border-color: var(--error);">
+      <h3 style="color: var(--error);">⚠️ Quest Under Dispute</h3>
+      <p>This quest's completion details have been formally disputed by the poster. The 10% Fairy Coin safety-net insurance guarantees manual arbitration support. Post coordinating details in the comment history below. Admin reviewers will evaluate comments and proof shortly.</p>
+    </div>
+
+    <!-- COMMENTS SECTION -->
+    <div class="comments-section">
+      <h3>Quest Coordination Board</h3>
+      <div class="comments-list" id="commentsBox">
+        <div style="color: var(--text-dim); text-align: center; padding: 20px;">No messages sent yet. Use this board to coordinate safely.</div>
+      </div>
+      <div class="comment-form">
+        <input type="text" id="commentText" placeholder="Type a message..." onkeydown="if(event.key === 'Enter') postCommentText()">
+        <button onclick="postCommentText()">Send</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="quest-detail.js"></script>
+</body>
+</html>

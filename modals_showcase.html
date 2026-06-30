@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Overlays Sandbox</title>
+  <link rel="stylesheet" href="modals.css">
+  <style>
+    body {
+      background: #0f0f13;
+      color: #e8e8f0;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 100px 20px;
+    }
+    .btn-panel {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+    button.test-btn {
+      padding: 14px 28px;
+      background: #1a1a22;
+      border: 1px solid #c9a84c;
+      color: #c9a84c;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    button.test-btn:hover {
+      background: #c9a84c;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Overlays and Modal Testing Hub</h1>
+  <p style="color: #9090a0;">Trigger notifications or risk warnings below to preview responsive animations.</p>
+
+  <div class="btn-panel">
+    <button class="test-btn" onclick="showGuildModal('off-platform', () => showToast('Proceeding off-platform', 'info'), () => showToast('Cancelled', 'error'))">Trigger Off-Platform Alert</button>
+    <button class="test-btn" onclick="showGuildModal('upi-warning', () => showToast('Proceeding UPI quest', 'success'), () => showToast('Cancelled', 'error'))">Trigger UPI Warning</button>
+    <button class="test-btn" onclick="showGuildModal('free-quest', () => showToast('Accepted free quest', 'success'), () => showToast('Cancelled', 'error'))">Trigger Free Quest</button>
+  </div>
+
+  <div class="btn-panel" style="margin-top: 20px;">
+    <button class="test-btn" style="border-color: #2ecc71; color: #2ecc71;" onclick="showToast('Success toast message logged!', 'success')">Green Success Toast</button>
+    <button class="test-btn" style="border-color: #e74c3c; color: #e74c3c;" onclick="showToast('Verification failed. UTR mismatch.', 'error', 0)">Red Error Toast</button>
+    <button class="test-btn" style="border-color: #3498db; color: #3498db;" onclick="showToast('Notification received.', 'info')">Blue Information Toast</button>
+  </div>
+
+  <script src="modals.js"></script>
+</body>
+</html>

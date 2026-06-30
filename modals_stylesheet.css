@@ -1,0 +1,91 @@
+/* KINDRED GUILD — MODAL POPUP DESIGNS */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(9, 9, 12, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-box {
+  background: #1a1a22;
+  border: 1px solid #c9a84c;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  transform: scale(0.9);
+  transition: transform 0.25s ease;
+}
+.modal-overlay.active .modal-box {
+  transform: scale(1);
+}
+
+.modal-box h3 {
+  color: #c9a84c;
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+.modal-box p {
+  color: #9090a0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.modal-btn {
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  font-size: 0.9rem;
+}
+.modal-btn-confirm { background: #c9a84c; color: #000; }
+.modal-btn-cancel { background: #252530; color: #e8e8f0; }
+
+/* TOAST STYLING */
+#toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toast {
+  padding: 14px 24px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  animation: slideIn 0.3s ease;
+  cursor: pointer;
+  border-left: 4px solid #fff;
+  background: #1a1a22;
+}
+.toast-success { color: #2ecc71; border-color: #2ecc71; }
+.toast-error { color: #e74c3c; border-color: #e74c3c; }
+.toast-info { color: #3498db; border-color: #3498db; }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

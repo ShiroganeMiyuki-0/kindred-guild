@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Admin Coins Audit</title>
+  <style>
+    :root {
+      --bg: #0c0c0f;
+      --surface: #15151e;
+      --surface-2: #21212f;
+      --text: #e8e8f0;
+      --text-dim: #9090a0;
+      --accent: #c9a84c;
+      --border: #222230;
+      --success: #2ecc71;
+      --error: #e74c3c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .header h1 { color: var(--accent); font-size: 1.8rem; }
+    .header a { color: var(--text-dim); text-decoration: none; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px;
+    }
+
+    .purchase-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .purchase-table th, .purchase-table td {
+      padding: 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--surface-2);
+    }
+    .purchase-table th { color: var(--accent); text-transform: uppercase; font-size: 0.85rem; }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: 4px;
+      margin-right: 6px;
+    }
+    .btn-approve { background: var(--success); color: #fff; }
+    .btn-reject { background: var(--error); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>🛡️ Ledger Admin Verification Console</h1>
+      <a href="quest-board.html">Go to Quest Board</a>
+    </div>
+
+    <div class="card">
+      <h3>Pending Transactions Queue</h3>
+      <table class="purchase-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Amount Requested</th>
+            <th>UTR Ref ID</th>
+            <th>Date Logged</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminQueueBody">
+          <tr>
+            <td colspan="5" style="color: var(--text-dim); text-align: center; padding: 30px;">Loading queued transactions...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="admin-coins.js"></script>
+</body>
+</html>

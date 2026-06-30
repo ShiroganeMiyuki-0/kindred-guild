@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Purchase Fairy Coins</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface-2: #252530;
+      --text: #e8e8f0;
+      --text-dim: #9090a0;
+      --accent: #c9a84c;
+      --accent-glow: rgba(201, 168, 76, 0.2);
+      --border: #222230;
+      --success: #2ecc71;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+    .header h1 { font-size: 1.5rem; color: var(--accent); }
+    .header a { color: var(--text-dim); text-decoration: none; }
+
+    .balance-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .balance-card span { font-size: 1.8rem; color: var(--accent); font-weight: bold; }
+
+    .purchase-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    select, input {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .qr-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .qr-placeholder {
+      width: 150px;
+      height: 150px;
+      background: #fff;
+      margin: 10px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: #000;
+      border-radius: 4px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn:disabled { opacity: 0.5; }
+
+    .message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 16px;
+      display: none;
+    }
+    .message.success { display: block; background: rgba(46,204,113,0.15); color: var(--success); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>💰 Acquire Fairy Coins</h1>
+      <a href="quest-board.html">← Go to Board</a>
+    </div>
+
+    <div class="balance-card">
+      <div>Active Balance:</div>
+      <span id="currentBalanceDisplay">--</span> FC
+    </div>
+
+    <div class="purchase-card">
+      <form id="purchaseForm" onsubmit="event.preventDefault(); submitPaymentReference();">
+        <div class="form-group">
+          <label>Select Package Bundle</label>
+          <select id="coinPackage" onchange="updateQRValue()">
+            <option value="100">100 Fairy Coins — ₹100</option>
+            <option value="500">500 Fairy Coins — ₹500</option>
+            <option value="1000">1000 Fairy Coins — ₹1000</option>
+          </select>
+        </div>
+
+        <div class="qr-box">
+          <h3>P2P UPI Escrow on-ramp</h3>
+          <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 6px;">Scan QR below or pay UPI: <strong>guild@upi</strong></p>
+          <div class="qr-placeholder">
+            [ QR PLACEHOLDER ]
+          </div>
+          <div>Total amount due: <strong id="amountDueSpan" style="color: var(--accent);">₹100</strong></div>
+        </div>
+
+        <div class="form-group">
+          <label>UPI Transaction Reference (UTR / Ref Number)</label>
+          <input type="text" id="utrRef" placeholder="12-Digit Transaction ID" required>
+        </div>
+
+        <button type="submit" id="submitPaymentBtn" class="btn">Log Transaction For Verification</button>
+      </form>
+
+      <div id="statusAlert" class="message success"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="buy-coins.js"></script>
+</body>
+</html>

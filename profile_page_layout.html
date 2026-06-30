@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Profile Hub</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface-2: #252530;
+      --text: #e8e8f0;
+      --text-dim: #9090a0;
+      --accent: #c9a84c;
+      --accent-glow: rgba(201, 168, 76, 0.2);
+      --border: #222230;
+      --error: #e74c3c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+    .header-bar a {
+      color: var(--text-dim);
+      text-decoration: none;
+    }
+    .header-bar a:hover { color: var(--accent); }
+
+    /* Profile Header card */
+    .profile-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .avatar-area {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 2px solid var(--accent);
+      object-fit: cover;
+    }
+
+    .meta-details h2 {
+      font-size: 1.6rem;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .meta-details .username {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+    .meta-details .rep-score {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    /* Tabs Layout */
+    .tabs {
+      display: flex;
+      gap: 12px;
+      border-bottom: 1px solid var(--surface-2);
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-weight: bold;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      background: var(--accent);
+      color: #000;
+    }
+
+    .suspension-banner {
+      background: rgba(231, 76, 60, 0.15);
+      border: 1px solid var(--error);
+      color: var(--error);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .quest-item {
+      padding: 15px;
+      border-bottom: 1px solid var(--surface-2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .quest-item:last-child { border-bottom: none; }
+    .quest-item a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .quest-item a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <h2>Guild Member Hub</h2>
+      <a href="quest-board.html">← Go to Board</a>
+    </div>
+
+    <!-- Suspension Notice -->
+    <div id="suspensionNotice" class="suspension-banner" style="display: none;">
+      ⚠️ This account is suspended due to unresolved disputes or security breaches.
+    </div>
+
+    <!-- Profile Identity -->
+    <div class="profile-card">
+      <div class="avatar-area">
+        <img id="profileAvatar" src="https://via.placeholder.com/80" alt="Avatar" class="avatar">
+        <div class="meta-details">
+          <h2 id="profileDisplayName">--</h2>
+          <div class="username" id="profileUsername">@--</div>
+          <div class="rep-score">Reputation: <span id="profileRepScore" style="color: var(--accent);">--</span></div>
+          <div style="font-size: 0.85rem; color: var(--text-dim); margin-top: 6px;">
+            Coin Balance: <strong id="privateBalanceDisplay" style="color: var(--accent);">--</strong> FC <span style="font-size: 0.75rem;">(Owner Only)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History & Configuration tab switcher -->
+    <div class="tabs">
+      <div class="tab active" data-tab="tab-posted" onclick="switchProfileTab('tab-posted')">Posted Quests</div>
+      <div class="tab" data-tab="tab-completed" onclick="switchProfileTab('tab-completed')">Completed Tasks</div>
+      <div class="tab" id="editProfileTabBtn" data-tab="tab-edit" onclick="switchProfileTab('tab-edit')" style="display: none;">Edit Settings</div>
+    </div>
+
+    <!-- POSTED TAB -->
+    <div id="tab-posted" class="tab-content active">
+      <div class="card">
+        <div id="postedQuestsList">
+          <div style="color: var(--text-dim); padding: 10px;">Loading quests history...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETED TAB -->
+    <div id="tab-completed" class="tab-content">
+      <div class="card">
+        <div id="completedQuestsList">
+          <div style="color: var(--text-dim); padding: 10px;">Loading completed history...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT PROFILE TAB -->
+    <div id="tab-edit" class="tab-content">
+      <div class="card">
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" id="editDisplayName" placeholder="Aria Moonweaver">
+        </div>
+        <div class="form-group">
+          <label>Avatar Upload URL</label>
+          <input type="text" id="editAvatarUrl" placeholder="https://image-links-here.com">
+        </div>
+        <button class="btn" onclick="saveProfileChanges()">Apply Settings</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="profile.js"></script>
+</body>
+</html>
