@@ -150,12 +150,12 @@
         </div>
 
         <div class="qr-box">
-          <h3>P2P UPI Escrow on-ramp</h3>
-          <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 6px;">Scan QR below or pay UPI: <strong>guild@upi</strong></p>
-          <div class="qr-placeholder">
-            [ QR PLACEHOLDER ]
+          <h3>💳 UPI Payment Gateway</h3>
+          <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 6px;">Scan QR below or pay to: <strong>yashwanthrangaswamy72@okhdfcbank</strong></p>
+          <div class="qr-placeholder" id="qrCodeContainer">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCAQAAAABUY/ToAAADjUlEQVR4nO2cTY7jNhBGX0UGvJSBOYCPQt9gjjRnyg2so/gAAaSlAQpfFiyKtLuTxaQN252qRTcl+UEiUKh/ycTvyfTHb4IQZJBBBhlkkEEG+XqkueyAZVcOy+rEWlaw1F+dnvy0Qb4kmSRJM9gJ0BkwO2aYDoOYDqvZiUGSpFvyGU8b5EuRO/+/HCD9CYKMMf61c11ZDNJ8QCxgMOQnPm2Q70AWh5YuO5gOq5FmYDpKdnrYPYN8b3J3d6zp54wg7yzNKwIByy5/IN9rn0E+jqw6NAqKtxrXHek8CBgEy4/M9PNqQNGn/37PIL8lOZmZ2QFIl708JSt5Gdivy17Aap6wPftpg3wpstihZl80HTCxAIxXYzpmBFdzU/UV9wzye5F06XqaAcZczuk8ZqQZpHnww3O7+l77DPJxpGuE5kEkZUjzUFRKZwDGXKpHJGXXptChID+SZoetHD1mV580D9J58VColq29DPme+wzyEaT7sqRMVZ9BMErF+rhrc70qq7BDQd6INinxUJoHuQka6zlgs02EDgV5J80Otciob4sBrk3KZRU6FOSnZCkImQGr2YnVvA8rqVyYDh5s2+npTxvkK5FbHl+Doi39qqm+5P5NHiOFHQryVjod+uScl4bKae9/hA4F+SlZ0nrXHDPbYb8uZkzHUqIWjFfTebxGryPIO6kpWXVeSXLD46uhJPhFmkMLOxSky9a3z7SOmM+gLT+ywWpi2XsHH9ZKvNc+g3wcuWX0dL0xrw8xeBOkSYpeR5Af5L5ftkXNrQVby9ZexQ4dCvJWWo2xk1ZydKXZkn5lIh4K8lZ6X1a1RJqh9cu6lr3XkUKHguzE+xqjZ2NNkerVujozdNXG0KEgN+lin82DAUPfy5e2Dv4cPdcg/4kc1CaEdGY1JtsLlr33y9LFs3o7fdU9g/wWZPdukKZjrlUhrw+h6bSaQBijsHTOUR8K8k5qXuYOrU0NtfCok66U/V77DPJxZDeD1kKhu3y/ZfT9xP577TPIR5P9dz/Ga5kfKqPUSVKNjCIeCvJTab6sjjDmruHRTVbf/gk7FOQmfW4/D723aoHSnYQOBfnv5LL3+aEyAWtmfWC9TYG8yNMG+aJkqQ/55Jlkdhi2dxQfdc8g356svQ4A7DRKUEf0SRf/tF4bzH/XfQb59WT/vj2tI1b7qz7HSB2qjvpQkB/E4hvnQQYZZJBBBhnk/5z8G618TVIt3ja3AAAAAElFTkSuQmCC" alt="UPI QR Code" style="width: 100%; height: auto; border-radius: 4px;">
           </div>
-          <div>Total amount due: <strong id="amountDueSpan" style="color: var(--accent);">₹100</strong></div>
+          <div style="margin-top: 12px;">Total amount due: <strong id="amountDueSpan" style="color: var(--accent);">₹100</strong></div>
         </div>
 
         <div class="form-group">
@@ -171,6 +171,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="buy-coins.js"></script>
+  <script src="coin_purchase_js_logic.js"></script>
 </body>
 </html>
