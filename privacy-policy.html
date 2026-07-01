@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Privacy Policy</title>
+  <style>
+    :root {
+      --bg: #09090c;
+      --surface: #12121a;
+      --surface-2: #1e1e2c;
+      --text: #e1e1e9;
+      --text-dim: #8b8b9c;
+      --accent: #c9a84c;
+      --border: #222230;
+      --max-width: 900px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.7;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      margin-bottom: 40px;
+    }
+
+    .brand {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: var(--accent);
+      margin: 30px 0 20px;
+      letter-spacing: 1px;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin: 25px 0 15px;
+      letter-spacing: 0.5px;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: var(--text-dim);
+    }
+
+    ul, ol {
+      margin: 16px 0 16px 24px;
+      color: var(--text-dim);
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .last-updated {
+      font-style: italic;
+      color: var(--text-dim);
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    footer {
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+
+    footer a {
+      color: var(--text-dim);
+      margin: 0 10px;
+    }
+
+    footer a:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="index.html" class="brand">⚔️ KINDRED GUILD</a>
+    </header>
+
+    <h1>Privacy Policy</h1>
+    <p class="last-updated">Last updated: January 2026</p>
+
+    <h2>1. Introduction</h2>
+    <p>Kindred Guild ("we", "us", or "our") respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.</p>
+
+    <h2>2. Information We Collect</h2>
+    
+    <h3>2.1 Account Information</h3>
+    <p>When you create an account, we collect:</p>
+    <ul>
+      <li>Email address (via Supabase authentication)</li>
+      <li>Username (publicly visible)</li>
+      <li>Display name (optional, publicly visible)</li>
+      <li>Avatar URL (optional, publicly visible)</li>
+    </ul>
+
+    <h3>2.2 Transaction Data</h3>
+    <p>We collect and store:</p>
+    <ul>
+      <li>Quest postings (title, description, payment type, amounts, deadlines)</li>
+      <li>Quest acceptance and completion records</li>
+      <li>Fairy Coin transaction ledger entries</li>
+      <li>Coin purchase requests with UPI transaction references</li>
+    </ul>
+
+    <h3>2.3 Communication Data</h3>
+    <p>We store:</p>
+    <ul>
+      <li>Quest comments and discussions</li>
+      <li>Ratings and reviews (double-blind until revealed)</li>
+    </ul>
+
+    <h3>2.4 Technical Data</h3>
+    <p>Automatically collected:</p>
+    <ul>
+      <li>IP address and device information</li>
+      <li>Browser type and version</li>
+      <li>Access timestamps</li>
+      <li>Cookies and similar technologies (for session management)</li>
+    </ul>
+
+    <h2>3. How We Use Your Information</h2>
+    <p>We use your data to:</p>
+    <ul>
+      <li>Provide and maintain the Kindred Guild platform</li>
+      <li>Process quest transactions and manage escrow</li>
+      <li>Calculate and display reputation scores</li>
+      <li>Prevent fraud and enforce Terms of Service</li>
+      <li>Verify coin purchases (manual UPI verification)</li>
+      <li>Send service-related notifications</li>
+      <li>Improve platform functionality and user experience</li>
+    </ul>
+
+    <h2>4. Information Sharing & Disclosure</h2>
+    
+    <h3>4.1 Public Information</h3>
+    <p>The following information is visible to all users:</p>
+    <ul>
+      <li>Username and display name</li>
+      <li>Reputation score</li>
+      <li>Quest history (posted and completed quests)</li>
+      <li>Public quest details</li>
+    </ul>
+
+    <h3>4.2 Private Information</h3>
+    <p>The following is kept private:</p>
+    <ul>
+      <li>Email address (never displayed publicly)</li>
+      <li>Fairy Coin balance (visible only to account owner)</li>
+      <li>Ledger transaction history (visible only to account owner)</li>
+      <li>Unrevealed ratings (until double-blind period ends)</li>
+      <li>Coin purchase transaction references</li>
+    </ul>
+
+    <h3>4.3 Third-Party Services</h3>
+    <p>We share data with trusted service providers:</p>
+    <ul>
+      <li><strong>Supabase:</strong> Database hosting, authentication, and storage</li>
+      <li><strong>Vercel:</strong> Platform hosting and deployment</li>
+    </ul>
+    <p>These providers are bound by confidentiality obligations and data protection requirements.</p>
+
+    <h3>4.4 Legal Requirements</h3>
+    <p>We may disclose information if required by law, court order, or government request, or to protect our rights and safety.</p>
+
+    <h2>5. Data Retention</h2>
+    <p>We retain your data:</p>
+    <ul>
+      <li>As long as your account is active</li>
+      <li>For legitimate business purposes (transaction records, reputation history)</li>
+      <li>As required by applicable laws</li>
+    </ul>
+    <p>You may request account deletion, but certain transaction records may be retained for legal and fraud prevention purposes.</p>
+
+    <h2>6. Data Security</h2>
+    <p>We implement appropriate technical and organizational measures:</p>
+    <ul>
+      <li>Row-Level Security (RLS) policies in our database</li>
+      <li>Secure authentication via Supabase Auth</li>
+      <li>Encrypted connections (HTTPS/TLS)</li>
+      <li>Escrow mechanisms for financial transactions</li>
+    </ul>
+    <p>However, no method of transmission over the internet is 100% secure. You use the platform at your own risk.</p>
+
+    <h2>7. Your Rights</h2>
+    <p>Depending on your jurisdiction, you may have the right to:</p>
+    <ul>
+      <li>Access your personal data</li>
+      <li>Correct inaccurate data</li>
+      <li>Request deletion of your data</li>
+      <li>Export your data in a portable format</li>
+      <li>Object to certain processing activities</li>
+    </ul>
+    <p>Contact us to exercise these rights.</p>
+
+    <h2>8. Children's Privacy</h2>
+    <p>Kindred Guild is not intended for children under 18 years of age. We do not knowingly collect data from minors. If you believe a minor has provided us with data, please contact us immediately.</p>
+
+    <h2>9. International Data Transfers</h2>
+    <p>Your data may be processed in countries outside your residence. By using the platform, you consent to such transfers in accordance with this policy.</p>
+
+    <h2>10. Cookies & Tracking</h2>
+    <p>We use minimal cookies for:</p>
+    <ul>
+      <li>Session management (keeping you logged in)</li>
+      <li>Platform functionality</li>
+    </ul>
+    <p>We do not use tracking cookies for advertising purposes.</p>
+
+    <h2>11. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy periodically. The "Last updated" date will reflect changes. Continued use after changes constitutes acceptance of the updated policy.</p>
+
+    <h2>12. Contact Us</h2>
+    <p>For privacy-related questions, concerns, or requests, please contact us through the platform or reach out to the development team.</p>
+
+    <footer>
+      <a href="index.html">Home</a> •
+      <a href="quest-board.html">Quest Board</a> •
+      <a href="terms-of-service.html">Terms of Service</a>
+      <br><br>
+      © 2026 Kindred Guild. All rights reserved.
+    </footer>
+  </div>
+</body>
+</html>
