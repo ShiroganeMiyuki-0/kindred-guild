@@ -337,6 +337,78 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
 -- =========================================================================
+-- SCHEDULED TASK FUNCTIONS (for pg_cron)
+-- =========================================================================
+
+-- Auto-approve quests after 48 hours if poster hasn't acted
+CREATE OR REPLACE FUNCTION auto_approve_quests()
+RETURNS VOID AS $$
+DECLARE
+  v_quest RECORD;
+BEGIN
+  FOR v_quest IN
+    SELECT q.id, q.poster_id, q.worker_id, q.coin_amount, q.payment_type
+    FROM quests q
+    WHERE q.status = 'submitted'
+      AND q.appraisal_deadline < NOW()
+      AND q.appraisal_deadline IS NOT NULL
+  LOOP
+    -- Update quest status
+    UPDATE quests 
+    SET status = 'approved', appraisal_deadline = NULL
+    WHERE id = v_quest.id;
+
+    -- Release locked coins to the worker if applicable
+    IF v_quest.payment_type = 'coins' THEN
+      INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+      VALUES (v_quest.worker_id, v_quest.coin_amount, 'quest_earning', v_quest.id, NOW());
+    END IF;
+
+    -- Log the auto-approval event
+    RAISE NOTICE 'Auto-approved quest %', v_quest.id;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Auto-reveal ratings after 7 days and update reputation
+CREATE OR REPLACE FUNCTION reveal_ratings_and_update_reputation()
+RETURNS VOID AS $$
+DECLARE
+  v_rating RECORD;
+  v_affected_posters UUID[];
+BEGIN
+  v_affected_posters := ARRAY[]::UUID[];
+
+  -- Find all unrevealed ratings older than 7 days
+  FOR v_rating IN
+    SELECT r.id, r.quest_id, r.rater_id, r.ratee_id, r.score,
+           q.poster_id, q.worker_id
+    FROM ratings r
+    JOIN quests q ON r.quest_id = q.id
+    WHERE r.revealed = FALSE
+      AND r.submitted_at < NOW() - INTERVAL '7 days'
+  LOOP
+    -- Reveal this rating
+    UPDATE ratings SET revealed = TRUE WHERE id = v_rating.id;
+
+    -- Track affected users for reputation recalculation
+    IF NOT v_rating.ratee_id = ANY(v_affected_posters) THEN
+      v_affected_posters := array_append(v_affected_posters, v_rating.ratee_id);
+    END IF;
+
+    RAISE NOTICE 'Auto-revealed rating % for ratee %', v_rating.id, v_rating.ratee_id;
+  END LOOP;
+
+  -- Recalculate reputation for all affected users
+  FOREACH v_ratee IN ARRAY v_affected_posters
+  LOOP
+    PERFORM recalculate_reputation(v_ratee);
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- =========================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- =========================================================================
 
