@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — Profile Hub</title>
+  <title>Kindred Guild — Profile Dashboard</title>
   <style>
     :root {
-      --bg: #0f0f13;
-      --surface: #1a1a22;
-      --surface-2: #252530;
-      --text: #e8e8f0;
-      --text-dim: #9090a0;
-      --accent: #c9a84c;
-      --accent-glow: rgba(201, 168, 76, 0.2);
-      --border: #222230;
-      --error: #e74c3c;
+      --bg: #0c0c0f;
+      --surface: #14141e;
+      --surface-2: #20202d;
+      --text: #f0f0f5;
+      --text-dim: #9494a8;
+      --accent: #d4af37;
+      --accent-glow: rgba(212, 175, 55, 0.15);
+      --border: #262636;
+      --error: #ef4444;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,7 +37,7 @@
       align-items: center;
       margin-bottom: 30px;
       padding-bottom: 16px;
-      border-bottom: 1px solid var(--surface-2);
+      border-bottom: 1px solid var(--border);
     }
     .header-bar a {
       color: var(--text-dim);
@@ -45,14 +45,12 @@
     }
     .header-bar a:hover { color: var(--accent); }
 
-    /* Profile Header card */
     .profile-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 30px;
       margin-bottom: 24px;
-      position: relative;
     }
 
     .avatar-area {
@@ -84,11 +82,10 @@
       font-weight: bold;
     }
 
-    /* Tabs Layout */
     .tabs {
       display: flex;
       gap: 12px;
-      border-bottom: 1px solid var(--surface-2);
+      border-bottom: 1px solid var(--border);
       margin-bottom: 20px;
     }
     .tab {
@@ -133,8 +130,8 @@
       width: 100%;
       padding: 12px;
       background: var(--bg);
-      border: 1px solid var(--surface-2);
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       color: var(--text);
     }
     input:focus {
@@ -144,16 +141,16 @@
 
     .btn {
       padding: 10px 20px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: bold;
       border: none;
       cursor: pointer;
       background: var(--accent);
-      color: #000;
+      color: #0c0c0f;
     }
 
     .suspension-banner {
-      background: rgba(231, 76, 60, 0.15);
+      background: rgba(239, 68, 68, 0.15);
       border: 1px solid var(--error);
       color: var(--error);
       padding: 16px;
@@ -165,7 +162,7 @@
 
     .quest-item {
       padding: 15px;
-      border-bottom: 1px solid var(--surface-2);
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -187,63 +184,57 @@
       <a href="quest-board.html">← Go to Board</a>
     </div>
 
-    <!-- Suspension Notice -->
     <div id="suspensionNotice" class="suspension-banner" style="display: none;">
-      ⚠️ This account is suspended due to unresolved disputes or security breaches.
+      ⚠️ Account suspended due to unresolved disputes or security breaches.
     </div>
 
-    <!-- Profile Identity -->
     <div class="profile-card">
       <div class="avatar-area">
-        <img id="profileAvatar" src="https://via.placeholder.com/80" alt="Avatar" class="avatar">
+        <img id="profileAvatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2314141e'/><text x='50%' y='55%' font-size='40' dominant-baseline='middle' text-anchor='middle'>👤</text></svg>" alt="Avatar" class="avatar">
         <div class="meta-details">
           <h2 id="profileDisplayName">--</h2>
           <div class="username" id="profileUsername">@--</div>
-          <div class="rep-score">Reputation: <span id="profileRepScore" style="color: var(--accent);">--</span></div>
+          <div class="rep-score">Reputation Rating: <span id="profileRepScore" style="color: var(--accent);">--</span></div>
           <div style="font-size: 0.85rem; color: var(--text-dim); margin-top: 6px;">
-            Coin Balance: <strong id="privateBalanceDisplay" style="color: var(--accent);">--</strong> FC <span style="font-size: 0.75rem;">(Owner Only)</span>
+            Fairy Coins Balance: <strong id="privateBalanceDisplay" style="color: var(--accent);">--</strong> FC <span style="font-size: 0.75rem;">(Owner Only)</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- History & Configuration tab switcher -->
     <div class="tabs">
       <div class="tab active" data-tab="tab-posted" onclick="switchProfileTab('tab-posted')">Posted Quests</div>
       <div class="tab" data-tab="tab-completed" onclick="switchProfileTab('tab-completed')">Completed Tasks</div>
       <div class="tab" id="editProfileTabBtn" data-tab="tab-edit" onclick="switchProfileTab('tab-edit')" style="display: none;">Edit Settings</div>
     </div>
 
-    <!-- POSTED TAB -->
     <div id="tab-posted" class="tab-content active">
       <div class="card">
         <div id="postedQuestsList">
-          <div style="color: var(--text-dim); padding: 10px;">Loading quests history...</div>
+          <div style="color: var(--text-dim); padding: 10px;">Loading historical records...</div>
         </div>
       </div>
     </div>
 
-    <!-- COMPLETED TAB -->
     <div id="tab-completed" class="tab-content">
       <div class="card">
         <div id="completedQuestsList">
-          <div style="color: var(--text-dim); padding: 10px;">Loading completed history...</div>
+          <div style="color: var(--text-dim); padding: 10px;">Loading tasks list...</div>
         </div>
       </div>
     </div>
 
-    <!-- EDIT PROFILE TAB -->
     <div id="tab-edit" class="tab-content">
       <div class="card">
         <div class="form-group">
           <label>Display Name</label>
-          <input type="text" id="editDisplayName" placeholder="Aria Moonweaver">
+          <input type="text" id="editDisplayName" placeholder="e.g. Aria Moonweaver">
         </div>
         <div class="form-group">
-          <label>Avatar Upload URL</label>
+          <label>Avatar URL Link</label>
           <input type="text" id="editAvatarUrl" placeholder="https://image-links-here.com">
         </div>
-        <button class="btn" onclick="saveProfileChanges()">Apply Settings</button>
+        <button class="btn" onclick="saveProfileChanges()">Save Profile</button>
       </div>
     </div>
 
