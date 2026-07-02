@@ -6,16 +6,16 @@
   <title>Kindred Guild — Post a Quest</title>
   <style>
     :root {
-      --bg: #0f0f13;
-      --surface: #1a1a22;
-      --surface-2: #252530;
-      --text: #e8e8f0;
-      --text-dim: #9090a0;
-      --accent: #c9a84c;
-      --accent-glow: rgba(201, 168, 76, 0.2);
-      --error: #e74c3c;
-      --success: #2ecc71;
-      --info: #3498db;
+      --bg: #0c0c0f;
+      --surface: #14141e;
+      --surface-2: #20202d;
+      --text: #f0f0f5;
+      --text-dim: #9494a8;
+      --accent: #d4af37;
+      --accent-glow: rgba(212, 175, 55, 0.15);
+      --border: #262636;
+      --error: #ef4444;
+      --success: #10b981;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -35,7 +35,7 @@
       justify-content: space-between;
       margin-bottom: 32px;
       padding-bottom: 16px;
-      border-bottom: 1px solid var(--surface-2);
+      border-bottom: 1px solid var(--border);
     }
     .header h1 {
       font-size: 1.5rem;
@@ -49,7 +49,7 @@
     .header a:hover { color: var(--accent); }
     .card {
       background: var(--surface);
-      border: 1px solid var(--surface-2);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 32px;
     }
@@ -68,17 +68,15 @@
       width: 100%;
       padding: 14px 16px;
       background: var(--bg);
-      border: 1px solid var(--surface-2);
+      border: 1px solid var(--border);
       border-radius: 10px;
       color: var(--text);
       font-size: 1rem;
       font-family: inherit;
-      transition: border-color 0.2s, box-shadow 0.2s;
     }
     input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
     }
     textarea {
       min-height: 120px;
@@ -94,24 +92,24 @@
       min-width: 140px;
       padding: 16px;
       background: var(--bg);
-      border: 2px solid var(--surface-2);
+      border: 2px solid var(--border);
       border-radius: 12px;
       cursor: pointer;
       text-align: center;
       transition: border-color 0.2s;
     }
-    .payment-type:hover { border-color: var(--accent); }
     .payment-type.selected {
       border-color: var(--accent);
-      background: rgba(201, 168, 76, 0.1);
+      background: var(--accent-glow);
     }
     .payment-type .icon { font-size: 1.5rem; margin-bottom: 8px; }
     .payment-type .name { font-weight: 600; font-size: 0.95rem; }
     .payment-type .desc { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; }
     .amount-input { display: none; }
     .amount-input.active { display: block; }
+    
     .commission-note {
-      background: rgba(201, 168, 76, 0.1);
+      background: var(--accent-glow);
       border: 1px solid var(--accent);
       border-radius: 10px;
       padding: 16px;
@@ -127,21 +125,20 @@
       margin-bottom: 8px;
     }
     .coin-balance span { color: var(--accent); font-weight: 600; }
+    
     button[type="submit"] {
       width: 100%;
       padding: 16px;
       background: var(--accent);
-      color: #0f0f13;
+      color: #0c0c0f;
       border: none;
       border-radius: 10px;
       font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.15s, opacity 0.15s;
       margin-top: 8px;
     }
-    button[type="submit"]:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.9; }
-    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+    button[type="submit"]:disabled { opacity: 0.5; }
     .message {
       margin-top: 16px;
       padding: 12px 16px;
@@ -149,8 +146,9 @@
       font-size: 0.9rem;
       display: none;
     }
-    .message.error { background: rgba(231, 76, 60, 0.15); color: var(--error); display: block; }
-    .message.success { background: rgba(46, 204, 113, 0.15); color: var(--success); display: block; }
+    .message.error { background: rgba(239, 68, 68, 0.15); color: var(--error); display: block; }
+    .message.success { background: rgba(16, 185, 129, 0.15); color: var(--success); display: block; }
+    
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -164,7 +162,7 @@
     .modal-overlay.active { display: flex; }
     .modal {
       background: var(--surface);
-      border: 1px solid var(--surface-2);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 32px;
       max-width: 480px;
@@ -173,7 +171,6 @@
     .modal h3 {
       color: var(--accent);
       margin-bottom: 16px;
-      font-size: 1.2rem;
     }
     .modal p {
       color: var(--text-dim);
@@ -195,7 +192,7 @@
     }
     .modal-buttons .confirm {
       background: var(--accent);
-      color: #0f0f13;
+      color: #0c0c0f;
     }
     .modal-buttons .cancel {
       background: var(--surface-2);
@@ -206,12 +203,6 @@
       align-items: center;
       gap: 12px;
       margin-bottom: 24px;
-    }
-    .user-bar img {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--surface-2);
     }
     .user-bar .name { font-weight: 600; }
     .user-bar .coins { font-size: 0.85rem; color: var(--text-dim); }
@@ -234,66 +225,63 @@
       <form id="questForm" onsubmit="event.preventDefault(); handleSubmit();">
         <div class="form-group">
           <label for="title">Quest Title</label>
-          <input type="text" id="title" placeholder="e.g. Design a guild banner" maxlength="100" required onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('description').focus();}" />
+          <input type="text" id="title" placeholder="e.g. Design a guild banner" maxlength="100" required />
         </div>
 
         <div class="form-group">
           <label for="description">Description</label>
-          <textarea id="description" placeholder="Describe what needs to be done, requirements, deliverables..." required></textarea>
+          <textarea id="description" placeholder="Describe requirements, parameters, guidelines..." required></textarea>
         </div>
 
         <div class="form-group">
-          <label>Payment Type</label>
+          <label>Payment Mode Selection</label>
           <div class="payment-types">
             <div class="payment-type selected" data-type="coins" onclick="selectPayment('coins')">
               <div class="icon">🪙</div>
               <div class="name">Fairy Coins</div>
-              <div class="desc">Safest — full platform protection</div>
+              <div class="desc">Locked upfront - Full Protection</div>
             </div>
             <div class="payment-type" data-type="upi" onclick="selectPayment('upi')">
               <div class="icon">₹</div>
               <div class="name">UPI Direct</div>
-              <div class="desc">Pay worker directly via UPI</div>
+              <div class="desc">Pay worker directly via external UPI</div>
             </div>
             <div class="payment-type" data-type="free" onclick="selectPayment('free')">
               <div class="icon">🎁</div>
               <div class="name">Free</div>
-              <div class="desc">No payment, no strings</div>
+              <div class="desc">Pure goodwill mutual aid</div>
             </div>
           </div>
         </div>
 
         <div class="form-group amount-input active" id="coinsInput">
-          <label for="coinAmount">Coin Reward</label>
-          <div class="coin-balance">Your balance: <span id="coinBalance2">--</span> FC</div>
-          <input type="number" id="coinAmount" placeholder="e.g. 500" min="1" required onkeydown="if(event.key==='Enter'){event.key==='Enter';document.getElementById('deadline').focus();}" />
+          <label for="coinAmount">Coins Reward Amount</label>
+          <div class="coin-balance">Your active balance: <span id="coinBalance2">--</span> FC</div>
+          <input type="number" id="coinAmount" placeholder="e.g. 500" min="1" />
           <div class="commission-note" id="coinsCommission">
-            <strong>💛 10% Commission:</strong> <span id="commissionCoins">0</span> FC will be locked upfront as your safety net.
+            <strong>💛 10% Platform Fee:</strong> <span id="commissionCoins">0</span> FC will be locked upfront.
           </div>
         </div>
 
         <div class="form-group amount-input" id="upiInput">
-          <label for="upiAmount">UPI Amount (₹)</label>
-          <div class="coin-balance">Your balance: <span id="coinBalance3">--</span> FC</div>
+          <label for="upiAmount">UPI Amount Due (₹)</label>
+          <div class="coin-balance">Your active balance: <span id="coinBalance3">--</span> FC</div>
           <input type="number" id="upiAmount" placeholder="e.g. 500" min="1" />
           <div class="commission-note" id="upiCommission">
-            <strong>💛 10% Commission:</strong> You need at least <span id="commissionUpi">0</span> FC in your balance (locked upfront). Payment goes directly to worker via UPI.
+            <strong>💛 10% Safety Net Fee:</strong> You need <span id="commissionUpi">0</span> FC in balance (locked upfront). UPI transactions happen externally.
           </div>
         </div>
 
         <div class="form-group">
-          <label>Deadline</label>
+          <label>Deadline Date & Time</label>
           <div style="display: flex; gap: 12px;">
             <div style="flex: 1;">
-              <label for="deadlineDate" style="font-size: 0.75rem; text-transform: none;">Date</label>
               <input type="date" id="deadlineDate" required />
             </div>
             <div style="flex: 1;">
-              <label for="deadlineTime" style="font-size: 0.75rem; text-transform: none;">Time</label>
               <input type="time" id="deadlineTime" required />
             </div>
           </div>
-          <input type="hidden" id="deadline" />
         </div>
 
         <button type="submit" id="submitBtn">Post Quest</button>
@@ -302,17 +290,16 @@
     </div>
   </div>
 
-<!-- UPI Risk Modal -->
-<div class="modal-overlay" id="upiModal">
-  <div class="modal">
-    <h3>⚠️ UPI Direct — Know the risks</h3>
-    <p>Kindred Guild cannot mediate disputes or verify completion for UPI quests. If payment is withheld, only reputation damage and eventual suspension apply. Proceed only if you trust the other party.</p>
-    <div class="modal-buttons">
-      <button class="cancel" onclick="closeUpiModal()">Cancel</button>
-      <button class="confirm" onclick="confirmUpiPost()">I understand, proceed</button>
+  <div class="modal-overlay" id="upiModal">
+    <div class="modal">
+      <h3>⚠️ UPI Direct Transaction Warnings</h3>
+      <p>UPI transactions happen externally. Kindred Guild cannot reverse or guarantee cash transfers, only enforce reputation bans if payment is withheld. Proceed only if trusted.</p>
+      <div class="modal-buttons">
+        <button class="cancel" onclick="closeUpiModal()">Cancel</button>
+        <button class="confirm" onclick="confirmUpiPost()">Confirm Post</button>
+      </div>
     </div>
   </div>
-</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="quest-post.js"></script>
