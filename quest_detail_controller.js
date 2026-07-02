@@ -14,7 +14,15 @@ let countdownInterval = null;
 // Extractor helper
 function getQuestId() {
   const params = new URLSearchParams(window.location.search);
-  return params.get('id');
+  const rawId = params.get('id');
+
+  // Supabase/Postgres UUID columns reject strings such as "null",
+  // "undefined", or malformed values with a 400 response. Validate the
+  // route param before any .eq('id', ...) / .eq('quest_id', ...) calls.
+  if (!rawId || rawId === 'null' || rawId === 'undefined') return null;
+
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidPattern.test(rawId) ? rawId : null;
 }
 
 function showAlert(text, type) {
@@ -31,7 +39,10 @@ function clearAlert() {
 (async function init() {
   const questId = getQuestId();
   if (!questId) {
-    window.location.href = 'quest-board.html';
+    showAlert('Invalid or missing quest link. Returning to the quest board...', 'error');
+    setTimeout(() => {
+      window.location.href = 'quest-board.html';
+    }, 1200);
     return;
   }
 
@@ -63,6 +74,10 @@ function clearAlert() {
 
 async function refreshQuestData() {
   const questId = getQuestId();
+  if (!questId) {
+    showAlert('Invalid or missing quest link. Please open the quest from the quest board.', 'error');
+    return;
+  }
   
   const { data: quest, error } = await sb
     .from('quests')
@@ -358,6 +373,8 @@ async function disputeQuest() {
 // COMMENTS / COORDINATION CHANNEL
 // -----------------------------
 async function loadQuestComments(questId) {
+  if (!questId) return;
+
   const { data, error } = await sb
     .from('quest_comments')
     .select(`
@@ -423,6 +440,8 @@ async function postCommentText() {
 }
 
 function subscribeToQuestComments(questId) {
+  if (!questId) return;
+
   sb.channel(`comments-${questId}`)
     .on('postgres_changes', { 
       event: 'INSERT', 

@@ -255,9 +255,10 @@ async function confirmAccept() {
     return;
   }
 
+  const acceptedQuestId = selectedQuestId;
   closeModal();
   alert('Quest accepted! Redirecting to quest detail...');
-  window.location.href = 'quest-detail.html?id=' + selectedQuestId;
+  window.location.href = 'quest-detail.html?id=' + encodeURIComponent(acceptedQuestId);
 }
 
 async function logout() {
