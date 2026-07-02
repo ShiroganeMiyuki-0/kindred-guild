@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — USER PROFILE LOGIC
+// KINDRED GUILD — PROFILE LOGIC
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -15,7 +15,6 @@ function getUsernameParam() {
 }
 
 (async function init() {
-  // Check auth
   const { data: { user } } = await sb.auth.getUser();
   if (user) currentUser = user;
 
@@ -25,7 +24,6 @@ function getUsernameParam() {
     return;
   }
 
-  // Load the displayed Profile
   let query = sb.from('user_profiles').select('*');
   if (targetUsername) {
     query = query.eq('username', targetUsername).single();
@@ -35,7 +33,7 @@ function getUsernameParam() {
 
   const { data: profile, error } = await query;
   if (error || !profile) {
-    alert('User profile details not found.');
+    alert('Guild profile details not found.');
     window.location.href = 'quest-board.html';
     return;
   }
@@ -43,7 +41,7 @@ function getUsernameParam() {
   profileUser = profile;
   renderProfileOverview();
   
-  // Load private balance & editing capabilities if this is the user's own profile
+  // Settings view access mapping
   if (currentUser && currentUser.id === profileUser.user_id) {
     document.getElementById('editProfileTabBtn').style.display = 'block';
     document.getElementById('editDisplayName').value = profileUser.display_name || '';
@@ -64,7 +62,7 @@ function renderProfileOverview() {
   document.getElementById('profileUsername').textContent = '@' + p.username;
 
   const score = p.reputation_score ? (p.reputation_score / 10).toFixed(1) : '0.0';
-  document.getElementById('profileRepScore').textContent = `${score}/5.0`;
+  document.getElementById('profileRepScore').textContent = `${score} / 5.0`;
 
   if (p.avatar_url) {
     document.getElementById('profileAvatar').src = p.avatar_url;
@@ -75,37 +73,32 @@ function renderProfileOverview() {
   }
 }
 
-function switchProfileTab(tabId) {
+window.switchProfileTab = function(tabId) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
 
   document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
   document.getElementById(tabId).classList.add('active');
-}
+};
 
 async function loadUserQuestsHistory() {
-  // Load posted
   const { data: posted, error: err1 } = await sb
     .from('quests')
     .select('*')
     .eq('poster_id', profileUser.user_id)
     .order('created_at', { ascending: false });
 
-  // Load completed
   const { data: completed, error: err2 } = await sb
     .from('quests')
     .select('*')
     .eq('worker_id', profileUser.user_id)
     .order('created_at', { ascending: false });
 
-  if (err1 || err2) {
-    console.error(err1, err2);
-    return;
-  }
+  if (err1 || err2) return;
 
   const pList = document.getElementById('postedQuestsList');
   if (posted.length === 0) {
-    pList.innerHTML = '<div style="color: var(--text-dim); padding: 10px;">No posted quests found.</div>';
+    pList.innerHTML = '<div style="color: var(--text-dim); padding: 10px;">No historical posted records.</div>';
   } else {
     pList.innerHTML = posted.map(q => `
       <div class="quest-item">
@@ -117,7 +110,7 @@ async function loadUserQuestsHistory() {
 
   const cList = document.getElementById('completedQuestsList');
   if (completed.length === 0) {
-    cList.innerHTML = '<div style="color: var(--text-dim); padding: 10px;">No completed tasks found.</div>';
+    cList.innerHTML = '<div style="color: var(--text-dim); padding: 10px;">No completed tasks on file.</div>';
   } else {
     cList.innerHTML = completed.map(q => `
       <div class="quest-item">
@@ -128,7 +121,7 @@ async function loadUserQuestsHistory() {
   }
 }
 
-async function saveProfileChanges() {
+window.saveProfileChanges = async function() {
   const dName = document.getElementById('editDisplayName').value.trim();
   const avatar = document.getElementById('editAvatarUrl').value.trim();
 
@@ -144,9 +137,9 @@ async function saveProfileChanges() {
     return;
   }
 
-  alert('Profile updated!');
+  alert('Profile updated successfully!');
   window.location.reload();
-}
+};
 
 function escapeHtml(text) {
   const div = document.createElement('div');
