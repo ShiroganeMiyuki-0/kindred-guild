@@ -20,7 +20,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     .single();
 
   if (error || !profile?.is_admin) {
-    alert('Access Restricted. Admins only.');
+    alert('Access Restricted. Yash / Admins only.');
     window.location.href = 'quest-board.html';
     return;
   }
@@ -73,9 +73,8 @@ async function loadPendingPurchases() {
 }
 
 window.approvePurchase = async function(purchaseId, userId, coins) {
-  if (!confirm(`Are you sure you want to approve this purchase? ${coins} FC will be credited to ledger.`)) return;
+  if (!confirm(`Verify and approve ${coins} FC to ledger?`)) return;
 
-  // Update transaction status
   const { error: txErr } = await sb
     .from('coin_purchases')
     .update({ status: 'verified' })
@@ -86,7 +85,6 @@ window.approvePurchase = async function(purchaseId, userId, coins) {
     return;
   }
 
-  // Credit user fairy ledger
   const { error: ledgerErr } = await sb
     .from('fairy_ledger')
     .insert({
@@ -102,10 +100,10 @@ window.approvePurchase = async function(purchaseId, userId, coins) {
   }
 
   loadPendingPurchases();
-}
+};
 
 window.rejectPurchase = async function(purchaseId) {
-  if (!confirm('Are you sure you want to reject this request?')) return;
+  if (!confirm('Reject transaction entry request?')) return;
 
   const { error } = await sb
     .from('coin_purchases')
@@ -119,4 +117,4 @@ window.rejectPurchase = async function(purchaseId) {
   }
 
   loadPendingPurchases();
-}
+};
