@@ -205,33 +205,39 @@ async function confirmAccept() {
   if (!selectedQuestId) return;
 
   // CRITICAL FIX: Verify user has a profile before accepting
-  const { data: profile } = await sb
+  const { data: profile, error: profileError } = await sb
     .from('user_profiles')
     .select('user_id')
     .eq('user_id', currentUser.id)
     .single();
 
-  if (!profile) {
-    alert('Profile setup required. Redirecting...');
+  if (profileError || !profile) {
+    alert('Profile setup required. Redirecting to complete your guild membership...');
     window.location.href = 'username-setup.html';
     return;
   }
 
   const { error } = await sb
     .from('quests')
-    .update({ worker_id: currentUser.id, status: 'accepted' })
+    .update({
+      worker_id: currentUser.id,
+      status: 'accepted'
+    })
     .eq('id', selectedQuestId)
     .eq('status', 'open');
 
   if (error) {
+    console.error('Accept error:', error);
     alert('Failed to accept quest: ' + error.message);
     closeModal();
     return;
   }
 
   closeModal();
+  alert('Quest accepted! Redirecting to quest detail...');
   window.location.href = 'quest-detail.html?id=' + selectedQuestId;
 }
+
 async function logout() {
   await sb.auth.signOut();
   window.location.href = 'auth.html';
