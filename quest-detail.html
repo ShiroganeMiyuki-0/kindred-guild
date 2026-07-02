@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — Quest Detail</title>
+  <title>Kindred Guild — Quest Workspace</title>
   <style>
     :root {
-      --bg: #0f0f13;
-      --surface: #1a1a22;
-      --surface-2: #252530;
-      --text: #e8e8f0;
-      --text-dim: #9090a0;
-      --accent: #c9a84c;
-      --accent-glow: rgba(201, 168, 76, 0.2);
-      --border: #222230;
-      --success: #2ecc71;
-      --error: #e74c3c;
+      --bg: #0c0c0f;
+      --surface: #14141e;
+      --surface-2: #20202d;
+      --text: #f0f0f5;
+      --text-dim: #9494a8;
+      --accent: #d4af37;
+      --accent-glow: rgba(212, 175, 55, 0.15);
+      --border: #262636;
+      --success: #10b981;
+      --error: #ef4444;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,7 +37,7 @@
       justify-content: space-between;
       align-items: center;
       padding-bottom: 16px;
-      border-bottom: 1px solid var(--surface-2);
+      border-bottom: 1px solid var(--border);
       margin-bottom: 24px;
     }
     .nav-bar a {
@@ -64,9 +64,9 @@
       text-transform: uppercase;
       margin-bottom: 16px;
     }
-    .badge-coins { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
-    .badge-upi { background: rgba(230, 126, 34, 0.15); color: #e67e22; }
-    .badge-free { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+    .badge-coins { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+    .badge-upi { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+    .badge-free { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 
     .status-badge {
       float: right;
@@ -78,9 +78,9 @@
     }
     .status-open { background: rgba(52, 152, 219, 0.15); color: #3498db; }
     .status-accepted { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
-    .status-submitted { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
-    .status-approved { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
-    .status-disputed { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+    .status-submitted { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+    .status-approved { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .status-disputed { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 
     .quest-title {
       font-size: 1.8rem;
@@ -97,9 +97,10 @@
       font-size: 0.9rem;
       margin-bottom: 20px;
       padding-bottom: 16px;
-      border-bottom: 1px solid var(--surface-2);
+      border-bottom: 1px solid var(--border);
     }
     .quest-meta strong { color: var(--text); }
+    .quest-meta a { color: var(--accent); text-decoration: none; }
 
     .quest-desc {
       line-height: 1.7;
@@ -108,7 +109,7 @@
       white-space: pre-wrap;
     }
 
-    /* Communication/Comment Section */
+    /* Message Channels */
     .comments-section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -132,7 +133,7 @@
     }
     .comment-card {
       background: var(--bg);
-      border: 1px solid var(--surface-2);
+      border: 1px solid var(--border);
       padding: 12px 16px;
       border-radius: 8px;
     }
@@ -156,8 +157,8 @@
       flex: 1;
       padding: 12px;
       background: var(--bg);
-      border: 1px solid var(--surface-2);
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       color: var(--text);
     }
     .comment-form input:focus {
@@ -167,14 +168,13 @@
     .comment-form button {
       padding: 12px 24px;
       background: var(--accent);
-      color: #000;
+      color: #0c0c0f;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: 700;
       cursor: pointer;
     }
 
-    /* Action sections */
     .action-panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -194,7 +194,7 @@
     }
 
     .file-drop-area {
-      border: 2px dashed var(--surface-2);
+      border: 2px dashed var(--border);
       border-radius: 8px;
       padding: 30px;
       text-align: center;
@@ -207,7 +207,7 @@
 
     .btn {
       padding: 12px 24px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: 700;
       border: none;
       cursor: pointer;
@@ -217,14 +217,13 @@
     .btn:hover { opacity: 0.9; }
     .btn-success { background: var(--success); color: #fff; }
     .btn-error { background: var(--error); color: #fff; }
-    .btn-accent { background: var(--accent); color: #000; }
+    .btn-accent { background: var(--accent); color: #0c0c0f; }
 
     .actions-group {
       display: flex;
       gap: 12px;
     }
 
-    /* Rating panel */
     .rating-panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -263,8 +262,8 @@
       font-size: 0.9rem;
       display: none;
     }
-    .message.error { background: rgba(231,76,60,0.15); color: var(--error); display: block; }
-    .message.success { background: rgba(46,204,113,0.15); color: var(--success); display: block; }
+    .message.error { background: rgba(239, 68, 68, 0.15); color: var(--error); display: block; }
+    .message.success { background: rgba(16, 185, 129, 0.15); color: var(--success); display: block; }
 
     .proof-viewer img {
       max-width: 100%;
@@ -286,17 +285,17 @@
 
   <div class="container">
     <div class="nav-bar">
-      <a href="quest-board.html">← Back to Quest Board</a>
+      <a href="quest-board.html">← Return to Board</a>
       <span id="userProfileBadge" style="color: var(--text-dim); font-size: 0.9rem;"></span>
     </div>
 
     <div id="alertBox" class="message"></div>
 
-    <!-- MAIN QUEST CONTAINER -->
+    <!-- QUEST IDENTITY CARD -->
     <div class="quest-header">
       <div id="statusBadge" class="status-badge status-open">Loading...</div>
       <span id="paymentTypeBadge" class="badge">--</span>
-      <h2 id="questTitle" class="quest-title">Loading Quest Details...</h2>
+      <h2 id="questTitle" class="quest-title">Loading...</h2>
       
       <div class="quest-meta">
         <div>Poster: <strong id="posterName">--</strong> <span id="posterRep"></span></div>
@@ -308,12 +307,12 @@
       <div id="questDesc" class="quest-desc">Loading...</div>
     </div>
 
-    <!-- WORKER: SUBMIT PROOF PANEL -->
+    <!-- WORKER PROOF SECTION -->
     <div id="workerProofPanel" class="action-panel" style="display: none;">
       <h3>Submit Proof of Completion</h3>
-      <p>Upload a supporting image, document, or confirmation file to prove you've executed the task properly. Once submitted, the appraisal countdown will trigger.</p>
+      <p>Upload a confirmation file, screenshot, or document. This starts the 48-hour appraisal timeline.</p>
       <div class="file-drop-area" id="dropArea" onclick="document.getElementById('proofFileInput').click()">
-        <span id="dropAreaText">📁 Click to select file for proof submission</span>
+        <span id="dropAreaText">📁 Select completion proof file to upload</span>
         <input type="file" id="proofFileInput" onchange="handleFileSelected(this)">
       </div>
       <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
@@ -322,29 +321,27 @@
       </div>
     </div>
 
-    <!-- POSTER: APPRAISAL PANEL -->
+    <!-- POSTER APPRAISAL BOARD -->
     <div id="posterAppraisalPanel" class="action-panel" style="display: none;">
-      <h3>Appraise Submitted Work</h3>
-      <p>Appraise the worker's files and descriptions. If no action is taken within 48 hours, the system auto-approves this quest and pays out the locked reward.</p>
+      <h3>Review Task Deliverables</h3>
+      <p>Analyze submitted assets. If no action is taken within 48 hours, the system auto-completes and disburses funds.</p>
       
-      <div class="proof-viewer" id="proofViewerContainer">
-        <!-- Proof loaded dynamically -->
-      </div>
+      <div class="proof-viewer" id="proofViewerContainer"></div>
 
       <div style="margin-bottom: 20px;">
         Auto-approves in: <span id="countdownTimer" class="countdown">--:--:--</span>
       </div>
 
       <div class="actions-group">
-        <button class="btn btn-success" onclick="approveSubmittedQuest()">Approve Quest & Pay</button>
-        <button class="btn btn-error" onclick="disputeQuest()">Dispute Submission</button>
+        <button class="btn btn-success" onclick="approveSubmittedQuest()">Approve & Payout</button>
+        <button class="btn btn-error" onclick="disputeQuest()">File Dispute</button>
       </div>
     </div>
 
-    <!-- GENERAL: RATING PANEL -->
+    <!-- DOUBLE BLIND RATING EXCHANGE -->
     <div id="ratingPanel" class="rating-panel" style="display: none;">
-      <h3>Exchange Rating Reviews</h3>
-      <p id="ratingExplanation">This quest has finished. Swap feedback scores below to build reputations securely. Ratings are hidden until both parties submit.</p>
+      <h3>Swap Reviews</h3>
+      <p>Provide anonymous star feedback to calculate and build community reputation.</p>
       
       <div id="activeRatingForm">
         <div class="rating-widget" id="starContainer">
@@ -354,33 +351,33 @@
           <span class="star" data-score="4" onclick="setRatingValue(4)">★</span>
           <span class="star" data-score="5" onclick="setRatingValue(5)">★</span>
         </div>
-        <button class="btn btn-accent" onclick="submitUserRating()">Submit Secure Feedback</button>
+        <button class="btn btn-accent" onclick="submitUserRating()">Submit Review</button>
       </div>
 
       <div id="waitingRatingMessage" style="display: none; color: var(--text-dim); padding: 15px 0;">
-        ⏳ feedback registered. Waiting for the other party to complete their review...
+        ⏳ Feedback registered. Waiting for the other party to complete their review...
       </div>
 
-      <div id="ratingResultDisplay" style="display: none; text-align: left; padding: 15px; border-radius: 8px; background: var(--bg); border: 1px solid var(--surface-2); margin-top: 15px;">
+      <div id="ratingResultDisplay" style="display: none; text-align: left; padding: 15px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); margin-top: 15px;">
         <h4 style="color: var(--accent); margin-bottom: 8px;">Revealed Rating Details:</h4>
         <div id="ratingScoreList" style="font-size: 0.95rem; line-height: 1.6;"></div>
       </div>
     </div>
 
-    <!-- DISPUTE SETTLEMENT INFORMATION BAR -->
+    <!-- DISPUTE SETTLEMENT EXPLANATION PANEL -->
     <div id="disputePanel" class="action-panel" style="display: none; border-color: var(--error);">
-      <h3 style="color: var(--error);">⚠️ Quest Under Dispute</h3>
-      <p>This quest's completion details have been formally disputed by the poster. The 10% Fairy Coin safety-net insurance guarantees manual arbitration support. Post coordinating details in the comment history below. Admin reviewers will evaluate comments and proof shortly.</p>
+      <h3 style="color: var(--error);">⚠️ Active Arbitration Dispute</h3>
+      <p>This quest's completion details have been contested. The 10% insurance commission is active to provide manual administration review. Use the secure comments timeline below to communicate and coordinate details.</p>
     </div>
 
-    <!-- COMMENTS SECTION -->
+    <!-- PRIVATE COORDINATION COMMENTS -->
     <div class="comments-section">
       <h3>Quest Coordination Board</h3>
       <div class="comments-list" id="commentsBox">
-        <div style="color: var(--text-dim); text-align: center; padding: 20px;">No messages sent yet. Use this board to coordinate safely.</div>
+        <div style="color: var(--text-dim); text-align: center; padding: 20px;">Secure coordination board loading...</div>
       </div>
       <div class="comment-form">
-        <input type="text" id="commentText" placeholder="Type a message..." onkeydown="if(event.key === 'Enter') postCommentText()">
+        <input type="text" id="commentText" placeholder="Type coordination detail message..." onkeydown="if(event.key === 'Enter') postCommentText()">
         <button onclick="postCommentText()">Send</button>
       </div>
     </div>
