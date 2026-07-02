@@ -28,14 +28,14 @@ const modalContent = document.getElementById('modalContent');
 
   const { data: profile } = await sb
     .from('user_profiles')
-    .select('username, display_name, is_admin')
+    .select('username, display_name')
     .eq('user_id', user.id)
     .single();
 
   const name = profile?.display_name || profile?.username || 'Guild Member';
   document.getElementById('userName').textContent = 'Welcome, ' + name;
 
-  if (profile?.is_admin) {
+  if (isYashAdmin(user)) {
     const adminLink = document.createElement('a');
     adminLink.href = 'admin_dashboard_ui.html';
     adminLink.className = 'btn btn-outline';
@@ -53,47 +53,60 @@ const modalContent = document.getElementById('modalContent');
 async function loadQuests() {
   questGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h2>Loading quests...</h2></div>';
 
-  let query = sb
+  const questSelect = `
+    id, title, description, payment_type, coin_amount, upi_amount,
+    status, deadline, created_at, poster_id, worker_id,
+    poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score),
+    worker:user_profiles!quests_worker_id_fkey(username, display_name, reputation_score)
+  `;
+  const typeFilter = filterType.value;
+
+  let openQuery = sb
     .from('quests')
-    .select(`
-      id, title, description, payment_type, coin_amount, upi_amount,
-      status, deadline, created_at, poster_id,
-      poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score)
-    `)
+    .select(questSelect)
     .eq('status', 'open');
 
-  // Filter by type
-  const typeFilter = filterType.value;
   if (typeFilter !== 'all') {
-    query = query.eq('payment_type', typeFilter);
+    openQuery = openQuery.eq('payment_type', typeFilter);
   }
 
-  // Sort
-  const sort = sortBy.value;
-  if (sort === 'newest') {
-    query = query.order('created_at', { ascending: false });
-  } else if (sort === 'deadline') {
-    query = query.order('deadline', { ascending: true });
-  } else if (sort === 'pay') {
-    query = query.order('coin_amount', { ascending: false });
+  let activeQuery = sb
+    .from('quests')
+    .select(questSelect)
+    .in('status', ['accepted', 'submitted', 'disputed'])
+    .or(`poster_id.eq.${currentUser.id},worker_id.eq.${currentUser.id}`);
+
+  if (typeFilter !== 'all') {
+    activeQuery = activeQuery.eq('payment_type', typeFilter);
   }
 
-  const { data, error } = await query;
+  const [{ data: openData, error: openError }, { data: activeData, error: activeError }] = await Promise.all([
+    openQuery,
+    activeQuery
+  ]);
 
+  const error = openError || activeError;
   if (error) {
     console.error('Load quests error:', error);
     questGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h2>Error loading quests</h2><p>' + error.message + '</p></div>';
     return;
   }
 
-  quests = data || [];
+  const byId = new Map();
+  [...(activeData || []), ...(openData || [])].forEach(quest => byId.set(quest.id, quest));
+  quests = Array.from(byId.values());
   console.log('Loaded quests:', quests.length, quests);
 
-  // Client-side sort for "pay"
-  if (sort === 'pay') {
+  // Client-side sort
+  const sort = sortBy.value;
+  if (sort === 'newest') {
+    quests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (sort === 'deadline') {
+    quests.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+  } else if (sort === 'pay') {
     quests.sort((a, b) => {
-      const aVal = a.payment_type === 'coins' ? a.coin_amount : a.upi_amount;
-      const bVal = b.payment_type === 'coins' ? b.coin_amount : b.upi_amount;
+      const aVal = a.payment_type === 'coins' ? a.coin_amount : a.payment_type === 'upi' ? a.upi_amount : 0;
+      const bVal = b.payment_type === 'coins' ? b.coin_amount : b.payment_type === 'upi' ? b.upi_amount : 0;
       return bVal - aVal;
     });
   }
@@ -153,6 +166,8 @@ function renderQuests() {
 
   questGrid.innerHTML = quests.map(quest => {
     const isOwn = quest.poster_id === currentUser?.id;
+    const isWorker = quest.worker_id === currentUser?.id;
+    const canAccept = quest.status === 'open' && !isOwn;
     const badgeClass = quest.payment_type === 'coins' ? 'badge-coins' :
                        quest.payment_type === 'upi' ? 'badge-upi' : 'badge-free';
     const badgeText = quest.payment_type === 'coins' ? '🪙 Fairy Coins' :
@@ -165,7 +180,10 @@ function renderQuests() {
 
     return `
       <div class="quest-card">
-        <span class="badge ${badgeClass}">${badgeText}</span>
+        <div class="badge-row">
+          <span class="badge ${badgeClass}">${badgeText}</span>
+          <span class="badge badge-status-${quest.status}">${formatQuestStatus(quest.status)}</span>
+        </div>
         <h3>${escapeHtml(quest.title)}</h3>
         <div class="poster">by <span>${escapeHtml(posterName)}</span> ⭐ ${rep}/5</div>
         <div class="description">${escapeHtml(quest.description)}</div>
@@ -174,12 +192,31 @@ function renderQuests() {
           <span class="deadline">${deadlineStr}</span>
         </div>
         <button class="accept-btn ${isOwn ? 'own' : ''}" 
-                ${isOwn ? 'disabled' : 'onclick="openAcceptModal(\'' + quest.id + '\')"'}>
-          ${isOwn ? 'Your Quest' : 'Accept Quest'}
+                ${canAccept ? 'onclick="openAcceptModal(\'' + quest.id + '\')"' : 'onclick="openQuestDetail(\'' + quest.id + '\')"'}>
+          ${getQuestActionLabel(quest, isOwn, isWorker)}
         </button>
       </div>
     `;
   }).join('');
+}
+
+function formatQuestStatus(status) {
+  return status.replace(/_/g, ' ');
+}
+
+function getQuestActionLabel(quest, isOwn, isWorker) {
+  if (quest.status === 'open') return isOwn ? 'Your Quest' : 'Accept Quest';
+  if (isWorker) return quest.status === 'accepted' ? 'Continue Quest' : 'View Your Quest';
+  if (isOwn) return 'View Posted Quest';
+  return 'View Details';
+}
+
+function openQuestDetail(questId) {
+  window.location.href = 'quest-detail.html?id=' + encodeURIComponent(questId);
+}
+
+function isYashAdmin(user) {
+  return user?.email?.trim().toLowerCase() === 'yashwanthrangaswamy72@gmail.com';
 }
 
 function escapeHtml(text) {
@@ -255,9 +292,10 @@ async function confirmAccept() {
     return;
   }
 
+  const acceptedQuestId = selectedQuestId;
   closeModal();
   alert('Quest accepted! Redirecting to quest detail...');
-  window.location.href = 'quest-detail.html?id=' + selectedQuestId;
+  window.location.href = 'quest-detail.html?id=' + encodeURIComponent(acceptedQuestId);
 }
 
 async function logout() {

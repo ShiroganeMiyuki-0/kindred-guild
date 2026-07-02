@@ -13,13 +13,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return;
   }
 
-  const { data: profile, error } = await sb
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('user_id', user.id)
-    .single();
-
-  if (error || !profile?.is_admin) {
+  if (!isYashAdmin(user)) {
     alert('Access Restricted. Admins only.');
     window.location.href = 'quest-board.html';
     return;
@@ -27,6 +21,10 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   loadPendingPurchases();
 })();
+
+function isYashAdmin(user) {
+  return user?.email?.trim().toLowerCase() === 'yashwanthrangaswamy72@gmail.com';
+}
 
 async function loadPendingPurchases() {
   const { data, error } = await sb

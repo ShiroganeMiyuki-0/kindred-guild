@@ -28,9 +28,19 @@ CREATE TABLE user_profiles (
   display_name TEXT,
   avatar_url TEXT,
   reputation_score INTEGER DEFAULT 0, -- Scaled by 10 (e.g., 45 represents a 4.5 star average)
+  is_admin BOOLEAN DEFAULT FALSE,
   is_suspended BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   CONSTRAINT chk_reputation CHECK (reputation_score >= 0 AND reputation_score <= 50)
+);
+
+
+-- Mark the site owner as admin when their Supabase Auth account exists.
+-- Re-run this after Yash signs in if the account has not been created yet.
+UPDATE user_profiles
+SET is_admin = TRUE
+WHERE user_id IN (
+  SELECT id FROM auth.users WHERE lower(email) = 'yashwanthrangaswamy72@gmail.com'
 );
 
 -- 2. QUESTS
