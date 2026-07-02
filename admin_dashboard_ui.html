@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — Admin Coins Audit</title>
+  <title>Kindred Guild — Admin Center</title>
   <style>
     :root {
       --bg: #0c0c0f;
-      --surface: #15151e;
-      --surface-2: #21212f;
-      --text: #e8e8f0;
-      --text-dim: #9090a0;
-      --accent: #c9a84c;
-      --border: #222230;
-      --success: #2ecc71;
-      --error: #e74c3c;
+      --surface: #14141e;
+      --surface-2: #20202d;
+      --text: #f0f0f5;
+      --text-dim: #9494a8;
+      --accent: #d4af37;
+      --border: #262636;
+      --success: #10b981;
+      --error: #ef4444;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       padding: 40px 20px;
     }
 
@@ -54,7 +54,7 @@
     .purchase-table th, .purchase-table td {
       padding: 14px;
       text-align: left;
-      border-bottom: 1px solid var(--surface-2);
+      border-bottom: 1px solid var(--border);
     }
     .purchase-table th { color: var(--accent); text-transform: uppercase; font-size: 0.85rem; }
 
@@ -74,20 +74,20 @@
 
   <div class="container">
     <div class="header">
-      <h1>🛡️ Ledger Admin Verification Console</h1>
+      <h1>🛡️ Ledger Verification Center</h1>
       <div>
         <a href="quest-board.html" style="margin-right: 20px;">Quest Board</a>
-        <a href="profile.html">My Profile</a>
+        <a href="profile.html">Profile</a>
       </div>
     </div>
 
     <div class="card">
-      <h3>Pending Transactions Queue</h3>
+      <h3>Verification Ledger Queues</h3>
       <table class="purchase-table">
         <thead>
           <tr>
             <th>User</th>
-            <th>Amount Requested</th>
+            <th>Coins Requested</th>
             <th>UTR Ref ID</th>
             <th>Date Logged</th>
             <th>Actions</th>
@@ -95,7 +95,7 @@
         </thead>
         <tbody id="adminQueueBody">
           <tr>
-            <td colspan="5" style="color: var(--text-dim); text-align: center; padding: 30px;">Loading queued transactions...</td>
+            <td colspan="5" style="color: var(--text-dim); text-align: center; padding: 30px;">Loading queued entries...</td>
           </tr>
         </tbody>
       </table>
