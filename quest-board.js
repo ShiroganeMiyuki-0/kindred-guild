@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — QUEST BOARD (DEBUGGED)
+// KINDRED GUILD — QUEST BOARD CONTROLLER
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -8,15 +8,13 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let quests = [];
-let selectedQuestId = null;
+let currentView = 'open'; // 'open', 'my_active', 'my_posted', 'my_completed'
 
 const questGrid = document.getElementById('questGrid');
 const filterType = document.getElementById('filterType');
 const sortBy = document.getElementById('sortBy');
-const acceptModal = document.getElementById('acceptModal');
-const modalContent = document.getElementById('modalContent');
 
-// Load user
+// Initialization
 (async function init() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) {
@@ -24,7 +22,6 @@ const modalContent = document.getElementById('modalContent');
     return;
   }
   currentUser = user;
-  console.log('Current user ID:', user.id);
 
   const { data: profile } = await sb
     .from('user_profiles')
@@ -33,14 +30,14 @@ const modalContent = document.getElementById('modalContent');
     .single();
 
   const name = profile?.display_name || profile?.username || 'Guild Member';
-  document.getElementById('userName').textContent = 'Welcome, ' + name;
+  document.getElementById('userName').textContent = 'Welcome, ' + name + ' 👤';
 
   if (profile?.is_admin) {
     const adminLink = document.createElement('a');
     adminLink.href = 'admin_dashboard_ui.html';
     adminLink.className = 'btn btn-outline';
     adminLink.style.marginLeft = '12px';
-    adminLink.textContent = 'Admin Console';
+    adminLink.textContent = '🛡️ Admin Panel';
     document.querySelector('.header .actions').prepend(adminLink);
   }
 
@@ -50,25 +47,45 @@ const modalContent = document.getElementById('modalContent');
   loadQuests();
 })();
 
+// Switch Views
+window.switchView = function(viewName) {
+  currentView = viewName;
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.getElementById('view-' + viewName.replace('my_', '')).classList.add('active');
+  loadQuests();
+};
+
 async function loadQuests() {
-  questGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h2>Loading quests...</h2></div>';
+  questGrid.innerHTML = '<div class="empty-state"><h2>Loading quests...</h2></div>';
 
   let query = sb
     .from('quests')
     .select(`
       id, title, description, payment_type, coin_amount, upi_amount,
-      status, deadline, created_at, poster_id,
+      status, deadline, created_at, poster_id, worker_id,
       poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score)
-    `)
-    .eq('status', 'open');
+    `);
 
-  // Filter by type
+  // View Filtering logic (handles disappearing issue)
+  if (currentView === 'open') {
+    query = query.eq('status', 'open');
+  } else if (currentView === 'my_active') {
+    query = query.in('status', ['accepted', 'submitted', 'disputed']);
+  } else if (currentView === 'my_posted') {
+    query = query.eq('poster_id', currentUser.id);
+  } else if (currentView === 'my_completed') {
+    query = query.eq('status', 'approved');
+  }
+
+  // Payment Type Filter
   const typeFilter = filterType.value;
   if (typeFilter !== 'all') {
     query = query.eq('payment_type', typeFilter);
   }
 
-  // Sort
+  // Database Sorting
   const sort = sortBy.value;
   if (sort === 'newest') {
     query = query.order('created_at', { ascending: false });
@@ -81,19 +98,23 @@ async function loadQuests() {
   const { data, error } = await query;
 
   if (error) {
-    console.error('Load quests error:', error);
-    questGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h2>Error loading quests</h2><p>' + error.message + '</p></div>';
+    console.error('Fetch quests error:', error);
+    questGrid.innerHTML = '<div class="empty-state"><h2>Error loading quests</h2><p>' + error.message + '</p></div>';
     return;
   }
 
   quests = data || [];
-  console.log('Loaded quests:', quests.length, quests);
 
-  // Client-side sort for "pay"
+  // Post-query matching for Active & Completed user associations
+  if (currentView === 'my_active' || currentView === 'my_completed') {
+    quests = quests.filter(q => q.worker_id === currentUser.id || q.poster_id === currentUser.id);
+  }
+
+  // Client-side Sort compensation for UPI vs Coin payouts
   if (sort === 'pay') {
     quests.sort((a, b) => {
-      const aVal = a.payment_type === 'coins' ? a.coin_amount : a.upi_amount;
-      const bVal = b.payment_type === 'coins' ? b.coin_amount : b.upi_amount;
+      const aVal = a.payment_type === 'coins' ? (a.coin_amount || 0) : (a.upi_amount || 0);
+      const bVal = b.payment_type === 'coins' ? (b.coin_amount || 0) : (b.upi_amount || 0);
       return bVal - aVal;
     });
   }
@@ -141,10 +162,15 @@ function formatDate(dateStr) {
 
 function renderQuests() {
   if (quests.length === 0) {
+    let msg = "No open quests available.";
+    if (currentView === 'my_active') msg = "You don't have any active quests right now. Accept some work to get started!";
+    if (currentView === 'my_posted') msg = "You haven't posted any quests yet.";
+    if (currentView === 'my_completed') msg = "No completed quests found.";
+
     questGrid.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <h2>No open quests</h2>
-        <p>Be the first to post one! Or check back later.</p>
+      <div class="empty-state">
+        <h2>Nothing Here</h2>
+        <p>${msg}</p>
         <a href="quest-post.html" class="btn" style="margin-top: 16px;">Post a Quest</a>
       </div>
     `;
@@ -163,20 +189,40 @@ function renderQuests() {
     const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '0.0';
     const deadlineStr = formatDate(quest.deadline);
 
-    return `
-      <div class="quest-card">
-        <span class="badge ${badgeClass}">${badgeText}</span>
-        <h3>${escapeHtml(quest.title)}</h3>
-        <div class="poster">by <span>${escapeHtml(posterName)}</span> ⭐ ${rep}/5</div>
-        <div class="description">${escapeHtml(quest.description)}</div>
-        <div class="meta">
-          <span class="reward">${rewardText}</span>
-          <span class="deadline">${deadlineStr}</span>
-        </div>
-        <button class="accept-btn ${isOwn ? 'own' : ''}" 
-                ${isOwn ? 'disabled' : 'onclick="openAcceptModal(\'' + quest.id + '\')"'}>
+    // Conditional button logic based on status and view
+    let actionButtonHtml = '';
+    if (quest.status === 'open') {
+      actionButtonHtml = `
+        <button class="action-btn ${isOwn ? 'own' : ''}" 
+                ${isOwn ? 'disabled' : 'onclick="openAcceptPrompt(\'' + quest.id + '\')"'}>
           ${isOwn ? 'Your Quest' : 'Accept Quest'}
         </button>
+      `;
+    } else {
+      // Direct Link for accepted active items so they can complete or coordinate
+      actionButtonHtml = `
+        <a href="quest-detail.html?id=${quest.id}" class="action-btn">
+          View Coordination Board (${quest.status})
+        </a>
+      `;
+    }
+
+    return `
+      <div class="quest-card">
+        <div class="quest-body">
+          <span class="badge ${badgeClass}">${badgeText}</span>
+          <span class="status-badge">${quest.status}</span>
+          <h3>${escapeHtml(quest.title)}</h3>
+          <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a> ⭐ ${rep}/5</div>
+          <div class="description">${escapeHtml(quest.description)}</div>
+        </div>
+        <div class="card-footer">
+          <div class="meta">
+            <span class="reward">${rewardText}</span>
+            <span class="deadline">${deadlineStr}</span>
+          </div>
+          ${actionButtonHtml}
+        </div>
       </div>
     `;
   }).join('');
@@ -188,80 +234,57 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-function openAcceptModal(questId) {
+// Accept Modals triggering using modals_controller.js
+window.openAcceptPrompt = function(questId) {
   const quest = quests.find(q => q.id === questId);
   if (!quest) return;
 
-  selectedQuestId = questId;
-  const isFree = quest.payment_type === 'free';
+  const handleConfirm = async () => {
+    // Check membership
+    const { data: profile, error: profileError } = await sb
+      .from('user_profiles')
+      .select('user_id')
+      .eq('user_id', currentUser.id)
+      .single();
 
-  if (isFree) {
-    modalContent.innerHTML = `
-      <h3>🎁 This is a free quest</h3>
-      <p>No payment, no ratings, no reputation involved. You're doing this purely out of goodwill. The guild thanks you for it.</p>
-      <div class="modal-buttons">
-        <button class="cancel" onclick="closeModal()">Back</button>
-        <button class="confirm" onclick="confirmAccept()">Accept anyway</button>
-      </div>
-    `;
+    if (profileError || !profile) {
+      alert('Profile setup required. Redirecting to complete your membership...');
+      window.location.href = 'username-setup.html';
+      return;
+    }
+
+    const { error } = await sb
+      .from('quests')
+      .update({ worker_id: currentUser.id, status: 'accepted' })
+      .eq('id', questId)
+      .eq('status', 'open');
+
+    if (error) {
+      alert('Failed to accept quest: ' + error.message);
+      return;
+    }
+
+    alert('Quest accepted! Opening active workspace...');
+    window.location.href = 'quest-detail.html?id=' + encodeURIComponent(questId);
+  };
+
+  const handleCancel = () => {
+    console.log('Acceptance cancelled.');
+  };
+
+  if (quest.payment_type === 'free') {
+    showGuildModal('free-quest', handleConfirm, handleCancel);
+  } else if (quest.payment_type === 'upi') {
+    showGuildModal('upi-warning', handleConfirm, handleCancel);
   } else {
-    modalContent.innerHTML = `
-      <h3>Accept Quest</h3>
-      <p>Once accepted, you'll be responsible for completing this quest by the deadline. The poster will review your work before payment is released.</p>
-      <div class="modal-buttons">
-        <button class="cancel" onclick="closeModal()">Cancel</button>
-        <button class="confirm" onclick="confirmAccept()">Accept</button>
-      </div>
-    `;
+    // Standard validation
+    if (confirm('Are you sure you want to accept this quest? Once taken, you should complete it by the designated deadline.')) {
+      handleConfirm();
+    }
   }
+};
 
-  acceptModal.classList.add('active');
-}
-
-function closeModal() {
-  acceptModal.classList.remove('active');
-  selectedQuestId = null;
-}
-
-async function confirmAccept() {
-  if (!selectedQuestId) return;
-
-  // CRITICAL FIX: Verify user has a profile before accepting
-  const { data: profile, error: profileError } = await sb
-    .from('user_profiles')
-    .select('user_id')
-    .eq('user_id', currentUser.id)
-    .single();
-
-  if (profileError || !profile) {
-    alert('Profile setup required. Redirecting to complete your guild membership...');
-    window.location.href = 'username-setup.html';
-    return;
-  }
-
-  const { error } = await sb
-    .from('quests')
-    .update({
-      worker_id: currentUser.id,
-      status: 'accepted'
-    })
-    .eq('id', selectedQuestId)
-    .eq('status', 'open');
-
-  if (error) {
-    console.error('Accept error:', error);
-    alert('Failed to accept quest: ' + error.message);
-    closeModal();
-    return;
-  }
-
-  const acceptedQuestId = selectedQuestId;
-  closeModal();
-  alert('Quest accepted! Redirecting to quest detail...');
-  window.location.href = 'quest-detail.html?id=' + encodeURIComponent(acceptedQuestId);
-}
-
-async function logout() {
+window.logout = async function() {
   await sb.auth.signOut();
   window.location.href = 'auth.html';
-}
+};
