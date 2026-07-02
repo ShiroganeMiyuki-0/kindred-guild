@@ -11,14 +11,11 @@ let currentQuest = null;
 let currentRatingValue = 0;
 let countdownInterval = null;
 
-// Extractor helper
+// Route param validation to prevent Supabase 400 UUID conversion failures
 function getQuestId() {
   const params = new URLSearchParams(window.location.search);
   const rawId = params.get('id');
 
-  // Supabase/Postgres UUID columns reject strings such as "null",
-  // "undefined", or malformed values with a 400 response. Validate the
-  // route param before any .eq('id', ...) / .eq('quest_id', ...) calls.
   if (!rawId || rawId === 'null' || rawId === 'undefined') return null;
 
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -35,18 +32,17 @@ function clearAlert() {
   document.getElementById('alertBox').className = 'message';
 }
 
-// Initializer
+// Start
 (async function init() {
   const questId = getQuestId();
   if (!questId) {
-    showAlert('Invalid or missing quest link. Returning to the quest board...', 'error');
+    showAlert('Invalid link. Returning to quest board...', 'error');
     setTimeout(() => {
       window.location.href = 'quest-board.html';
     }, 1200);
     return;
   }
 
-  // Get User details
   const { data: { user } } = await sb.auth.getUser();
   if (!user) {
     window.location.href = 'auth.html';
@@ -54,7 +50,6 @@ function clearAlert() {
   }
   currentUser = user;
 
-  // Retrieve user credentials
   const { data: userProfile } = await sb
     .from('user_profiles')
     .select('username, display_name')
@@ -64,20 +59,16 @@ function clearAlert() {
   const name = userProfile?.display_name || userProfile?.username || 'Guild Member';
   document.getElementById('userProfileBadge').textContent = `Member: ${name}`;
 
-  // Read Quest specifics
   await refreshQuestData();
   
-  // Connect listeners
+  // Real-time channel integration
   subscribeToQuestComments(questId);
   await loadQuestComments(questId);
 })();
 
 async function refreshQuestData() {
   const questId = getQuestId();
-  if (!questId) {
-    showAlert('Invalid or missing quest link. Please open the quest from the quest board.', 'error');
-    return;
-  }
+  if (!questId) return;
   
   const { data: quest, error } = await sb
     .from('quests')
@@ -90,7 +81,6 @@ async function refreshQuestData() {
     .single();
 
   if (error || !quest) {
-    console.error('Error fetching details:', error);
     showAlert('Quest detail information could not be retrieved.', 'error');
     return;
   }
@@ -104,11 +94,9 @@ function renderQuestUI() {
   const isPoster = q.poster_id === currentUser.id;
   const isWorker = q.worker_id === currentUser.id;
 
-  // Render text contents
   document.getElementById('questTitle').textContent = q.title;
   document.getElementById('questDesc').textContent = q.description;
 
-  // Badges styling
   const pb = document.getElementById('paymentTypeBadge');
   pb.className = 'badge badge-' + q.payment_type;
   pb.textContent = q.payment_type === 'coins' ? '🪙 Fairy Coins' : q.payment_type === 'upi' ? '₹ UPI Direct' : '🎁 Free';
@@ -117,23 +105,21 @@ function renderQuestUI() {
   sbBadge.className = 'status-badge status-' + q.status;
   sbBadge.textContent = q.status;
 
-  // Poster & Worker identities
   const pName = q.poster?.display_name || q.poster?.username || 'Unknown';
   const pRep = q.poster?.reputation_score ? (q.poster.reputation_score / 10).toFixed(1) : '0.0';
-  document.getElementById('posterName').textContent = pName;
+  document.getElementById('posterName').innerHTML = `<a href="profile.html?username=${q.poster?.username}">${escapeHtml(pName)}</a>`;
   document.getElementById('posterRep').textContent = `⭐ ${pRep}/5`;
 
   if (q.worker) {
     const wName = q.worker?.display_name || q.worker?.username;
     const wRep = q.worker?.reputation_score ? (q.worker.reputation_score / 10).toFixed(1) : '0.0';
-    document.getElementById('workerName').textContent = wName;
+    document.getElementById('workerName').innerHTML = `<a href="profile.html?username=${q.worker?.username}">${escapeHtml(wName)}</a>`;
     document.getElementById('workerRep').textContent = `⭐ ${wRep}/5`;
   } else {
     document.getElementById('workerName').textContent = 'No one yet';
     document.getElementById('workerRep').textContent = '';
   }
 
-  // Reward parameters
   const rewardVal = document.getElementById('rewardVal');
   if (q.payment_type === 'coins') {
     rewardVal.textContent = q.coin_amount + ' FC';
@@ -144,21 +130,14 @@ function renderQuestUI() {
   }
 
   const deadlineDate = new Date(q.deadline);
-  const formattedDate = deadlineDate.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: 'numeric'
-  });
-  const formattedTime = deadlineDate.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit'
-  });
+  const formattedDate = deadlineDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const formattedTime = deadlineDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   document.getElementById('deadlineStr').innerHTML = `
     <span style="color: var(--text); font-weight: 600;">${formattedDate}</span>
     <span style="color: var(--text-dim); margin-left: 8px;">${formattedTime}</span>
   `;
 
-  // Panels visibility controls
+  // Reset UI Panels
   document.getElementById('workerProofPanel').style.display = 'none';
   document.getElementById('posterAppraisalPanel').style.display = 'none';
   document.getElementById('disputePanel').style.display = 'none';
@@ -166,7 +145,7 @@ function renderQuestUI() {
 
   if (countdownInterval) clearInterval(countdownInterval);
 
-  // Status-specific panels toggle
+  // Status mapping
   if (q.status === 'accepted' && isWorker) {
     document.getElementById('workerProofPanel').style.display = 'block';
   } else if (q.status === 'submitted') {
@@ -175,8 +154,7 @@ function renderQuestUI() {
       renderProofFileViewer();
       startAppraisalCountdown();
     } else {
-      // Worker or guest sees waiting info
-      showAlert('Quest proof submitted. Poster has 48 hours to approve or dispute.', 'success');
+      showAlert('Quest proof submitted. Poster has 48 hours to approve or initiate dispute.', 'success');
     }
   } else if (q.status === 'disputed') {
     document.getElementById('disputePanel').style.display = 'block';
@@ -186,9 +164,6 @@ function renderQuestUI() {
   }
 }
 
-// -----------------------------
-// APPRAISAL COUNTDOWN (48 HOURS)
-// -----------------------------
 function startAppraisalCountdown() {
   const countdownEl = document.getElementById('countdownTimer');
   if (!currentQuest.appraisal_deadline) return;
@@ -214,7 +189,6 @@ function startAppraisalCountdown() {
   }, 1000);
 }
 
-// Render proof file or image correctly
 function renderProofFileViewer() {
   const container = document.getElementById('proofViewerContainer');
   const url = currentQuest.proof_url;
@@ -226,67 +200,57 @@ function renderProofFileViewer() {
   const isImage = url.match(/\.(jpeg|jpg|gif|png|webp)/i);
   if (isImage) {
     container.innerHTML = `
-      <div style="margin-bottom: 10px;">Submitted Asset:</div>
-      <img src="${url}" alt="Worker Task Proof">
-      <div><a href="${url}" target="_blank">🔗 View Full Resolution Asset</a></div>
+      <div style="margin-bottom: 10px;">Submitted Asset Proof:</div>
+      <img src="${url}" alt="Task Proof">
+      <div><a href="${url}" target="_blank">🔗 Open Asset URL</a></div>
     `;
   } else {
     container.innerHTML = `
-      <div style="margin-bottom: 15px;">
-        📄 Submitted File: <strong>Document File</strong>
-      </div>
-      <a href="${url}" target="_blank" class="btn btn-accent">🔗 Download & Open Proof File</a>
-      <div style="height: 15px;"></div>
+      <div style="margin-bottom: 15px;">📄 Submitted Proof File.</div>
+      <a href="${url}" target="_blank" class="btn btn-accent">🔗 Download Document Asset</a>
     `;
   }
 }
 
-// -----------------------------
-// PROOF FILE UPLOAD FUNCTIONALITY
-// -----------------------------
 let selectedProofFile = null;
 
-function handleFileSelected(input) {
+window.handleFileSelected = function(input) {
   if (input.files && input.files[0]) {
     selectedProofFile = input.files[0];
-    document.getElementById('selectedFileName').textContent = `Selected: ${selectedProofFile.name}`;
+    document.getElementById('selectedFileName').textContent = `File selected: ${selectedProofFile.name}`;
     document.getElementById('submitProofBtn').style.display = 'inline-block';
   }
-}
+};
 
-async function uploadProofFile() {
+window.uploadProofFile = async function() {
   if (!selectedProofFile) return;
 
   const btn = document.getElementById('submitProofBtn');
   btn.disabled = true;
-  btn.textContent = 'Uploading...';
+  btn.textContent = 'Uploading Proof...';
 
   try {
     const fileExt = selectedProofFile.name.split('.').pop();
     const fileName = `${currentQuest.id}-${Date.now()}.${fileExt}`;
     const filePath = `proofs/${fileName}`;
 
-    // Upload asset to quest-images Supabase Storage Bucket
     const { data, error } = await sb.storage
       .from('quest-images')
       .upload(filePath, selectedProofFile);
 
     if (error) {
-      console.error('Upload failed:', error);
       showAlert(`Upload failed: ${error.message}`, 'error');
       btn.disabled = false;
       btn.textContent = 'Submit Proof';
       return;
     }
 
-    // Get Public URL
     const { data: publicData } = sb.storage
       .from('quest-images')
       .getPublicUrl(filePath);
 
     const publicUrl = publicData.publicUrl;
 
-    // Trigger state change in Quest Database
     const appraisalDeadline = new Date();
     appraisalDeadline.setHours(appraisalDeadline.getHours() + 48);
 
@@ -300,56 +264,49 @@ async function uploadProofFile() {
       .eq('id', currentQuest.id);
 
     if (dbError) {
-      console.error('Update database failed:', dbError);
-      showAlert('Failed to update quest with proof record.', 'error');
+      showAlert('Database failed to map proof details.', 'error');
       btn.disabled = false;
       btn.textContent = 'Submit Proof';
       return;
     }
 
-    showAlert('Proof submitted successfully!', 'success');
+    showAlert('Proof uploaded successfully!', 'success');
     setTimeout(() => refreshQuestData(), 1200);
 
   } catch (err) {
-    console.error('Unexpected error:', err);
-    showAlert('Something went wrong during submission.', 'error');
+    showAlert('System failed during proof upload.', 'error');
     btn.disabled = false;
     btn.textContent = 'Submit Proof';
   }
-}
+};
 
-// -----------------------------
-// APPROVAL & DISPUTE HANDLERS
-// -----------------------------
-async function approveSubmittedQuest() {
+window.approveSubmittedQuest = async function() {
   clearAlert();
-  if (!confirm('Are you sure you want to approve this quest completion? Reward balances will be released immediately.')) return;
+  if (!confirm('Approve submission and release locked rewards?')) return;
 
   try {
-    const { data, error } = await sb.rpc('approve_quest', { p_quest_id: currentQuest.id });
+    const { error } = await sb.rpc('approve_quest', { p_quest_id: currentQuest.id });
 
     if (error) {
-      console.error('Approve failed:', error);
       showAlert(`Approve failed: ${error.message}`, 'error');
       return;
     }
 
-    showAlert('Quest approved! Coins released or transaction noted.', 'success');
+    showAlert('Quest successfully approved! Payout sent.', 'success');
     
     if (currentQuest.payment_type === 'upi') {
-      alert(`Please pay the worker immediately ₹${currentQuest.upi_amount} via external UPI now!`);
+      alert(`Remember to pay the worker ₹${currentQuest.upi_amount} directly via external UPI now!`);
     }
 
     setTimeout(() => refreshQuestData(), 1500);
-
   } catch (err) {
-    console.error('Approve transaction error:', err);
+    console.error(err);
   }
-}
+};
 
-async function disputeQuest() {
+window.disputeQuest = async function() {
   clearAlert();
-  if (!confirm('Disputing holds payout and requests manual arbitration. Your 10% guild fee is active as safety protection. Proceed?')) return;
+  if (!confirm('Holding payout initiates review dispute. Proceed?')) return;
 
   try {
     const { error } = await sb
@@ -358,20 +315,17 @@ async function disputeQuest() {
       .eq('id', currentQuest.id);
 
     if (error) {
-      showAlert(`Dispute failed: ${error.message}`, 'error');
+      showAlert(`Action failed: ${error.message}`, 'error');
       return;
     }
 
-    showAlert('Dispute initiated. Admin investigators notified.', 'error');
+    showAlert('Review dispute logged. Investigators notified.', 'error');
     setTimeout(() => refreshQuestData(), 1200);
   } catch (err) {
     console.error(err);
   }
-}
+};
 
-// -----------------------------
-// COMMENTS / COORDINATION CHANNEL
-// -----------------------------
 async function loadQuestComments(questId) {
   if (!questId) return;
 
@@ -385,7 +339,7 @@ async function loadQuestComments(questId) {
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.error('Load comments failed:', error);
+    console.error('Comments fetching failed:', error);
     return;
   }
 
@@ -418,7 +372,7 @@ function renderComments(comments) {
   box.scrollTop = box.scrollHeight;
 }
 
-async function postCommentText() {
+window.postCommentText = async function() {
   const input = document.getElementById('commentText');
   const text = input.value.trim();
   if (!text) return;
@@ -434,10 +388,9 @@ async function postCommentText() {
     });
 
   if (error) {
-    console.error('Insert comment failed:', error);
-    showAlert('Failed to post message.', 'error');
+    showAlert('Message posting failed.', 'error');
   }
-}
+};
 
 function subscribeToQuestComments(questId) {
   if (!questId) return;
@@ -454,10 +407,8 @@ function subscribeToQuestComments(questId) {
     .subscribe();
 }
 
-// -----------------------------
-// RATING SYSTEM (DOUBLE BLIND)
-// -----------------------------
-function setRatingValue(score) {
+// Double blind reviews logic
+window.setRatingValue = function(score) {
   currentRatingValue = score;
   const stars = document.querySelectorAll('.star');
   stars.forEach(s => {
@@ -468,33 +419,32 @@ function setRatingValue(score) {
       s.classList.remove('selected');
     }
   });
-}
+};
 
-async function submitUserRating() {
+window.submitUserRating = async function() {
   if (currentRatingValue === 0) {
-    alert('Please select a star rating first.');
+    alert('Select score rating stars first.');
     return;
   }
 
   try {
-    const { data, error } = await sb.rpc('submit_rating', {
+    const { error } = await sb.rpc('submit_rating', {
       p_quest_id: currentQuest.id,
       p_score: currentRatingValue
     });
 
     if (error) {
-      console.error(error);
-      alert('Failed to register score: ' + error.message);
+      alert('Failed to register review score: ' + error.message);
       return;
     }
 
-    alert('Your review feedback has been logged!');
+    alert('Your review evaluation feedback is registered!');
     loadRatingWidgetDetails();
 
   } catch (err) {
     console.error(err);
   }
-}
+};
 
 async function loadRatingWidgetDetails() {
   const { data: ratings, error } = await sb
@@ -502,10 +452,7 @@ async function loadRatingWidgetDetails() {
     .select('*')
     .eq('quest_id', currentQuest.id);
 
-  if (error) {
-    console.error('Error loading ratings details:', error);
-    return;
-  }
+  if (error) return;
 
   const myRating = ratings.find(r => r.rater_id === currentUser.id);
   const revealed = ratings.length > 0 && ratings.every(r => r.revealed);
@@ -524,7 +471,7 @@ async function loadRatingWidgetDetails() {
     let scoresHtml = '';
     ratings.forEach(r => {
       const isMine = r.rater_id === currentUser.id;
-      scoresHtml += `<div>${isMine ? '🏆 You left rating' : '👥 Other participant rating'}: <strong>${r.score} / 5 Stars</strong></div>`;
+      scoresHtml += `<div>${isMine ? '🏆 You left review score' : '👥 Co-participant rating score'}: <strong>${r.score} Stars</strong></div>`;
     });
 
     scoreList.innerHTML = scoresHtml;
