@@ -104,8 +104,8 @@ git push -u origin main
 ├── username-setup.html         # First-time username selection
 ├── quest-board.html            # Browse and filter quests
 ├── quest-post.html             # Create new quests
-├── quest_detail_layout.html    # Quest detail, proof upload, approval
-├── profile_page_layout.html    # User profile and settings
+├── quest-detail.html           # Quest detail, proof upload, approval
+├── profile.html                # User profile and settings
 ├── coin_purchase_ui.html       # Buy Fairy Coins with UPI
 ├── admin_dashboard_ui.html     # Admin panel for coin verification
 ├── terms-of-service.html       # Legal: Terms of Service
@@ -115,9 +115,9 @@ git push -u origin main
 ├── quest-board.js              # Quest board controller
 ├── quest-post.js               # Quest posting controller
 ├── quest_detail_controller.js  # Quest detail controller
-├── profile_page_js_logic.js    # Profile page controller
+├── profile.js                  # Profile page controller
 ├── coin_purchase_js_logic.js   # Coin purchase controller
-├── admin_dashboard_js_controller.js  # Admin dashboard controller
+├── admin-dashboard.js          # Admin dashboard controller
 ├── username-setup.js           # Username setup controller
 ├── modals_controller.js        # Modal and toast utilities
 ├── supabase_sql_schema.sql     # Complete database schema + functions
