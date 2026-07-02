@@ -153,8 +153,21 @@ function renderQuestUI() {
       document.getElementById('posterAppraisalPanel').style.display = 'block';
       renderProofFileViewer();
       startAppraisalCountdown();
+      
+      // Dynamic button tuning: Hide disputes and edit text for Free Quests
+      const approveBtn = document.querySelector('#posterAppraisalPanel .btn-success');
+      const disputeBtn = document.querySelector('#posterAppraisalPanel .btn-error');
+      if (approveBtn && disputeBtn) {
+        if (q.payment_type === 'free') {
+          approveBtn.textContent = 'Approve & Complete';
+          disputeBtn.style.display = 'none'; // No disputes on free help!
+        } else {
+          approveBtn.textContent = 'Approve & Payout';
+          disputeBtn.style.display = 'inline-block';
+        }
+      }
     } else {
-      showAlert('Quest proof submitted. Poster has 48 hours to approve or initiate dispute.', 'success');
+      showAlert('Quest proof submitted. Poster has 48 hours to approve.', 'success');
     }
   } else if (q.status === 'disputed') {
     document.getElementById('disputePanel').style.display = 'block';
@@ -282,7 +295,8 @@ window.uploadProofFile = async function() {
 
 window.approveSubmittedQuest = async function() {
   clearAlert();
-  if (!confirm('Approve submission and release locked rewards?')) return;
+  const actionText = currentQuest.payment_type === 'free' ? 'approve and mark this free quest as complete?' : 'approve submission and release locked rewards?';
+  if (!confirm(`Are you sure you want to ${actionText}`)) return;
 
   try {
     const { error } = await sb.rpc('approve_quest', { p_quest_id: currentQuest.id });
@@ -292,7 +306,12 @@ window.approveSubmittedQuest = async function() {
       return;
     }
 
-    showAlert('Quest successfully approved! Payout sent.', 'success');
+    // Dynamic message protection for Free Quests
+    if (currentQuest.payment_type === 'free') {
+      showAlert('Quest successfully marked as completed!', 'success');
+    } else {
+      showAlert('Quest successfully approved! Payout sent.', 'success');
+    }
     
     if (currentQuest.payment_type === 'upi') {
       alert(`Remember to pay the worker ₹${currentQuest.upi_amount} directly via external UPI now!`);
@@ -306,6 +325,10 @@ window.approveSubmittedQuest = async function() {
 
 window.disputeQuest = async function() {
   clearAlert();
+  if (currentQuest.payment_type === 'free') {
+    showAlert('Free quests do not support dispute states.', 'error');
+    return;
+  }
   if (!confirm('Holding payout initiates review dispute. Proceed?')) return;
 
   try {
@@ -407,7 +430,6 @@ function subscribeToQuestComments(questId) {
     .subscribe();
 }
 
-// Double blind reviews logic
 window.setRatingValue = function(score) {
   currentRatingValue = score;
   const stars = document.querySelectorAll('.star');
