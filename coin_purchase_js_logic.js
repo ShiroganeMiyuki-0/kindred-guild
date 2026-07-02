@@ -20,17 +20,17 @@ let currentUser = null;
   document.getElementById('currentBalanceDisplay').textContent = balance || 0;
 })();
 
-function updateQRValue() {
+window.updateQRValue = function() {
   const coins = document.getElementById('coinPackage').value;
   document.getElementById('amountDueSpan').textContent = `₹${coins}`;
-}
+};
 
-async function submitPaymentReference() {
+window.submitPaymentReference = async function() {
   const coins = parseInt(document.getElementById('coinPackage').value);
   const utr = document.getElementById('utrRef').value.trim();
 
-  if (!utr) {
-    alert('Please insert a valid reference ID.');
+  if (!utr || utr.length < 6) {
+    alert('Please insert a valid UPI reference ID.');
     return;
   }
 
@@ -47,14 +47,14 @@ async function submitPaymentReference() {
     });
 
   if (error) {
-    alert('Failed to submit purchase: ' + error.message);
+    alert('Failed to submit: ' + error.message);
     btn.disabled = false;
     return;
   }
 
   const alertBox = document.getElementById('statusAlert');
-  alertBox.textContent = "UTR Submitted. Coins will be credited to your balance within 24 hours after verification.";
+  alertBox.textContent = "UTR Logged. Coins will be verified and credited within 24 hours.";
   alertBox.style.display = 'block';
 
   document.getElementById('utrRef').value = '';
-}
+};
