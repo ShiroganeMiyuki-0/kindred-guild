@@ -16,6 +16,8 @@ const descInput = document.getElementById('description');
 const coinAmountInput = document.getElementById('coinAmount');
 const upiAmountInput = document.getElementById('upiAmount');
 const deadlineInput = document.getElementById('deadline');
+const deadlineDateInput = document.getElementById('deadlineDate');
+const deadlineTimeInput = document.getElementById('deadlineTime');
 const submitBtn = document.getElementById('submitBtn');
 const messageEl = document.getElementById('message');
 const commissionCoinsEl = document.getElementById('commissionCoins');
@@ -58,7 +60,11 @@ function clearMessage() {
 
   const now = new Date();
   now.setHours(now.getHours() + 1);
-  deadlineInput.min = now.toISOString().slice(0, 16);
+  deadlineDateInput.min = now.toISOString().slice(0, 10);
+  
+  // Set default values
+  deadlineDateInput.value = now.toISOString().slice(0, 10);
+  deadlineTimeInput.value = now.toTimeString().slice(0, 5);
 })();
 
 function selectPayment(type) {
@@ -95,14 +101,15 @@ async function handleSubmit() {
 
   const title = titleInput.value.trim();
   const description = descInput.value.trim();
-  const deadline = deadlineInput.value;
+  const datePart = deadlineDateInput.value;
+  const timePart = deadlineTimeInput.value;
 
-  if (!title || !description || !deadline) {
+  if (!title || !description || !datePart || !timePart) {
     showMessage('Please fill in all fields.', 'error');
     return;
   }
 
-  const deadlineDate = new Date(deadline);
+  const deadlineDate = new Date(`${datePart}T${timePart}`);
   if (deadlineDate <= new Date()) {
     showMessage('Deadline must be in the future.', 'error');
     return;
