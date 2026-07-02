@@ -1,5 +1,5 @@
 // ============================================
-// KINDRED GUILD — QUEST POSTING (FIXED UPI MODAL)
+// KINDRED GUILD — QUEST POSTING CONTROLLER
 // ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
@@ -15,7 +15,6 @@ const titleInput = document.getElementById('title');
 const descInput = document.getElementById('description');
 const coinAmountInput = document.getElementById('coinAmount');
 const upiAmountInput = document.getElementById('upiAmount');
-const deadlineInput = document.getElementById('deadline');
 const deadlineDateInput = document.getElementById('deadlineDate');
 const deadlineTimeInput = document.getElementById('deadlineTime');
 const submitBtn = document.getElementById('submitBtn');
@@ -27,7 +26,6 @@ const upiModal = document.getElementById('upiModal');
 function showMessage(text, type) {
   messageEl.textContent = text;
   messageEl.className = 'message ' + (type || 'error');
-  console.log('[' + (type || 'error') + ']', text);
 }
 
 function clearMessage() {
@@ -61,13 +59,11 @@ function clearMessage() {
   const now = new Date();
   now.setHours(now.getHours() + 1);
   deadlineDateInput.min = now.toISOString().slice(0, 10);
-  
-  // Set default values
   deadlineDateInput.value = now.toISOString().slice(0, 10);
   deadlineTimeInput.value = now.toTimeString().slice(0, 5);
 })();
 
-function selectPayment(type) {
+window.selectPayment = function(type) {
   selectedType = type;
   document.querySelectorAll('.payment-type').forEach(el => el.classList.remove('selected'));
   document.querySelector('[data-type="' + type + '"]').classList.add('selected');
@@ -79,7 +75,7 @@ function selectPayment(type) {
   upiAmountInput.required = (type === 'upi');
 
   updateCommission();
-}
+};
 
 function updateCommission() {
   if (selectedType === 'coins') {
@@ -96,7 +92,7 @@ function updateCommission() {
 coinAmountInput.addEventListener('input', updateCommission);
 upiAmountInput.addEventListener('input', updateCommission);
 
-async function handleSubmit() {
+window.handleSubmit = async function() {
   clearMessage();
 
   const title = titleInput.value.trim();
@@ -122,58 +118,45 @@ async function handleSubmit() {
   if (selectedType === 'coins') {
     coinAmount = parseInt(coinAmountInput.value) || 0;
     if (coinAmount <= 0) {
-      showMessage('Please enter a valid coin amount.', 'error');
+      showMessage('Enter a valid coin amount.', 'error');
       return;
     }
     commissionCoins = Math.ceil(coinAmount * 0.1);
     if (coinBalance < coinAmount + commissionCoins) {
-      showMessage('Not enough Fairy Coins. You need ' + (coinAmount + commissionCoins) + ' FC (reward + ' + commissionCoins + ' FC commission). Purchase more to post this quest.', 'error');
+      showMessage('Insufficient Coins. You need ' + (coinAmount + commissionCoins) + ' FC.', 'error');
       return;
     }
   } else if (selectedType === 'upi') {
     upiAmount = parseInt(upiAmountInput.value) || 0;
     if (upiAmount <= 0) {
-      showMessage('Please enter a valid UPI amount.', 'error');
+      showMessage('Enter a valid UPI amount.', 'error');
       return;
     }
     commissionCoins = Math.ceil(upiAmount * 0.1);
     if (coinBalance < commissionCoins) {
-      showMessage('Not enough Fairy Coins. You need at least ' + commissionCoins + ' FC for commission (10% of ₹' + upiAmount + '). Purchase more to post this quest.', 'error');
+      showMessage('Insufficient Coins. You need ' + commissionCoins + ' FC safety commission.', 'error');
       return;
     }
-    // Store data and show modal
     pendingFormData = { title, description, deadlineDate, coinAmount, upiAmount, commissionCoins };
-    console.log('Stored pending data:', pendingFormData);
     upiModal.classList.add('active');
     return;
   }
 
-  // Free or Coins — post directly
   await postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins });
-}
+};
 
-// These functions are called from the modal buttons in HTML
-// We use window. to make them globally accessible since modal HTML is static
 window.confirmUpiPost = async function() {
-  console.log('confirmUpiPost called, pending data exists:', !!pendingFormData);
-  
   if (!pendingFormData) {
-    console.error('No pending form data!');
-    showMessage('Something went wrong. Please try again.', 'error');
     upiModal.classList.remove('active');
     return;
   }
-
-  // Save data locally before clearing
   const data = pendingFormData;
   pendingFormData = null;
   upiModal.classList.remove('active');
-
   await postQuest(data);
 };
 
 window.closeUpiModal = function() {
-  console.log('closeUpiModal called');
   pendingFormData = null;
   upiModal.classList.remove('active');
 };
@@ -183,8 +166,6 @@ async function postQuest({ title, description, deadlineDate, coinAmount, upiAmou
   submitBtn.textContent = 'Posting...';
 
   try {
-    console.log('Posting quest with type:', selectedType);
-
     const { data: questId, error } = await sb.rpc('post_quest_with_commission', {
       p_title: title,
       p_description: description,
@@ -196,20 +177,17 @@ async function postQuest({ title, description, deadlineDate, coinAmount, upiAmou
     });
 
     if (error) {
-      console.error('Post quest error:', error);
       showMessage(error.message, 'error');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Post Quest';
       return;
     }
 
-    console.log('Quest posted, ID:', questId);
-    showMessage('Quest posted successfully! Redirecting to board...', 'success');
+    showMessage('Quest posted successfully! Redirecting...', 'success');
     setTimeout(() => window.location.href = 'quest-board.html', 1500);
 
   } catch (err) {
-    console.error('Unexpected error:', err);
-    showMessage('Something went wrong. Check console (F12).', 'error');
+    showMessage('Unexpected error occured.', 'error');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Post Quest';
   }
