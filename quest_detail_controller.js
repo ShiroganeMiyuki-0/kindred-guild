@@ -129,7 +129,19 @@ function renderQuestUI() {
   }
 
   const deadlineDate = new Date(q.deadline);
-  document.getElementById('deadlineStr').textContent = deadlineDate.toLocaleString();
+  const formattedDate = deadlineDate.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: 'numeric'
+  });
+  const formattedTime = deadlineDate.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit'
+  });
+  document.getElementById('deadlineStr').innerHTML = `
+    <span style="color: var(--text); font-weight: 600;">${formattedDate}</span>
+    <span style="color: var(--text-dim); margin-left: 8px;">${formattedTime}</span>
+  `;
 
   // Panels visibility controls
   document.getElementById('workerProofPanel').style.display = 'none';

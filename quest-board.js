@@ -28,12 +28,21 @@ const modalContent = document.getElementById('modalContent');
 
   const { data: profile } = await sb
     .from('user_profiles')
-    .select('username, display_name')
+    .select('username, display_name, is_admin')
     .eq('user_id', user.id)
     .single();
 
   const name = profile?.display_name || profile?.username || 'Guild Member';
   document.getElementById('userName').textContent = 'Welcome, ' + name;
+
+  if (profile?.is_admin) {
+    const adminLink = document.createElement('a');
+    adminLink.href = 'admin_dashboard_ui.html';
+    adminLink.className = 'btn btn-outline';
+    adminLink.style.marginLeft = '12px';
+    adminLink.textContent = 'Admin Console';
+    document.querySelector('.header .actions').prepend(adminLink);
+  }
 
   const { data: balance } = await sb.rpc('get_coin_balance', { p_user_id: user.id });
   document.getElementById('coinBalance').textContent = balance || 0;
@@ -98,23 +107,36 @@ function formatDate(dateStr) {
   const now = new Date();
   const diffMs = date - now;
   
-  if (diffMs < 0) return 'Expired';
+  if (diffMs < 0) return '<span class="date-expired">Expired</span>';
   
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHrs / 24);
   
-  if (diffMins < 60) return diffMins + ' min left';
-  if (diffHrs < 24) return diffHrs + ' hrs left';
-  if (diffDays === 1) return '1 day left';
-  if (diffDays < 7) return diffDays + ' days left';
-  if (diffDays < 30) return Math.floor(diffDays / 7) + ' weeks left';
-  
-  // Far future - show date only
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric'
+  let timeStr = '';
+  if (diffMins < 60) timeStr = `${diffMins}m left`;
+  else if (diffHrs < 24) timeStr = `${diffHrs}h left`;
+  else if (diffDays === 1) timeStr = `1d left`;
+  else if (diffDays < 7) timeStr = `${diffDays}d left`;
+  else if (diffDays < 30) timeStr = `${Math.floor(diffDays / 7)}w left`;
+  else timeStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  const formattedDate = date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: 'numeric'
   });
+  const formattedTime = date.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit'
+  });
+
+  return `
+    <div class="modern-date">
+      <span class="date-main">${formattedDate}</span>
+      <span class="date-sub">${formattedTime} • <span class="date-relative">${timeStr}</span></span>
+    </div>
+  `;
 }
 
 function renderQuests() {
@@ -149,7 +171,7 @@ function renderQuests() {
         <div class="description">${escapeHtml(quest.description)}</div>
         <div class="meta">
           <span class="reward">${rewardText}</span>
-          <span class="deadline">⏰ ${deadlineStr}</span>
+          <span class="deadline">${deadlineStr}</span>
         </div>
         <button class="accept-btn ${isOwn ? 'own' : ''}" 
                 ${isOwn ? 'disabled' : 'onclick="openAcceptModal(\'' + quest.id + '\')"'}>
