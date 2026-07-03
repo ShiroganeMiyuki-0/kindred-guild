@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Fairy Wishes Board</title>
+  <style>
+    :root {
+      --bg: #0c0c0f;
+      --surface: #14141e;
+      --surface-2: #20202d;
+      --text: #f0f0f5;
+      --text-dim: #9494a8;
+      --accent: #d4af37;
+      --accent-glow: rgba(212, 175, 55, 0.15);
+      --border: #262636;
+      --error: #ef4444;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-bar h2 {
+      color: var(--accent);
+      font-size: 1.5rem;
+    }
+    .header-bar a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .header-bar a:hover { color: var(--accent); }
+
+    .disclaimer-card {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(20, 20, 30, 1) 100%);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    .disclaimer-card h3 {
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .disclaimer-card p {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+    }
+
+    .layout-split {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .layout-split { grid-template-columns: 1fr; }
+    }
+
+    .wish-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .wish-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .wish-info {
+      flex: 1;
+    }
+    .wish-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .wish-badge.coins { background: rgba(234, 179, 8, 0.12); color: #eab308; }
+    .wish-badge.upi { background: rgba(249, 115, 22, 0.12); color: #f97316; }
+    .wish-badge.free { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+
+    .wish-title {
+      font-size: 1.15rem;
+      color: var(--text);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .wish-desc {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .vote-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      min-width: 70px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .vote-panel:hover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .vote-panel.voted {
+      background: var(--accent);
+      color: #0c0c0f;
+      border-color: var(--accent);
+    }
+    .vote-icon { font-size: 1.2rem; margin-bottom: 2px; }
+    .vote-count { font-size: 0.9rem; font-weight: bold; }
+
+    .side-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      height: fit-content;
+      position: sticky;
+      top: 20px;
+    }
+    .side-card h3 {
+      color: var(--accent);
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    textarea { min-height: 100px; resize: vertical; }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #0c0c0f;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .wish-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .wish-filter-tab {
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+    .wish-filter-tab.active {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+
+    /* Custom Dialog Modals */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    .custom-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+    .custom-modal h4 {
+      color: var(--accent);
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+    .custom-modal p {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .custom-modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .custom-modal-actions button {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Premium Alert Overlays replacing native alerts -->
+  <div id="customModalOverlay" class="custom-modal-overlay">
+    <div class="custom-modal">
+      <h4 id="customModalTitle">Sovereign Proclamation</h4>
+      <p id="customModalText">Are you sure you want to proceed?</p>
+      <div class="custom-modal-actions">
+        <button id="customModalCancel" class="btn" style="background: var(--surface-2); color: var(--text);">Dismiss</button>
+        <button id="customModalConfirm" class="btn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header-bar">
+      <h2>✨ Fairy Wishes Board</h2>
+      <a href="quest-board.html" onclick="event.preventDefault(); safeNavigate('quest-board.html')">← Back to Board</a>
+    </div>
+
+    <div class="disclaimer-card">
+      <h3>📜 Guild Sovereign Enclave Wishes</h3>
+      <p>This space is dedicated to pooled community coordination. Members of Kindred Guild can formulate a collective "Wish". The Guild administration (Yash & partners) regularly reviews the highest-voted wishes to delegate pooled capital, platform fee reserves, and local real-estate resources to make them happen. <strong>Note: A 10% country-blend management fee is locked upfront for backed wishes to keep the Guild running. No absolute promises are made—our results are fueled by community magic!</strong></p>
+    </div>
+
+    <div class="layout-split">
+      <div>
+        <div class="wish-filters">
+          <span class="wish-filter-tab active" data-filter="hot" onclick="filterWishes('hot')">🔥 Most Upvoted</span>
+          <span class="wish-filter-tab" data-filter="new" onclick="filterWishes('new')">⏳ Newest</span>
+          <span class="wish-filter-tab" data-filter="coins" onclick="filterWishes('coins')">🪙 Pledged Wishes</span>
+        </div>
+
+        <div class="wish-list" id="wishesFeed">
+          <div style="color: var(--text-dim); padding: 20px; text-align: center;">Retrieving collective wishes...</div>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <h3>Make a Wish</h3>
+        <form id="wishForm" onsubmit="event.preventDefault(); submitNewWish()">
+          <div class="form-group">
+            <label for="wishTitle">Wish Theme</label>
+            <input type="text" id="wishTitle" placeholder="e.g. Upgrade local co-working space" required>
+          </div>
+          <div class="form-group">
+            <label for="wishDesc">Detailed Description</label>
+            <textarea id="wishDesc" placeholder="Why should the Guild target this wish? Detail the community benefits..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="wishType">Pledge Style</label>
+            <select id="wishType" onchange="adjustPledgeStyle()">
+              <option value="free">🎁 Free Proposal (Pure Voting)</option>
+              <option value="coins">🪙 Backed with Fairy Coins (Deducts upfront)</option>
+              <option value="upi">₹ Backed with UPI Pledge</option>
+            </select>
+          </div>
+
+          <div id="wishCoinsAmountGroup" class="form-group" style="display: none;">
+            <label for="wishCoinsAmount">Fairy Coins Backing</label>
+            <input type="number" id="wishCoinsAmount" placeholder="e.g. 100" min="10">
+            <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 6px;">10% platform sovereign fee is charged on financial movements.</p>
+          </div>
+
+          <div id="wishUpiAmountGroup" class="form-group" style="display: none;">
+            <label for="wishUpiAmount">UPI Pledge (₹)</label>
+            <input type="number" id="wishUpiAmount" placeholder="e.g. 500" min="10">
+            <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 6px;">10% platform sovereign fee (in FC) is locked upfront.</p>
+          </div>
+
+          <button class="btn" id="postWishBtn" type="submit">Cast Wish into Enclave</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ============================================
+    // KINDRED GUILD — FAIRY WISH CONTROLLER
+    // ============================================
+    const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let wishesList = [];
+    let myVotesList = [];
+    let activeFilter = 'hot';
+    let customModalResolve = null;
+
+    function safeNavigate(target) {
+      if (!target) return;
+      try {
+        const protocol = window.location.protocol;
+        if (protocol === 'http:' || protocol === 'https:' || protocol === 'file:') {
+          const resolved = new URL(target, window.location.href).href;
+          window.location.href = resolved;
+        } else {
+          window.location.href = target;
+        }
+      } catch (e) {
+        console.warn("Navigation failed safely under active sandbox environment.", e);
+      }
+    }
+
+    function showCustomAlert(title, text, confirmOnly = true) {
+      document.getElementById('customModalTitle').textContent = title;
+      document.getElementById('customModalText').textContent = text;
+      
+      const cancelBtn = document.getElementById('customModalCancel');
+      if (confirmOnly) {
+        cancelBtn.style.display = 'none';
+      } else {
+        cancelBtn.style.display = 'block';
+      }
+
+      document.getElementById('customModalOverlay').style.display = 'flex';
+      return new Promise((resolve) => {
+        customModalResolve = resolve;
+      });
+    }
+
+    document.getElementById('customModalConfirm').onclick = function() {
+      document.getElementById('customModalOverlay').style.display = 'none';
+      if (customModalResolve) customModalResolve(true);
+    };
+
+    document.getElementById('customModalCancel').onclick = function() {
+      document.getElementById('customModalOverlay').style.display = 'none';
+      if (customModalResolve) customModalResolve(false);
+    };
+
+    (async function initWishes() {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        safeNavigate('auth.html');
+        return;
+      }
+      currentUser = user;
+      await loadWishDatabase();
+    })();
+
+    async function loadWishDatabase() {
+      const { data: wishes, error } = await sb
+        .from('wishes')
+        .select(`
+          *,
+          creator:user_profiles!wishes_creator_id_fkey(username, display_name)
+        `)
+        .eq('status', 'active');
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const { data: votes } = await sb
+        .from('wish_votes')
+        .select('wish_id')
+        .eq('voter_id', currentUser.id);
+
+      myVotesList = (votes || []).map(v => v.wish_id);
+
+      wishesList = await Promise.all((wishes || []).map(async w => {
+        const { data: count } = await sb.rpc('get_wish_votes', { p_wish_id: w.id });
+        w.votesCount = count || 0;
+        return w;
+      }));
+
+      renderWishes();
+    }
+
+    window.adjustPledgeStyle = function() {
+      const type = document.getElementById('wishType').value;
+      document.getElementById('wishCoinsAmountGroup').style.display = type === 'coins' ? 'block' : 'none';
+      document.getElementById('wishUpiAmountGroup').style.display = type === 'upi' ? 'block' : 'none';
+    };
+
+    window.filterWishes = function(tab) {
+      activeFilter = tab;
+      document.querySelectorAll('.wish-filter-tab').forEach(el => el.classList.remove('active'));
+      document.querySelector(`[data-filter="${tab}"]`).classList.add('active');
+      renderWishes();
+    };
+
+    function renderWishes() {
+      const container = document.getElementById('wishesFeed');
+      if (wishesList.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-dim); padding: 30px; text-align: center;">No wishes found. Cast the first enclave wish!</div>';
+        return;
+      }
+
+      let filtered = [...wishesList];
+      if (activeFilter === 'coins') {
+        filtered = filtered.filter(w => w.wish_type !== 'free');
+      }
+
+      if (activeFilter === 'hot') {
+        filtered.sort((a, b) => b.votesCount - a.votesCount);
+      } else {
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+
+      container.innerHTML = filtered.map(w => {
+        const badgeType = w.wish_type === 'coins' ? 'coins' : w.wish_type === 'upi' ? 'upi' : 'free';
+        const badgeLabel = w.wish_type === 'coins' ? `🪙 ${w.coin_amount} FC` : w.wish_type === 'upi' ? `₹ ${w.upi_amount}` : '🎁 Free Wish';
+        const isVoted = myVotesList.includes(w.id);
+        const creatorName = w.creator?.display_name || w.creator?.username || 'Guild Member';
+
+        return `
+          <div class="wish-card">
+            <div class="wish-info">
+              <span class="wish-badge ${badgeType}">${badgeLabel}</span>
+              <div class="wish-title">${escapeHtml(w.title)}</div>
+              <div class="wish-desc">${escapeHtml(w.description)}</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 8px;">Casted by: @${escapeHtml(creatorName)}</div>
+            </div>
+            <div class="vote-panel ${isVoted ? 'voted' : ''}" onclick="toggleWishVote('${w.id}')">
+              <div class="vote-icon">▲</div>
+              <div class="vote-count">${w.votesCount}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.toggleWishVote = async function(wishId) {
+      const isVoted = myVotesList.includes(wishId);
+
+      if (isVoted) {
+        const { error } = await sb
+          .from('wish_votes')
+          .delete()
+          .eq('wish_id', wishId)
+          .eq('voter_id', currentUser.id);
+
+        if (error) {
+          await showCustomAlert('Action Failed', 'Failed to retract vote: ' + error.message, true);
+          return;
+        }
+      } else {
+        const { error } = await sb
+          .from('wish_votes')
+          .insert({ wish_id: wishId, voter_id: currentUser.id });
+
+        if (error) {
+          await showCustomAlert('Action Failed', 'Failed to submit vote: ' + error.message, true);
+          return;
+        }
+      }
+
+      await loadWishDatabase();
+    };
+
+    window.submitNewWish = async function() {
+      const title = document.getElementById('wishTitle').value.trim();
+      const desc = document.getElementById('wishDesc').value.trim();
+      const type = document.getElementById('wishType').value;
+      const coinAmt = parseInt(document.getElementById('wishCoinsAmount').value) || 0;
+      const upiAmt = parseInt(document.getElementById('wishUpiAmount').value) || 0;
+      const commCoins = Math.ceil((type === 'coins' ? coinAmt : upiAmt) * 0.1);
+
+      if (!title || !desc) return;
+
+      const btn = document.getElementById('postWishBtn');
+      btn.disabled = true;
+      btn.textContent = 'Casting Wish...';
+
+      try {
+        const { error } = await sb.rpc('post_wish_with_commission', {
+          p_title: title,
+          p_description: desc,
+          p_wish_type: type,
+          p_coin_amount: type === 'coins' ? coinAmt : null,
+          p_upi_amount: type === 'upi' ? upiAmt : null,
+          p_commission_coins: type !== 'free' ? commCoins : null
+        });
+
+        if (error) {
+          await showCustomAlert('Failed to Cast Wish', error.message, true);
+          btn.disabled = false;
+          btn.textContent = 'Cast Wish into Enclave';
+          return;
+        }
+
+        await showCustomAlert('Wish Cast Successfully!', 'Your wish has been formulated. Direct other members to vote on it!', true);
+        
+        // Reset Inputs
+        document.getElementById('wishTitle').value = '';
+        document.getElementById('wishDesc').value = '';
+        document.getElementById('wishCoinsAmount').value = '';
+        document.getElementById('wishUpiAmount').value = '';
+        document.getElementById('wishType').value = 'free';
+        adjustPledgeStyle();
+
+        await loadWishDatabase();
+
+      } catch (err) {
+        await showCustomAlert('Server Error', 'Failed to connect to backend server.', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Cast Wish into Enclave';
+      }
+    };
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
