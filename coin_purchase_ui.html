@@ -1,175 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kindred Guild — Acquire Fairy Coins</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #0c0c0f;
-      --surface: #14141e;
-      --surface-2: #20202d;
-      --text: #f0f0f5;
-      --text-dim: #9494a8;
-      --accent: #d4af37;
-      --accent-glow: rgba(212, 175, 55, 0.15);
-      --border: #262636;
-      --success: #10b981;
+      --bg: #0f0f1a;
+      --card: #1a1a2e;
+      --accent: #e2b714;
+      --text: #e0e0e0;
+      --muted: #a0a0b0;
+      --success: #4caf50;
+      --danger: #f44336;
+      --warning: #ff9800;
+      --border: #2a2a40;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Segoe UI', system-ui, sans-serif;
       min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
     }
-    .header h1 { font-size: 1.5rem; color: var(--accent); }
-    .header a { color: var(--text-dim); text-decoration: none; }
-
-    .balance-card {
-      background: var(--surface);
+    .container {
+      max-width: 480px;
+      width: 100%;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 32px;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: var(--accent);
       text-align: center;
     }
-    .balance-card span { font-size: 1.8rem; color: var(--accent); font-weight: bold; }
-
-    .purchase-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 30px;
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
     }
-
-    .form-group {
-      margin-bottom: 20px;
+    .balance-box {
+      background: rgba(226, 183, 20, 0.1);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .balance-box span {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
     }
     label {
       display: block;
-      font-size: 0.85rem;
-      color: var(--text-dim);
       margin-bottom: 8px;
+      font-size: 0.85rem;
       text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
     }
     select, input {
       width: 100%;
-      padding: 12px;
-      background: var(--bg);
+      padding: 14px;
+      border-radius: 10px;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      background: var(--bg);
       color: var(--text);
       font-size: 1rem;
+      margin-bottom: 20px;
+      outline: none;
     }
     select:focus, input:focus {
-      outline: none;
       border-color: var(--accent);
     }
-
-    .qr-box {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      padding: 20px;
-      border-radius: 8px;
+    .payment-card {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 24px;
       text-align: center;
       margin-bottom: 20px;
+      border: 1px solid var(--border);
     }
-    .qr-placeholder {
-      width: 180px;
-      height: 180px;
-      background: #fff;
-      margin: 10px auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .payment-card h3 {
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+    .upi-id {
+      font-family: monospace;
+      font-size: 1rem;
+      background: rgba(226, 183, 20, 0.1);
+      padding: 8px 16px;
       border-radius: 8px;
-      padding: 10px;
+      display: inline-block;
+      margin-bottom: 16px;
+      word-break: break-all;
     }
-
+    .qr-wrap {
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+    .qr-wrap img {
+      width: 200px;
+      height: 200px;
+      display: block;
+    }
+    .amount-due {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
     .btn {
       width: 100%;
       padding: 14px;
-      background: var(--accent);
-      color: #0c0c0f;
-      font-weight: bold;
-      border-radius: 8px;
+      border-radius: 10px;
       border: none;
+      font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 12px;
     }
-    .btn:disabled { opacity: 0.5; }
-
-    .message {
-      padding: 12px;
-      border-radius: 6px;
-      margin-top: 16px;
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+    .btn-primary:hover {
+      background: #f0c420;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+    }
+    .btn-secondary:hover {
+      background: rgba(226, 183, 20, 0.1);
+    }
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: #45a049;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .payment-note-box {
+      background: rgba(76, 175, 80, 0.1);
+      border: 1px dashed var(--success);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .payment-note-box label {
+      color: var(--success);
+      margin-bottom: 4px;
+    }
+    .payment-note {
+      font-family: monospace;
+      font-size: 1.1rem;
+      color: var(--success);
+      font-weight: 700;
+      word-break: break-all;
+    }
+    .copy-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 16px 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider span {
+      padding: 0 12px;
+    }
+    .status-alert {
       display: none;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+      line-height: 1.5;
     }
-    .message.success { display: block; background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .status-alert.success {
+      display: block;
+      background: rgba(76, 175, 80, 0.15);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+    .status-alert.info {
+      display: block;
+      background: rgba(33, 150, 243, 0.15);
+      border: 1px solid #2196f3;
+      color: #2196f3;
+    }
+    .utr-section {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .utr-section p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .utr-section p strong {
+      color: var(--text);
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .pending-list {
+      margin-top: 24px;
+    }
+    .pending-list h3 {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .pending-item {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .pending-item .time {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+    .pending-item .status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .status-pending { background: rgba(255, 152, 0, 0.2); color: var(--warning); }
+    .status-verified { background: rgba(76, 175, 80, 0.2); color: var(--success); }
   </style>
 </head>
 <body>
-
   <div class="container">
-    <div class="header">
-      <h1>💰 Acquire Fairy Coins</h1>
-      <a href="quest-board.html">← Go to Board</a>
+    <h1>⚔️ Acquire Fairy Coins</h1>
+    <p class="subtitle">Power up your guild account with Fairy Coins</p>
+
+    <div class="balance-box">
+      <div style="font-size: 0.85rem; color: var(--muted); margin-bottom: 4px;">Current Balance</div>
+      <span id="currentBalanceDisplay">0</span> FC
     </div>
 
-    <div class="balance-card">
-      <div>Active Coins Balance:</div>
-      <span id="currentBalanceDisplay">--</span> FC
+    <label for="coinPackage">Select Coins Package</label>
+    <select id="coinPackage" onchange="updatePaymentDetails()">
+      <option value="100" selected>100 Fairy Coins — ₹100</option>
+      <option value="200">200 Fairy Coins — ₹200</option>
+      <option value="500">500 Fairy Coins — ₹500</option>
+      <option value="1000">1,000 Fairy Coins — ₹1,000</option>
+    </select>
+
+    <div class="payment-card">
+      <h3>💳 UPI Payment</h3>
+      <div class="upi-id">yashwanthrangaswamy72@okhdfcbank</div>
+      
+      <div class="qr-wrap">
+        <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi%3A%2F%2Fpay%3Fpa%3Dyashwanthrangaswamy72%40okhdfcbank%26pn%3DKindred%20Guild%26am%3D100%26cu%3DINR" alt="UPI QR Code" />
+      </div>
+
+      <div class="amount-due">Amount Due: <span id="amountDueSpan">₹100</span></div>
+
+      <div class="payment-note-box">
+        <label>📝 Payment Note (Auto-generated)</label>
+        <div class="payment-note" id="paymentNote">KINDRED-LOADING...</div>
+        <div class="copy-hint">Please include this note in your UPI payment description if possible. It helps us match your payment instantly.</div>
+      </div>
+
+      <a id="upiLink" href="#" target="_blank" style="text-decoration: none;">
+        <button class="btn btn-primary" type="button">
+          📱 Pay with UPI App (GPay / PhonePe / Paytm)
+        </button>
+      </a>
+      <button class="btn btn-secondary" type="button" onclick="copyUpiLink()">
+        🔗 Copy UPI Payment Link
+      </button>
     </div>
 
-    <div class="purchase-card">
-      <form id="purchaseForm" onsubmit="event.preventDefault(); submitPaymentReference();">
-        <div class="form-group">
-          <label>Select Coins Package</label>
-          <select id="coinPackage" onchange="updateQRValue()">
-            <option value="100">100 Fairy Coins — ₹100</option>
-            <option value="500">500 Fairy Coins — ₹500</option>
-            <option value="1000">1000 Fairy Coins — ₹1000</option>
-          </select>
-        </div>
+    <div class="divider"><span>OR</span></div>
 
-        <div class="qr-box">
-          <h3>💳 UPI Payment Interface</h3>
-          <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 6px;">Scan QR below or pay to: <strong>yashwanthrangaswamy72@okhdfcbank</strong></p>
-          <div class="qr-placeholder" id="qrCodeContainer">
-            <img src="upi_qr_code.png" alt="UPI QR Code" style="width: 100%; height: auto; border-radius: 4px;" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCAQAAAABUY/ToAAADjUlEQVR4nO2cTY7jNhBGX0UGvJSBOYCPQt9gjjRnyg2so/gAAaSlAQpfFiyKtLuTxaQN252qRTcl+UEiUKh/ycTvyfTHb4IQZJBBBhlkkEEG+XqkueyAZVcOy+rEWlaw1F+dnvy0Qb4kmSRJM9gJ0BkwO2aYDoOYDqvZiUGSpFvyGU8b5EuRO/+/HCD9CYKMMf61c11ZDNJ8QCxgMOQnPm2Q70AWh5YuO5gOq5FmYDpKdnrYPYN8b3J3d6zp54wg7yzNKwIByy5/IN9rn0E+jqw6NAqKtxrXHek8CBgEy4/M9PNqQNGn/37PIL8lOZmZ2QFIl708JSt5Gdivy17Aap6wPftpg3wpstihZl80HTCxAIxXYzpmBFdzU/UV9wzye5F06XqaAcZczuk8ZqQZpHnww3O7+l77DPJxpGuE5kEkZUjzUFRKZwDGXKpHJGXXptChID+SZoetHD1mV580D9J58VColq29DPme+wzyEaT7sqRMVZ9BMErF+rhrc70qq7BDQd6INinxUJoHuQka6zlgs02EDgV5J80Otciob4sBrk3KZRU6FOSnZCkImQGr2YnVvA8rqVyYDh5s2+npTxvkK5FbHl+Doi39qqm+5P5NHiOFHQryVjod+uScl4bKae9/hA4F+SlZ0nrXHDPbYb8uZkzHUqIWjFfTebxGryPIO6kpWXVeSXLD46uhJPhFmkMLOxSky9a3z7SOmM+gLT+ywWpi2XsHH9ZKvNc+g3wcuWX0dL0xrw8xeBOkSYpeR5Af5L5ftkXNrQVby9ZexQ4dCvJWWo2xk1ZydKXZkn5lIh4K8lZ6X1a1RJqh9cu6lr3XkUKHguzE+xqjZ2NNkerVujozdNXG0KEgN+lin82DAUPfy5e2Dv4cPdcg/4kc1CaEdGY1JtsLlr33y9LFs3o7fdU9g/WZPdukKZjrlUhrw+h6bSaQBijsHTOUR8K8k5qXuYOrU0NtfCok66U/V77DPJxZDeD1kKhu3y/ZfT9xP577TPIR5P9dz/Ga5kfKqPUSVKNjCIeCvJTab6sjjDmruHRTVbf/gk7FOQmfW4/D723aoHSnYQOBfnv5LL3+aEyAWtmfWC9TYG8yNMG+aJkqQ/55Jlkdhi2dxQfdc8g356svQ4A7DRKUEf0SRf/tF4bzH/XfQb59WT/vj2tI1b7qz7HSB2qjvpQkB/E4hvnQQYZZJBBBhnk/5z8G618TVIt3ja3AAAAAElFTkSuQmCC'">
-          </div>
-          <div style="margin-top: 12px;">Amount Due: <strong id="amountDueSpan" style="color: var(--accent);">₹100</strong></div>
-        </div>
+    <div class="utr-section">
+      <p>
+        <strong>Already paid?</strong> Click below to notify us. Your coins will be credited within 24 hours after we verify your payment.
+      </p>
+      <p style="font-size: 0.8rem; color: var(--muted);">
+        Optional: If you have your UTR/Reference number, enter it below for faster verification.
+      </p>
+      <label for="utrRef" style="margin-top: 8px;">UPI Transaction Reference (Optional)</label>
+      <input type="text" id="utrRef" placeholder="e.g. 123456789012" maxlength="20" />
+      <button class="btn btn-success" id="submitPaymentBtn" onclick="submitPaymentReference()">
+        ✅ I've Paid — Log My Purchase
+      </button>
+    </div>
 
-        <div class="form-group">
-          <label>UPI Transaction Reference Number (UTR)</label>
-          <input type="text" id="utrRef" placeholder="12-Digit Reference ID" required>
-        </div>
+    <div id="statusAlert" class="status-alert"></div>
 
-        <button type="submit" id="submitPaymentBtn" class="btn">Log Transaction Details</button>
-      </form>
-
-      <div id="statusAlert" class="message success"></div>
+    <div class="pending-list" id="pendingList" style="display: none;">
+      <h3>📋 Your Pending Purchases</h3>
+      <div id="pendingItems"></div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="coin_purchase_js_logic.js"></script>
 </body>
 </html>
