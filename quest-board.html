@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — Quest Board</title>
+  <title>Kindred Guild — Quest & Skill Board</title>
   <link rel="stylesheet" href="modals_stylesheet.css">
   <style>
     :root {
@@ -113,6 +113,47 @@
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 24px;
+    }
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .search-row input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .search-row input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .tag-badge {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tag-badge:hover, .tag-badge.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-color: var(--accent);
     }
     .view-selector {
       display: flex;
@@ -234,6 +275,20 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .card-tag {
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: var(--accent-glow);
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
     .quest-card .meta {
       display: flex;
       justify-content: space-between;
@@ -283,7 +338,6 @@
     .logout { color: var(--text-dim); cursor: pointer; font-size: 0.9rem; }
     .logout:hover { color: var(--accent); }
 
-    /* Date Styling */
     .modern-date {
       display: flex;
       flex-direction: column;
@@ -314,10 +368,12 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>⚔️ Quest Board</h1>
+      <h1>⚔️ Kindred Guild Board</h1>
       <div class="actions">
+        <!-- New entry point to Fairy Wishes Section -->
+        <a href="fairy-wishes.html" class="btn btn-outline" style="margin-right: 8px;">✨ Fairy Wishes</a>
         <span class="logout" onclick="logout()">Logout</span>
-        <a href="quest-post.html" class="btn">+ Post Quest</a>
+        <a href="quest-post.html" class="btn">+ Post Project/Quest</a>
       </div>
     </div>
 
@@ -329,38 +385,45 @@
     </div>
 
     <div class="filters-section">
-      <!-- Added tabs so accepted quests never disappear -->
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="🔍 Search quests, showcase projects, fundraisers, or tags..." oninput="handleSearch()">
+      </div>
+
+      <div class="tag-cloud" id="tagCloud">
+        <!-- Tags will load dynamically -->
+      </div>
+
       <div class="view-selector">
-        <button class="view-tab active" id="view-open" onclick="switchView('open')">Available Quests</button>
+        <button class="view-tab active" id="view-open" onclick="switchView('open')">Available Quests & Showcases</button>
         <button class="view-tab" id="view-active" onclick="switchView('my_active')">My Active Quests</button>
-        <button class="view-tab" id="view-posted" onclick="switchView('my_posted')">My Posted Quests</button>
-        <button class="view-tab" id="view-completed" onclick="switchView('my_completed')">My Completed Quests</button>
+        <button class="view-tab" id="view-posted" onclick="switchView('my_posted')">My Posted Projects</button>
+        <button class="view-tab" id="view-completed" onclick="switchView('my_completed')">My Completed</button>
       </div>
 
       <div class="filters">
         <select id="filterType" onchange="loadQuests()">
-          <option value="all">All Payment Types</option>
+          <option value="all">All Modes</option>
           <option value="coins">🪙 Fairy Coins</option>
           <option value="upi">₹ UPI Direct</option>
-          <option value="free">🎁 Free</option>
+          <option value="free">🎁 Free Goodwill</option>
         </select>
         <select id="sortBy" onchange="loadQuests()">
           <option value="newest">Newest First</option>
           <option value="deadline">Deadline Soonest</option>
           <option value="pay">Highest Pay</option>
         </select>
+        <button onclick="resetFilters()" style="background: var(--surface-2); color: var(--text);">Clear Filters</button>
         <button onclick="loadQuests()">Refresh</button>
       </div>
     </div>
 
     <div class="quest-grid" id="questGrid">
       <div class="empty-state">
-        <h2>Loading quests...</h2>
+        <h2>Loading board...</h2>
       </div>
     </div>
   </div>
 
-  <!-- Global Modal references handled dynamically inside modals_controller.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="modals_controller.js"></script>
   <script src="quest-board.js"></script>
