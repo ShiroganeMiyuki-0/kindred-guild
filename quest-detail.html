@@ -16,6 +16,7 @@
       --border: #262636;
       --success: #10b981;
       --error: #ef4444;
+      --warning: #f59e0b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,6 +54,7 @@
       padding: 30px;
       border-radius: 12px;
       margin-bottom: 24px;
+      position: relative;
     }
 
     .badge {
@@ -81,6 +83,7 @@
     .status-submitted { background: rgba(234, 179, 8, 0.15); color: #eab308; }
     .status-approved { background: rgba(16, 185, 129, 0.15); color: #10b981; }
     .status-disputed { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .status-cancelled { background: rgba(94, 94, 108, 0.15); color: var(--text-dim); }
 
     .quest-title {
       font-size: 1.8rem;
@@ -123,7 +126,7 @@
       font-size: 1.2rem;
     }
     .comments-list {
-      max-height: 300px;
+      max-height: 380px;
       overflow-y: auto;
       margin-bottom: 16px;
       display: flex;
@@ -149,9 +152,36 @@
       font-size: 0.9rem;
       line-height: 1.5;
     }
+    
+    /* Embed styling for rich comments */
+    .comment-embed {
+      margin-top: 10px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      max-width: 260px;
+    }
+    .comment-embed img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .comment-embed a {
+      display: block;
+      padding: 8px;
+      background: var(--surface-2);
+      color: var(--accent);
+      font-size: 0.8rem;
+      text-decoration: none;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
     .comment-form {
       display: flex;
       gap: 12px;
+      align-items: center;
     }
     .comment-form input {
       flex: 1;
@@ -166,13 +196,19 @@
       border-color: var(--accent);
     }
     .comment-form button {
-      padding: 12px 24px;
+      padding: 12px 20px;
       background: var(--accent);
       color: #0c0c0f;
       border: none;
       border-radius: 8px;
       font-weight: 700;
       cursor: pointer;
+    }
+    .attach-btn {
+      background: var(--surface-2) !important;
+      color: var(--text) !important;
+      padding: 12px 14px !important;
+      font-size: 1.1rem;
     }
 
     .action-panel {
@@ -196,7 +232,7 @@
     .file-drop-area {
       border: 2px dashed var(--border);
       border-radius: 8px;
-      padding: 30px;
+      padding: 24px;
       text-align: center;
       background: var(--bg);
       cursor: pointer;
@@ -205,8 +241,42 @@
     .file-drop-area:hover { border-color: var(--accent); }
     .file-drop-area input { display: none; }
 
+    .staged-files-list {
+      margin: 16px 0;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .staged-file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .staged-file-item:last-child { border-bottom: none; }
+    .staged-file-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .staged-file-size {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-left: 8px;
+    }
+    .remove-file-btn {
+      color: var(--error);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
     .btn {
-      padding: 12px 24px;
+      padding: 12px 20px;
       border-radius: 8px;
       font-weight: 700;
       border: none;
@@ -217,11 +287,13 @@
     .btn:hover { opacity: 0.9; }
     .btn-success { background: var(--success); color: #fff; }
     .btn-error { background: var(--error); color: #fff; }
+    .btn-warning { background: var(--warning); color: #fff; }
     .btn-accent { background: var(--accent); color: #0c0c0f; }
 
     .actions-group {
       display: flex;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
     .rating-panel {
@@ -265,23 +337,119 @@
     .message.error { background: rgba(239, 68, 68, 0.15); color: var(--error); display: block; }
     .message.success { background: rgba(16, 185, 129, 0.15); color: var(--success); display: block; }
 
-    .proof-viewer img {
-      max-width: 100%;
-      max-height: 400px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      margin-bottom: 16px;
+    /* Rich multi-file proof grid viewer */
+    .proof-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 15px;
+      margin-bottom: 15px;
     }
-    .proof-viewer a {
+    .proof-tile {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .proof-tile img, .proof-tile video {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      background: #000;
+    }
+    .proof-tile-doc {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: var(--accent);
+      background: var(--surface-2);
+    }
+    .proof-tile-info {
+      padding: 8px;
+      font-size: 0.75rem;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    .proof-tile-info a {
       color: var(--accent);
       text-decoration: none;
-      display: inline-block;
-      margin-bottom: 16px;
+      font-weight: bold;
+    }
+
+    /* UPI Details Showcase */
+    .upi-payout-box {
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+    }
+    .upi-qr-image {
+      max-width: 160px;
+      height: auto;
+      border-radius: 6px;
+      margin-top: 10px;
+      border: 2px solid var(--border);
+    }
+
+    /* Custom Confirmation Modal System */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    .custom-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+    .custom-modal h4 {
+      color: var(--accent);
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+    .custom-modal p {
+      color: var(--text-dim);
       font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .custom-modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .custom-modal-actions button {
+      flex: 1;
     }
   </style>
 </head>
 <body>
+
+  <!-- Custom Modal Dialogs (Required to replace alert / confirm) -->
+  <div id="customModalOverlay" class="custom-modal-overlay">
+    <div class="custom-modal">
+      <h4 id="customModalTitle">Confirm Action</h4>
+      <p id="customModalText">Are you sure you want to proceed?</p>
+      <div class="custom-modal-actions">
+        <button id="customModalCancel" class="btn btn-error" style="background: var(--surface-2); color: var(--text);">Cancel</button>
+        <button id="customModalConfirm" class="btn btn-accent">Confirm</button>
+      </div>
+    </div>
+  </div>
 
   <div class="container">
     <div class="nav-bar">
@@ -305,36 +473,58 @@
       </div>
 
       <div id="questDesc" class="quest-desc">Loading...</div>
+      
+      <!-- Reversibility feature: Worker abandon option -->
+      <div id="abandonContainer" style="display: none; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+        <span style="color: var(--text-dim); font-size: 0.85rem; display: block; margin-bottom: 8px;">Changed your mind? You can release this task back to the board.</span>
+        <button class="btn btn-error" onclick="triggerAbandonQuest()" style="padding: 8px 16px; font-size: 0.85rem;">⚠️ Forfeit & Abandon Quest</button>
+      </div>
     </div>
 
-    <!-- WORKER PROOF SECTION -->
+    <!-- WORKER PROOF SECTION (WITH REVERSIBLE DRAFT STAGING) -->
     <div id="workerProofPanel" class="action-panel" style="display: none;">
       <h3>Submit Proof of Completion</h3>
-      <p>Upload a confirmation file, screenshot, or document. This starts the 48-hour appraisal timeline.</p>
+      <p>Select your confirmation screenshots, videos, or documents. Review your queue details below before hitting submit.</p>
+      
       <div class="file-drop-area" id="dropArea" onclick="document.getElementById('proofFileInput').click()">
-        <span id="dropAreaText">📁 Select completion proof file to upload</span>
-        <input type="file" id="proofFileInput" onchange="handleFileSelected(this)">
+        <span>📁 Click to browse or queue complete assets</span>
+        <input type="file" id="proofFileInput" multiple onchange="handleQueueFiles(this)">
       </div>
-      <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-        <span id="selectedFileName" style="font-size: 0.9rem; color: var(--accent);"></span>
-        <button id="submitProofBtn" class="btn btn-accent" onclick="uploadProofFile()" style="display: none;">Submit Proof</button>
+
+      <!-- File Queue Staging area -->
+      <div id="stagedFilesContainer" style="display: none; margin-top: 16px;">
+        <div style="font-size: 0.85rem; color: var(--accent); font-weight: bold; margin-bottom: 6px;">Queued Files (Pending Submission):</div>
+        <div class="staged-files-list" id="stagedFilesList"></div>
+        <div style="text-align: right; margin-top: 12px;">
+          <button class="btn btn-success" id="submitProofBtn" onclick="uploadProofFiles()">Submit Staged Deliverables</button>
+        </div>
       </div>
     </div>
 
-    <!-- POSTER APPRAISAL BOARD -->
+    <!-- POSTER APPRAISAL BOARD (REJECT / REVISE PARADIGM) -->
     <div id="posterAppraisalPanel" class="action-panel" style="display: none;">
       <h3>Review Task Deliverables</h3>
-      <p>Analyze submitted assets. If no action is taken within 48 hours, the system auto-completes and disburses funds.</p>
+      <p>Analyze submitted assets. If you request a revision, the workspace status reverts back to let the worker update their files.</p>
       
-      <div class="proof-viewer" id="proofViewerContainer"></div>
+      <!-- Multi-file deliverable viewer -->
+      <div id="proofViewerTitle" style="font-weight: bold; margin-bottom: 10px;">Submitted Asset proofs:</div>
+      <div class="proof-grid" id="multiProofViewer"></div>
 
-      <div style="margin-bottom: 20px;">
+      <!-- Worker payment details if UPI is chosen -->
+      <div id="workerUpiShowcase" class="upi-payout-box" style="display: none;">
+        <strong>💳 Worker UPI payment Info:</strong>
+        <div id="workerUpiText" style="margin-top: 6px; font-size: 0.95rem;"></div>
+        <div id="workerUpiQrContainer"></div>
+      </div>
+
+      <div style="margin: 20px 0;">
         Auto-approves in: <span id="countdownTimer" class="countdown">--:--:--</span>
       </div>
 
       <div class="actions-group">
-        <button class="btn btn-success" onclick="approveSubmittedQuest()">Approve & Payout</button>
-        <button class="btn btn-error" onclick="disputeQuest()">File Dispute</button>
+        <button class="btn btn-success" onclick="triggerApproval()">Approve & Payout</button>
+        <button class="btn btn-warning" onclick="triggerRevisionRequest()">Request Revision</button>
+        <button class="btn btn-error" id="disputeLauncher" onclick="triggerDisputeLaunch()">File Dispute</button>
       </div>
     </div>
 
@@ -364,22 +554,32 @@
       </div>
     </div>
 
-    <!-- DISPUTE SETTLEMENT EXPLANATION PANEL -->
+    <!-- DISPUTE SETTLEMENT EXPLANATION PANEL (WITH JOINT LIFTING CONTROLS) -->
     <div id="disputePanel" class="action-panel" style="display: none; border-color: var(--error);">
       <h3 style="color: var(--error);">⚠️ Active Arbitration Dispute</h3>
-      <p>This quest's completion details have been contested. The 10% insurance commission is active to provide manual administration review. Use the secure comments timeline below to communicate and coordinate details.</p>
+      <p>This quest's details have been contested. You can discuss details directly below. At any time, you can agree to settle this mutually using the options below.</p>
+      
+      <div class="actions-group" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+        <button id="disputeReleaseBtn" class="btn btn-success" style="display: none;" onclick="triggerDisputeResolution('release')">Resolve: Release Payout to Worker</button>
+        <button id="disputeRefundBtn" class="btn btn-error" style="display: none;" onclick="triggerDisputeResolution('refund')">Resolve: Cancel & Refund Poster</button>
+      </div>
     </div>
 
-    <!-- PRIVATE COORDINATION COMMENTS -->
+    <!-- PRIVATE COORDINATION COMMENTS (WITH IMAGE EMBEDS) -->
     <div class="comments-section">
       <h3>Quest Coordination Board</h3>
       <div class="comments-list" id="commentsBox">
         <div style="color: var(--text-dim); text-align: center; padding: 20px;">Secure coordination board loading...</div>
       </div>
+      
       <div class="comment-form">
-        <input type="text" id="commentText" placeholder="Type coordination detail message..." onkeydown="if(event.key === 'Enter') postCommentText()">
-        <button onclick="postCommentText()">Send</button>
+        <button class="btn attach-btn" onclick="document.getElementById('commentAttachmentInput').click()" title="Attach document/image">📎</button>
+        <input type="file" id="commentAttachmentInput" style="display: none;" onchange="handleCommentAttachment(this)">
+        
+        <input type="text" id="commentText" placeholder="Type coordination details message..." onkeydown="if(event.key === 'Enter') postCommentText()">
+        <button class="btn btn-accent" id="sendCommentBtn" onclick="postCommentText()">Send</button>
       </div>
+      <div id="commentAttachmentName" style="font-size: 0.8rem; color: var(--accent); margin-top: 6px; display: none;"></div>
     </div>
 
   </div>
