@@ -1,6 +1,3 @@
-// ============================================
-// KINDRED GUILD — AUTH LOGIC
-// ============================================
 const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
 
@@ -12,6 +9,23 @@ const checkStep = document.getElementById('checkStep');
 const emailDisplay = document.getElementById('emailDisplay');
 const messageEl = document.getElementById('message');
 const sendBtn = document.getElementById('sendBtn');
+
+function safeNavigate(target) {
+  if (!target) return;
+  try {
+    const protocol = window.location.protocol;
+    // Resolve relative path to window.location.href if on standard web schemes
+    if (protocol === 'http:' || protocol === 'https:' || protocol === 'file:') {
+      const resolved = new URL(target, window.location.href).href;
+      window.location.href = resolved;
+    } else {
+      // In sandbox preview frames (e.g., about:srcdoc), try standard assignment directly
+      window.location.href = target;
+    }
+  } catch (e) {
+    console.warn("Navigation resolution failed to target: " + target + " under sandbox context.", e);
+  }
+}
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -34,8 +48,11 @@ window.sendMagicLink = async function() {
   sendBtn.disabled = true;
   sendBtn.textContent = 'Sending...';
 
-  // Fix: Dynamic redirect fallback guarantees URL compatibility across localhost, stages and custom domains
-  const dynamicRedirectUrl = window.location.origin + '/auth.html';
+  // Fix: Safe dynamic redirect fallback logic (replaces Vercel URLs to prevent null-origin exceptions)
+  const dynamicRedirectUrl = (window.location.origin && window.location.origin !== 'null') 
+    ? window.location.origin + '/auth.html' 
+    : window.location.href.split('?')[0].split('#')[0];
+    
   console.log('Target dynamic authentication redirect set to:', dynamicRedirectUrl);
 
   try {
@@ -72,7 +89,6 @@ window.backToEmail = function() {
   clearMessage();
 };
 
-// Handle return redirects
 (async function init() {
   try {
     const { data: { session }, error: sessionError } = await sb.auth.getSession();
@@ -94,8 +110,8 @@ async function handleLoggedInUser(user) {
     .single();
 
   if (profile) {
-    window.location.href = 'quest-board.html';
+    safeNavigate('quest-board.html');
   } else {
-    window.location.href = 'username-setup.html';
+    safeNavigate('username-setup.html');
   }
 }
