@@ -13,6 +13,7 @@ let pendingFormData = null;
 
 const titleInput = document.getElementById('title');
 const descInput = document.getElementById('description');
+const tagsInput = document.getElementById('tags');
 const coinAmountInput = document.getElementById('coinAmount');
 const upiAmountInput = document.getElementById('upiAmount');
 const deadlineDateInput = document.getElementById('deadlineDate');
@@ -92,24 +93,44 @@ function updateCommission() {
 coinAmountInput.addEventListener('input', updateCommission);
 upiAmountInput.addEventListener('input', updateCommission);
 
+function parseAndFormatTags(rawText) {
+  if (!rawText) return [];
+  // Split by comma or space
+  const elements = rawText.split(/[,\s]+/);
+  return elements
+    .map(el => {
+      let cleaned = el.trim();
+      if (!cleaned) return null;
+      if (!cleaned.startsWith('#')) {
+        cleaned = '#' + cleaned;
+      }
+      // Ensure capitalized tag formatting
+      return cleaned.charAt(0) + cleaned.slice(1);
+    })
+    .filter(el => el !== null);
+}
+
 window.handleSubmit = async function() {
   clearMessage();
 
   const title = titleInput.value.trim();
   const description = descInput.value.trim();
+  const rawTags = tagsInput.value.trim();
   const datePart = deadlineDateInput.value;
   const timePart = deadlineTimeInput.value;
 
   if (!title || !description || !datePart || !timePart) {
-    showMessage('Please fill in all fields.', 'error');
+    showMessage('Please complete required fields.', 'error');
     return;
   }
 
   const deadlineDate = new Date(`${datePart}T${timePart}`);
   if (deadlineDate <= new Date()) {
-    showMessage('Deadline must be in the future.', 'error');
+    showMessage('Target expiration must reside in the future.', 'error');
     return;
   }
+
+  const formattedTags = parseAndFormatTags(rawTags);
 
   let coinAmount = 0;
   let upiAmount = 0;
@@ -118,31 +139,31 @@ window.handleSubmit = async function() {
   if (selectedType === 'coins') {
     coinAmount = parseInt(coinAmountInput.value) || 0;
     if (coinAmount <= 0) {
-      showMessage('Enter a valid coin amount.', 'error');
+      showMessage('Enter valid coin reward amount.', 'error');
       return;
     }
     commissionCoins = Math.ceil(coinAmount * 0.1);
     if (coinBalance < coinAmount + commissionCoins) {
-      showMessage('Insufficient Coins. You need ' + (coinAmount + commissionCoins) + ' FC.', 'error');
+      showMessage('Insufficient balance. You need ' + (coinAmount + commissionCoins) + ' FC.', 'error');
       return;
     }
   } else if (selectedType === 'upi') {
     upiAmount = parseInt(upiAmountInput.value) || 0;
     if (upiAmount <= 0) {
-      showMessage('Enter a valid UPI amount.', 'error');
+      showMessage('Enter valid UPI amount.', 'error');
       return;
     }
     commissionCoins = Math.ceil(upiAmount * 0.1);
     if (coinBalance < commissionCoins) {
-      showMessage('Insufficient Coins. You need ' + commissionCoins + ' FC safety commission.', 'error');
+      showMessage('Insufficient balance. You need ' + commissionCoins + ' FC safety commission.', 'error');
       return;
     }
-    pendingFormData = { title, description, deadlineDate, coinAmount, upiAmount, commissionCoins };
+    pendingFormData = { title, description, deadlineDate, coinAmount, upiAmount, commissionCoins, tags: formattedTags };
     upiModal.classList.add('active');
     return;
   }
 
-  await postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins });
+  await postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins, tags: formattedTags });
 };
 
 window.confirmUpiPost = async function() {
@@ -161,9 +182,9 @@ window.closeUpiModal = function() {
   upiModal.classList.remove('active');
 };
 
-async function postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins }) {
+async function postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins, tags }) {
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Posting...';
+  submitBtn.textContent = 'Deploying...';
 
   try {
     const { data: questId, error } = await sb.rpc('post_quest_with_commission', {
@@ -179,16 +200,24 @@ async function postQuest({ title, description, deadlineDate, coinAmount, upiAmou
     if (error) {
       showMessage(error.message, 'error');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Post Quest';
+      submitBtn.textContent = 'Deploy to Guild Board';
       return;
     }
 
-    showMessage('Quest posted successfully! Redirecting...', 'success');
+    // Save custom tags directly after successfully initiating the transaction
+    if (tags && tags.length > 0) {
+      await sb
+        .from('quests')
+        .update({ tags: tags })
+        .eq('id', questId);
+    }
+
+    showMessage('Project deployed successfully! Redirecting...', 'success');
     setTimeout(() => window.location.href = 'quest-board.html', 1500);
 
   } catch (err) {
-    showMessage('Unexpected error occured.', 'error');
+    showMessage('Unexpected server mapping error occurred.', 'error');
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Post Quest';
+    submitBtn.textContent = 'Deploy to Guild Board';
   }
 }
