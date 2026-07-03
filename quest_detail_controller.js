@@ -10,6 +10,30 @@ let currentUser = null;
 let currentQuest = null;
 let currentRatingValue = 0;
 let countdownInterval = null;
+let stagedProofFiles = [];
+let pendingCommentAttachment = null;
+
+// Custom Modal Promise configuration replacing alert/confirm
+let customModalResolve = null;
+
+function showCustomConfirm(title, text) {
+  document.getElementById('customModalTitle').textContent = title;
+  document.getElementById('customModalText').textContent = text;
+  document.getElementById('customModalOverlay').style.display = 'flex';
+  return new Promise((resolve) => {
+    customModalResolve = resolve;
+  });
+}
+
+document.getElementById('customModalConfirm').onclick = function() {
+  document.getElementById('customModalOverlay').style.display = 'none';
+  if (customModalResolve) customModalResolve(true);
+};
+
+document.getElementById('customModalCancel').onclick = function() {
+  document.getElementById('customModalOverlay').style.display = 'none';
+  if (customModalResolve) customModalResolve(false);
+};
 
 // Route param validation to prevent Supabase 400 UUID conversion failures
 function getQuestId() {
@@ -32,14 +56,13 @@ function clearAlert() {
   document.getElementById('alertBox').className = 'message';
 }
 
-// Start
 (async function init() {
   const questId = getQuestId();
   if (!questId) {
-    showAlert('Invalid link. Returning to quest board...', 'error');
+    showAlert('Invalid workspace link. Returning to board...', 'error');
     setTimeout(() => {
       window.location.href = 'quest-board.html';
-    }, 1200);
+    }, 1500);
     return;
   }
 
@@ -61,7 +84,6 @@ function clearAlert() {
 
   await refreshQuestData();
   
-  // Real-time channel integration
   subscribeToQuestComments(questId);
   await loadQuestComments(questId);
 })();
@@ -74,14 +96,14 @@ async function refreshQuestData() {
     .from('quests')
     .select(`
       *,
-      poster:user_profiles!quests_poster_id_fkey(user_id, username, display_name, reputation_score),
-      worker:user_profiles!quests_worker_id_fkey(user_id, username, display_name, reputation_score)
+      poster:user_profiles!quests_poster_id_fkey(user_id, username, display_name, reputation_score, upi_id, upi_qr_url),
+      worker:user_profiles!quests_worker_id_fkey(user_id, username, display_name, reputation_score, upi_id, upi_qr_url)
     `)
     .eq('id', questId)
     .single();
 
   if (error || !quest) {
-    showAlert('Quest detail information could not be retrieved.', 'error');
+    showAlert('Workspace details could not be retrieved.', 'error');
     return;
   }
 
@@ -137,44 +159,210 @@ function renderQuestUI() {
     <span style="color: var(--text-dim); margin-left: 8px;">${formattedTime}</span>
   `;
 
-  // Reset UI Panels
+  // Reset Sub-Panels
   document.getElementById('workerProofPanel').style.display = 'none';
   document.getElementById('posterAppraisalPanel').style.display = 'none';
   document.getElementById('disputePanel').style.display = 'none';
   document.getElementById('ratingPanel').style.display = 'none';
+  document.getElementById('abandonContainer').style.display = 'none';
 
   if (countdownInterval) clearInterval(countdownInterval);
 
-  // Status mapping
-  if (q.status === 'accepted' && isWorker) {
-    document.getElementById('workerProofPanel').style.display = 'block';
+  // Workflow State Router
+  if (q.status === 'accepted') {
+    if (isWorker) {
+      document.getElementById('workerProofPanel').style.display = 'block';
+      document.getElementById('abandonContainer').style.display = 'block';
+    } else if (isPoster) {
+      showAlert('Quest accepted. Awaiting worker deliverable uploads.', 'success');
+    }
   } else if (q.status === 'submitted') {
     if (isPoster) {
       document.getElementById('posterAppraisalPanel').style.display = 'block';
-      renderProofFileViewer();
+      renderProofFileGrid();
       startAppraisalCountdown();
       
-      // Dynamic button tuning: Hide disputes and edit text for Free Quests
-      const approveBtn = document.querySelector('#posterAppraisalPanel .btn-success');
-      const disputeBtn = document.querySelector('#posterAppraisalPanel .btn-error');
-      if (approveBtn && disputeBtn) {
-        if (q.payment_type === 'free') {
-          approveBtn.textContent = 'Approve & Complete';
-          disputeBtn.style.display = 'none'; // No disputes on free help!
+      // Free quest layout customization
+      if (q.payment_type === 'free') {
+        document.getElementById('disputeLauncher').style.display = 'none';
+      } else {
+        document.getElementById('disputeLauncher').style.display = 'inline-block';
+      }
+
+      // Display worker UPI details on appraisal board if payment is UPI direct
+      if (q.payment_type === 'upi' && q.worker) {
+        const upiShowcase = document.getElementById('workerUpiShowcase');
+        const upiText = document.getElementById('workerUpiText');
+        const qrContainer = document.getElementById('workerUpiQrContainer');
+        
+        upiShowcase.style.display = 'block';
+        upiText.textContent = q.worker.upi_id ? `Direct Payout Address: ${q.worker.upi_id}` : 'Worker has not setup a UPI ID yet.';
+        
+        if (q.worker.upi_qr_url) {
+          qrContainer.innerHTML = `
+            <div style="font-size:0.8rem; color: var(--text-dim); margin-top:8px;">Scan to Pay:</div>
+            <img src="${q.worker.upi_qr_url}" class="upi-qr-image" alt="UPI QR">
+          `;
         } else {
-          approveBtn.textContent = 'Approve & Payout';
-          disputeBtn.style.display = 'inline-block';
+          qrContainer.innerHTML = '<div style="font-size:0.8rem; color: var(--error); margin-top:8px;">No payment QR uploaded. Coordinate in secure comments panel.</div>';
         }
+      } else {
+        document.getElementById('workerUpiShowcase').style.display = 'none';
       }
     } else {
-      showAlert('Quest proof submitted. Poster has 48 hours to approve.', 'success');
+      showAlert('Staged completion files uploaded! Poster has 48 hours to approve or request revision.', 'success');
     }
   } else if (q.status === 'disputed') {
     document.getElementById('disputePanel').style.display = 'block';
+    
+    // Settle Dispute joint commands
+    if (isPoster) {
+      document.getElementById('disputeReleaseBtn').style.display = 'inline-block';
+    } else if (isWorker) {
+      document.getElementById('disputeRefundBtn').style.display = 'inline-block';
+    }
   } else if (q.status === 'approved' && q.payment_type !== 'free') {
     document.getElementById('ratingPanel').style.display = 'block';
     loadRatingWidgetDetails();
   }
+}
+
+// Staged proof cache actions
+window.handleQueueFiles = function(input) {
+  if (input.files) {
+    for (let i = 0; i < input.files.length; i++) {
+      stagedProofFiles.push(input.files[i]);
+    }
+    input.value = ''; // Reset input to allow re-selecting same files
+    renderStagedFilesList();
+  }
+};
+
+function renderStagedFilesList() {
+  const container = document.getElementById('stagedFilesContainer');
+  const list = document.getElementById('stagedFilesList');
+  
+  if (stagedProofFiles.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  list.innerHTML = stagedProofFiles.map((f, index) => {
+    const sizeKB = (f.size / 1024).toFixed(1);
+    return `
+      <div class="staged-file-item">
+        <div>
+          <span class="staged-file-name">${escapeHtml(f.name)}</span>
+          <span class="staged-file-size">(${sizeKB} KB)</span>
+        </div>
+        <button class="remove-file-btn" onclick="removeStagedFile(${index})">Remove</button>
+      </div>
+    `;
+  }).join('');
+}
+
+window.removeStagedFile = function(index) {
+  stagedProofFiles.splice(index, 1);
+  renderStagedFilesList();
+};
+
+window.uploadProofFiles = async function() {
+  if (stagedProofFiles.length === 0) return;
+
+  const btn = document.getElementById('submitProofBtn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading files...';
+
+  try {
+    const uploadPromises = stagedProofFiles.map(async (file) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentQuest.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `proofs/${fileName}`;
+
+      const { data, error } = await sb.storage
+        .from('quest-images')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: publicData } = sb.storage
+        .from('quest-images')
+        .getPublicUrl(filePath);
+
+      return publicData.publicUrl;
+    });
+
+    const uploadedUrls = await Promise.all(uploadPromises);
+
+    const appraisalDeadline = new Date();
+    appraisalDeadline.setHours(appraisalDeadline.getHours() + 48);
+
+    const { error: dbError } = await sb
+      .from('quests')
+      .update({
+        proof_urls: uploadedUrls,
+        proof_url: uploadedUrls[0] || null, // Backwards compatibility hook
+        status: 'submitted',
+        appraisal_deadline: appraisalDeadline.toISOString()
+      })
+      .eq('id', currentQuest.id);
+
+    if (dbError) {
+      showAlert('Database update failed to record proof URLs.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Submit Staged Deliverables';
+      return;
+    }
+
+    stagedProofFiles = [];
+    renderStagedFilesList();
+    showAlert('Staged deliverables uploaded successfully!', 'success');
+    setTimeout(() => refreshQuestData(), 1200);
+
+  } catch (err) {
+    showAlert(`Submission failed: ${err.message}`, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Submit Staged Deliverables';
+  }
+};
+
+function renderProofFileGrid() {
+  const container = document.getElementById('multiProofViewer');
+  const urls = currentQuest.proof_urls || [];
+  
+  // Backwards compatibility fallback to singular proof_url
+  if (urls.length === 0 && currentQuest.proof_url) {
+    urls.push(currentQuest.proof_url);
+  }
+
+  if (urls.length === 0) {
+    container.innerHTML = '<p style="color: var(--error)">No files uploaded.</p>';
+    return;
+  }
+
+  container.innerHTML = urls.map((url, i) => {
+    const isImage = url.match(/\.(jpeg|jpg|gif|png|webp)/i);
+    const isVideo = url.match(/\.(mp4|webm|ogg|mov)/i);
+    let previewHtml = '';
+
+    if (isImage) {
+      previewHtml = `<img src="${url}" alt="Attachment">`;
+    } else if (isVideo) {
+      previewHtml = `<video src="${url}" controls muted></video>`;
+    } else {
+      previewHtml = `<div class="proof-tile-doc">📄</div>`;
+    }
+
+    return `
+      <div class="proof-tile">
+        ${previewHtml}
+        <div class="proof-tile-info">
+          <a href="${url}" target="_blank">🔗 View File ${i + 1}</a>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function startAppraisalCountdown() {
@@ -189,7 +377,7 @@ function startAppraisalCountdown() {
 
     if (distance < 0) {
       clearInterval(countdownInterval);
-      countdownEl.textContent = 'AUTO-APPROVING NOW...';
+      countdownEl.textContent = 'AUTO-APPROVING...';
       refreshQuestData();
       return;
     }
@@ -202,134 +390,79 @@ function startAppraisalCountdown() {
   }, 1000);
 }
 
-function renderProofFileViewer() {
-  const container = document.getElementById('proofViewerContainer');
-  const url = currentQuest.proof_url;
-  if (!url) {
-    container.innerHTML = '<p style="color: var(--error)">No proof attachments found.</p>';
-    return;
-  }
-
-  const isImage = url.match(/\.(jpeg|jpg|gif|png|webp)/i);
-  if (isImage) {
-    container.innerHTML = `
-      <div style="margin-bottom: 10px;">Submitted Asset Proof:</div>
-      <img src="${url}" alt="Task Proof">
-      <div><a href="${url}" target="_blank">🔗 Open Asset URL</a></div>
-    `;
-  } else {
-    container.innerHTML = `
-      <div style="margin-bottom: 15px;">📄 Submitted Proof File.</div>
-      <a href="${url}" target="_blank" class="btn btn-accent">🔗 Download Document Asset</a>
-    `;
-  }
-}
-
-let selectedProofFile = null;
-
-window.handleFileSelected = function(input) {
-  if (input.files && input.files[0]) {
-    selectedProofFile = input.files[0];
-    document.getElementById('selectedFileName').textContent = `File selected: ${selectedProofFile.name}`;
-    document.getElementById('submitProofBtn').style.display = 'inline-block';
-  }
-};
-
-window.uploadProofFile = async function() {
-  if (!selectedProofFile) return;
-
-  const btn = document.getElementById('submitProofBtn');
-  btn.disabled = true;
-  btn.textContent = 'Uploading Proof...';
+window.triggerAbandonQuest = async function() {
+  const confirmed = await showCustomConfirm('Abandon Quest', 'Are you sure you want to abandon this quest? It will be put back on the public board for other members to accept.');
+  if (!confirmed) return;
 
   try {
-    const fileExt = selectedProofFile.name.split('.').pop();
-    const fileName = `${currentQuest.id}-${Date.now()}.${fileExt}`;
-    const filePath = `proofs/${fileName}`;
-
-    const { data, error } = await sb.storage
-      .from('quest-images')
-      .upload(filePath, selectedProofFile);
-
+    const { error } = await sb.rpc('abandon_quest', { p_quest_id: currentQuest.id });
     if (error) {
-      showAlert(`Upload failed: ${error.message}`, 'error');
-      btn.disabled = false;
-      btn.textContent = 'Submit Proof';
+      showAlert(`Action failed: ${error.message}`, 'error');
       return;
     }
-
-    const { data: publicData } = sb.storage
-      .from('quest-images')
-      .getPublicUrl(filePath);
-
-    const publicUrl = publicData.publicUrl;
-
-    const appraisalDeadline = new Date();
-    appraisalDeadline.setHours(appraisalDeadline.getHours() + 48);
-
-    const { error: dbError } = await sb
-      .from('quests')
-      .update({
-        proof_url: publicUrl,
-        status: 'submitted',
-        appraisal_deadline: appraisalDeadline.toISOString()
-      })
-      .eq('id', currentQuest.id);
-
-    if (dbError) {
-      showAlert('Database failed to map proof details.', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Submit Proof';
-      return;
-    }
-
-    showAlert('Proof uploaded successfully!', 'success');
-    setTimeout(() => refreshQuestData(), 1200);
-
+    showAlert('Quest abandoned. Redirecting to board...', 'success');
+    setTimeout(() => window.location.href = 'quest-board.html', 1500);
   } catch (err) {
-    showAlert('System failed during proof upload.', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Submit Proof';
+    console.error(err);
   }
 };
 
-window.approveSubmittedQuest = async function() {
+window.triggerRevisionRequest = async function() {
+  const confirmed = await showCustomConfirm('Request Revision', 'Reject this proof and request revisions from the worker? The quest will move back to "Accepted" state.');
+  if (!confirmed) return;
+
+  try {
+    const { error } = await sb.rpc('request_revision', { p_quest_id: currentQuest.id });
+    if (error) {
+      showAlert(`Action failed: ${error.message}`, 'error');
+      return;
+    }
+    
+    // Post system revision comment automatically
+    await sb.from('quest_comments').insert({
+      quest_id: currentQuest.id,
+      user_id: currentUser.id,
+      content: '🚨 REVISION REQUESTED: Poster has requested changes. Deliverables rejected. Reset to pending accepted.'
+    });
+
+    showAlert('Revision request sent successfully!', 'success');
+    setTimeout(() => refreshQuestData(), 1200);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+window.triggerApproval = async function() {
   clearAlert();
-  const actionText = currentQuest.payment_type === 'free' ? 'approve and mark this free quest as complete?' : 'approve submission and release locked rewards?';
-  if (!confirm(`Are you sure you want to ${actionText}`)) return;
+  let msg = 'Approve deliverables and disburse payments?';
+  if (currentQuest.payment_type === 'free') msg = 'Confirm task completion?';
+  
+  const confirmed = await showCustomConfirm('Approve Deliverables', msg);
+  if (!confirmed) return;
 
   try {
     const { error } = await sb.rpc('approve_quest', { p_quest_id: currentQuest.id });
-
     if (error) {
       showAlert(`Approve failed: ${error.message}`, 'error');
       return;
     }
 
-    // Dynamic message protection for Free Quests
     if (currentQuest.payment_type === 'free') {
-      showAlert('Quest successfully marked as completed!', 'success');
+      showAlert('Quest successfully completed!', 'success');
     } else {
-      showAlert('Quest successfully approved! Payout sent.', 'success');
+      showAlert('Quest successfully approved! Payout completed.', 'success');
     }
     
-    if (currentQuest.payment_type === 'upi') {
-      alert(`Remember to pay the worker ₹${currentQuest.upi_amount} directly via external UPI now!`);
-    }
-
     setTimeout(() => refreshQuestData(), 1500);
   } catch (err) {
     console.error(err);
   }
 };
 
-window.disputeQuest = async function() {
+window.triggerDisputeLaunch = async function() {
   clearAlert();
-  if (currentQuest.payment_type === 'free') {
-    showAlert('Free quests do not support dispute states.', 'error');
-    return;
-  }
-  if (!confirm('Holding payout initiates review dispute. Proceed?')) return;
+  const confirmed = await showCustomConfirm('File Dispute', 'Lock funds and file an active arbitration dispute? The Guild Administration will assist in resolving the case.');
+  if (!confirmed) return;
 
   try {
     const { error } = await sb
@@ -342,8 +475,45 @@ window.disputeQuest = async function() {
       return;
     }
 
-    showAlert('Review dispute logged. Investigators notified.', 'error');
+    await sb.from('quest_comments').insert({
+      quest_id: currentQuest.id,
+      user_id: currentUser.id,
+      content: '🚨 DISPUTE LOGGED: An official dispute is raised. Settle amicably or await administration arbitration.'
+    });
+
+    showAlert('Arbitration log created successfully.', 'error');
     setTimeout(() => refreshQuestData(), 1200);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+window.triggerDisputeResolution = async function(action) {
+  let text = 'Choose resolve and disburse payouts?';
+  if (action === 'refund') text = 'Agree to forfeit the dispute, cancel the quest, and issue a full refund to the poster?';
+  
+  const confirmed = await showCustomConfirm('Resolve Dispute', text);
+  if (!confirmed) return;
+
+  try {
+    const { error } = await sb.rpc('resolve_dispute_jointly', {
+      p_quest_id: currentQuest.id,
+      p_action: action
+    });
+
+    if (error) {
+      showAlert(`Resolution trigger failed: ${error.message}`, 'error');
+      return;
+    }
+
+    await sb.from('quest_comments').insert({
+      quest_id: currentQuest.id,
+      user_id: currentUser.id,
+      content: `🤝 DISPUTE RESOLVED: Joint compromise reached. Case closed with action: "${action}".`
+    });
+
+    showAlert('Dispute successfully resolved!', 'success');
+    setTimeout(() => refreshQuestData(), 1500);
   } catch (err) {
     console.error(err);
   }
@@ -381,13 +551,41 @@ function renderComments(comments) {
     const timestamp = new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const isSelf = c.user_id === currentUser.id;
 
+    // Rich comment media embedded render check
+    let embedHtml = '';
+    if (c.content && c.content.includes('[ATTACHMENT:')) {
+      const match = c.content.match(/\[ATTACHMENT:\s*([^\]\s]+)\]/);
+      if (match && match[1]) {
+        const fileUrl = match[1];
+        const isImage = fileUrl.match(/\.(jpeg|jpg|gif|png|webp)/i);
+        if (isImage) {
+          embedHtml = `
+            <div class="comment-embed">
+              <img src="${fileUrl}" alt="Embed">
+              <a href="${fileUrl}" target="_blank">🔗 Open Full Image</a>
+            </div>
+          `;
+        } else {
+          embedHtml = `
+            <div class="comment-embed">
+              <a href="${fileUrl}" target="_blank">📄 Download Attached File</a>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // Clean bracket tags from textual display
+    const cleanContent = c.content.replace(/\[ATTACHMENT:\s*[^\]\s]+\]/g, '').trim();
+
     return `
       <div class="comment-card" style="${isSelf ? 'border-color: var(--accent);' : ''}">
         <div class="comment-meta">
           <strong>${sender} ${isSelf ? '(You)' : ''}</strong>
           <span>${timestamp}</span>
         </div>
-        <div class="comment-content">${escapeHtml(c.content)}</div>
+        <div class="comment-content">${escapeHtml(cleanContent)}</div>
+        ${embedHtml}
       </div>
     `;
   }).join('');
@@ -395,23 +593,68 @@ function renderComments(comments) {
   box.scrollTop = box.scrollHeight;
 }
 
+window.handleCommentAttachment = async function(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const indicator = document.getElementById('commentAttachmentName');
+    indicator.textContent = `📎 Staged attachment: ${file.name}`;
+    indicator.style.display = 'block';
+    pendingCommentAttachment = file;
+  }
+};
+
 window.postCommentText = async function() {
   const input = document.getElementById('commentText');
   const text = input.value.trim();
-  if (!text) return;
+  
+  if (!text && !pendingCommentAttachment) return;
 
-  input.value = '';
+  const sendBtn = document.getElementById('sendCommentBtn');
+  sendBtn.disabled = true;
 
-  const { error } = await sb
-    .from('quest_comments')
-    .insert({
-      quest_id: currentQuest.id,
-      user_id: currentUser.id,
-      content: text
-    });
+  try {
+    let finalContent = text;
 
-  if (error) {
-    showAlert('Message posting failed.', 'error');
+    if (pendingCommentAttachment) {
+      const fileExt = pendingCommentAttachment.name.split('.').pop();
+      const fileName = `comments/${currentQuest.id}-${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await sb.storage
+        .from('quest-images')
+        .upload(fileName, pendingCommentAttachment);
+
+      if (error) {
+        showAlert('Failed to upload file attachment.', 'error');
+        sendBtn.disabled = false;
+        return;
+      }
+
+      const { data: publicData } = sb.storage
+        .from('quest-images')
+        .getPublicUrl(fileName);
+
+      finalContent = `${finalContent} [ATTACHMENT:${publicData.publicUrl}]`.trim();
+    }
+
+    input.value = '';
+    pendingCommentAttachment = null;
+    document.getElementById('commentAttachmentName').style.display = 'none';
+
+    const { error } = await sb
+      .from('quest_comments')
+      .insert({
+        quest_id: currentQuest.id,
+        user_id: currentUser.id,
+        content: finalContent
+      });
+
+    if (error) {
+      showAlert('Message posting failed.', 'error');
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    sendBtn.disabled = false;
   }
 };
 
@@ -445,7 +688,7 @@ window.setRatingValue = function(score) {
 
 window.submitUserRating = async function() {
   if (currentRatingValue === 0) {
-    alert('Select score rating stars first.');
+    showAlert('Select score rating stars first.', 'error');
     return;
   }
 
@@ -456,11 +699,11 @@ window.submitUserRating = async function() {
     });
 
     if (error) {
-      alert('Failed to register review score: ' + error.message);
+      showAlert('Failed to register review score: ' + error.message, 'error');
       return;
     }
 
-    alert('Your review evaluation feedback is registered!');
+    showAlert('Your review feedback is registered!', 'success');
     loadRatingWidgetDetails();
 
   } catch (err) {
