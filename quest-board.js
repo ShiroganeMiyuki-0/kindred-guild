@@ -8,13 +8,15 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let quests = [];
-let currentView = 'open'; // 'open', 'my_active', 'my_posted', 'my_completed'
+let currentView = 'open'; 
+let activeTagFilter = null;
+let searchTimeout = null;
 
 const questGrid = document.getElementById('questGrid');
 const filterType = document.getElementById('filterType');
 const sortBy = document.getElementById('sortBy');
+const searchInput = document.getElementById('searchInput');
 
-// Initialization
 (async function init() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) {
@@ -45,9 +47,44 @@ const sortBy = document.getElementById('sortBy');
   document.getElementById('coinBalance').textContent = balance || 0;
 
   loadQuests();
+  renderPresetTags();
 })();
 
-// Switch Views
+function renderPresetTags() {
+  const cloud = document.getElementById('tagCloud');
+  const presets = ['#Showcase', '#Fundraiser', '#Art', '#Coding', '#SkillShare', '#Goodwill', '#Design'];
+  
+  cloud.innerHTML = presets.map(tag => `
+    <span class="tag-badge ${activeTagFilter === tag ? 'active' : ''}" onclick="toggleTagFilter('${tag}')">${tag}</span>
+  `).join('');
+}
+
+window.toggleTagFilter = function(tag) {
+  if (activeTagFilter === tag) {
+    activeTagFilter = null;
+  } else {
+    activeTagFilter = tag;
+  }
+  renderPresetTags();
+  loadQuests();
+};
+
+window.resetFilters = function() {
+  activeTagFilter = null;
+  searchInput.value = '';
+  filterType.value = 'all';
+  sortBy.value = 'newest';
+  renderPresetTags();
+  loadQuests();
+};
+
+window.handleSearch = function() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    loadQuests();
+  }, 300);
+};
+
 window.switchView = function(viewName) {
   currentView = viewName;
   document.querySelectorAll('.view-tab').forEach(tab => {
@@ -58,17 +95,16 @@ window.switchView = function(viewName) {
 };
 
 async function loadQuests() {
-  questGrid.innerHTML = '<div class="empty-state"><h2>Loading quests...</h2></div>';
+  questGrid.innerHTML = '<div class="empty-state"><h2>Loading board updates...</h2></div>';
 
   let query = sb
     .from('quests')
     .select(`
       id, title, description, payment_type, coin_amount, upi_amount,
-      status, deadline, created_at, poster_id, worker_id,
+      status, deadline, created_at, poster_id, worker_id, tags,
       poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score)
     `);
 
-  // View Filtering logic (handles disappearing issue)
   if (currentView === 'open') {
     query = query.eq('status', 'open');
   } else if (currentView === 'my_active') {
@@ -79,13 +115,11 @@ async function loadQuests() {
     query = query.eq('status', 'approved');
   }
 
-  // Payment Type Filter
   const typeFilter = filterType.value;
   if (typeFilter !== 'all') {
     query = query.eq('payment_type', typeFilter);
   }
 
-  // Database Sorting
   const sort = sortBy.value;
   if (sort === 'newest') {
     query = query.order('created_at', { ascending: false });
@@ -98,19 +132,32 @@ async function loadQuests() {
   const { data, error } = await query;
 
   if (error) {
-    console.error('Fetch quests error:', error);
-    questGrid.innerHTML = '<div class="empty-state"><h2>Error loading quests</h2><p>' + error.message + '</p></div>';
+    console.error('Fetch error:', error);
+    questGrid.innerHTML = '<div class="empty-state"><h2>Error updating board</h2><p>' + error.message + '</p></div>';
     return;
   }
 
   quests = data || [];
 
-  // Post-query matching for Active & Completed user associations
   if (currentView === 'my_active' || currentView === 'my_completed') {
     quests = quests.filter(q => q.worker_id === currentUser.id || q.poster_id === currentUser.id);
   }
 
-  // Client-side Sort compensation for UPI vs Coin payouts
+  const term = searchInput.value.toLowerCase().trim();
+  if (term || activeTagFilter) {
+    quests = quests.filter(q => {
+      const matchSearch = !term || 
+        q.title.toLowerCase().includes(term) || 
+        q.description.toLowerCase().includes(term) ||
+        (q.tags && q.tags.some(t => t.toLowerCase().includes(term)));
+        
+      const matchTag = !activeTagFilter ||
+        (q.tags && q.tags.some(t => t.toLowerCase() === activeTagFilter.toLowerCase()));
+
+      return matchSearch && matchTag;
+    });
+  }
+
   if (sort === 'pay') {
     quests.sort((a, b) => {
       const aVal = a.payment_type === 'coins' ? (a.coin_amount || 0) : (a.upi_amount || 0);
@@ -142,36 +189,21 @@ function formatDate(dateStr) {
   else if (diffDays < 30) timeStr = `${Math.floor(diffDays / 7)}w left`;
   else timeStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-  const formattedDate = date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: 'numeric'
-  });
-  const formattedTime = date.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit'
-  });
-
   return `
     <div class="modern-date">
-      <span class="date-main">${formattedDate}</span>
-      <span class="date-sub">${formattedTime} • <span class="date-relative">${timeStr}</span></span>
+      <span class="date-main">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+      <span class="date-sub">${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} • <span class="date-relative">${timeStr}</span></span>
     </div>
   `;
 }
 
 function renderQuests() {
   if (quests.length === 0) {
-    let msg = "No open quests available.";
-    if (currentView === 'my_active') msg = "You don't have any active quests right now. Accept some work to get started!";
-    if (currentView === 'my_posted') msg = "You haven't posted any quests yet.";
-    if (currentView === 'my_completed') msg = "No completed quests found.";
-
     questGrid.innerHTML = `
       <div class="empty-state">
-        <h2>Nothing Here</h2>
-        <p>${msg}</p>
-        <a href="quest-post.html" class="btn" style="margin-top: 16px;">Post a Quest</a>
+        <h2>No Quests Found</h2>
+        <p>Refine your search parameters, try custom hashtag keywords, or post a new creative showcase project.</p>
+        <a href="quest-post.html" class="btn" style="margin-top: 16px;">Post Project/Quest</a>
       </div>
     `;
     return;
@@ -189,17 +221,22 @@ function renderQuests() {
     const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '0.0';
     const deadlineStr = formatDate(quest.deadline);
 
-    // Conditional button logic based on status and view
+    // Tags list renderer
+    const tagsHtml = quest.tags && quest.tags.length > 0 ? `
+      <div class="card-tags">
+        ${quest.tags.map(t => `<span class="card-tag" onclick="event.stopPropagation(); toggleTagFilter('${t}')">${t}</span>`).join('')}
+      </div>
+    ` : '';
+
     let actionButtonHtml = '';
     if (quest.status === 'open') {
       actionButtonHtml = `
         <button class="action-btn ${isOwn ? 'own' : ''}" 
                 ${isOwn ? 'disabled' : 'onclick="openAcceptPrompt(\'' + quest.id + '\')"'}>
-          ${isOwn ? 'Your Quest' : 'Accept Quest'}
+          ${isOwn ? 'Your Project' : 'Accept Quest'}
         </button>
       `;
     } else {
-      // Direct Link for accepted active items so they can complete or coordinate
       actionButtonHtml = `
         <a href="quest-detail.html?id=${quest.id}" class="action-btn">
           View Coordination Board (${quest.status})
@@ -215,6 +252,7 @@ function renderQuests() {
           <h3>${escapeHtml(quest.title)}</h3>
           <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a> ⭐ ${rep}/5</div>
           <div class="description">${escapeHtml(quest.description)}</div>
+          ${tagsHtml}
         </div>
         <div class="card-footer">
           <div class="meta">
@@ -234,13 +272,11 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Accept Modals triggering using modals_controller.js
 window.openAcceptPrompt = function(questId) {
   const quest = quests.find(q => q.id === questId);
   if (!quest) return;
 
   const handleConfirm = async () => {
-    // Check membership
     const { data: profile, error: profileError } = await sb
       .from('user_profiles')
       .select('user_id')
@@ -264,21 +300,16 @@ window.openAcceptPrompt = function(questId) {
       return;
     }
 
-    alert('Quest accepted! Opening active workspace...');
+    alert('Accepted! Opening workspace...');
     window.location.href = 'quest-detail.html?id=' + encodeURIComponent(questId);
   };
 
-  const handleCancel = () => {
-    console.log('Acceptance cancelled.');
-  };
-
   if (quest.payment_type === 'free') {
-    showGuildModal('free-quest', handleConfirm, handleCancel);
+    showGuildModal('free-quest', handleConfirm, () => {});
   } else if (quest.payment_type === 'upi') {
-    showGuildModal('upi-warning', handleConfirm, handleCancel);
+    showGuildModal('upi-warning', handleConfirm, () => {});
   } else {
-    // Standard validation
-    if (confirm('Are you sure you want to accept this quest? Once taken, you should complete it by the designated deadline.')) {
+    if (confirm('Accept this quest and lock commitments?')) {
       handleConfirm();
     }
   }
