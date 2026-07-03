@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — Post a Quest</title>
+  <title>Kindred Guild — Post a Showcase or Quest</title>
   <style>
     :root {
       --bg: #0c0c0f;
@@ -207,12 +207,27 @@
     .user-bar .name { font-weight: 600; }
     .user-bar .coins { font-size: 0.85rem; color: var(--text-dim); }
     .user-bar .coins span { color: var(--accent); }
+    
+    .country-blend-card {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(212, 175, 55, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .country-blend-card h4 {
+      color: var(--accent);
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>⚔️ Post a Quest</h1>
+      <h1>⚔️ Post Creative Project / Quest</h1>
       <a href="quest-board.html">← Back to Board</a>
     </div>
 
@@ -224,17 +239,23 @@
     <div class="card">
       <form id="questForm" onsubmit="event.preventDefault(); handleSubmit();">
         <div class="form-group">
-          <label for="title">Quest Title</label>
-          <input type="text" id="title" placeholder="e.g. Design a guild banner" maxlength="100" required />
+          <label for="title">Project / Quest Title</label>
+          <input type="text" id="title" placeholder="e.g. Crowdfunding for new guild emblem designs" maxlength="100" required />
         </div>
 
         <div class="form-group">
-          <label for="description">Description</label>
-          <textarea id="description" placeholder="Describe requirements, parameters, guidelines..." required></textarea>
+          <label for="description">Detailed Description</label>
+          <textarea id="description" placeholder="Showcase parameters, milestone goals, portfolio references, or fundraising targets..." required></textarea>
         </div>
 
         <div class="form-group">
-          <label>Payment Mode Selection</label>
+          <label for="tags">Hashtag Categorization (Separate with spaces or commas)</label>
+          <input type="text" id="tags" placeholder="e.g. #Showcase, #Coding, #Fundraiser, #Art" />
+          <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 6px;">You can write any custom tags! If you miss the # prefix, we'll automatically format it.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Economic Settlement Mode</label>
           <div class="payment-types">
             <div class="payment-type selected" data-type="coins" onclick="selectPayment('coins')">
               <div class="icon">🪙</div>
@@ -248,32 +269,37 @@
             </div>
             <div class="payment-type" data-type="free" onclick="selectPayment('free')">
               <div class="icon">🎁</div>
-              <div class="name">Free</div>
-              <div class="desc">Pure goodwill mutual aid</div>
+              <div class="name">Free / Goodwill</div>
+              <div class="desc">Pure community cooperative showcase</div>
             </div>
           </div>
         </div>
 
         <div class="form-group amount-input active" id="coinsInput">
-          <label for="coinAmount">Coins Reward Amount</label>
+          <label for="coinAmount">Coins Payout / Target Amount</label>
           <div class="coin-balance">Your active balance: <span id="coinBalance2">--</span> FC</div>
           <input type="number" id="coinAmount" placeholder="e.g. 500" min="1" />
           <div class="commission-note" id="coinsCommission">
-            <strong>💛 10% Platform Fee:</strong> <span id="commissionCoins">0</span> FC will be locked upfront.
+            <strong>💛 10% Platform Enclave Fee:</strong> <span id="commissionCoins">0</span> FC will be locked upfront.
           </div>
         </div>
 
         <div class="form-group amount-input" id="upiInput">
-          <label for="upiAmount">UPI Amount Due (₹)</label>
+          <label for="upiAmount">UPI Target Payout Amount (₹)</label>
           <div class="coin-balance">Your active balance: <span id="coinBalance3">--</span> FC</div>
           <input type="number" id="upiAmount" placeholder="e.g. 500" min="1" />
           <div class="commission-note" id="upiCommission">
-            <strong>💛 10% Safety Net Fee:</strong> You need <span id="commissionUpi">0</span> FC in balance (locked upfront). UPI transactions happen externally.
+            <strong>💛 10% Platform Enclave Fee:</strong> You need <span id="commissionUpi">0</span> FC in balance (locked upfront). UPI transactions happen externally.
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Deadline Date & Time</label>
+        <div class="country-blend-card">
+          <h4>🏰 Building the Enclave Blend</h4>
+          <p>The 10% platform fee is directly channeled towards orchestrating the physical-digital blend country being built by Kindred Guild. Your contribution directly funds land resource pooling, sovereign operations management, and active guild rewards.</p>
+        </div>
+
+        <div class="form-group" style="margin-top: 24px;">
+          <label>Target Expiration / Deadline</label>
           <div style="display: flex; gap: 12px;">
             <div style="flex: 1;">
               <input type="date" id="deadlineDate" required />
@@ -284,7 +310,7 @@
           </div>
         </div>
 
-        <button type="submit" id="submitBtn">Post Quest</button>
+        <button type="submit" id="submitBtn">Deploy to Guild Board</button>
         <div id="message" class="message"></div>
       </form>
     </div>
@@ -293,7 +319,7 @@
   <div class="modal-overlay" id="upiModal">
     <div class="modal">
       <h3>⚠️ UPI Direct Transaction Warnings</h3>
-      <p>UPI transactions happen externally. Kindred Guild cannot reverse or guarantee cash transfers, only enforce reputation bans if payment is withheld. Proceed only if trusted.</p>
+      <p>UPI direct transfers occur externally. Kindred Guild holds no programmatic custody, but enforces absolute reputational exile (suspensions) if validated milestones are left unpaid.</p>
       <div class="modal-buttons">
         <button class="cancel" onclick="closeUpiModal()">Cancel</button>
         <button class="confirm" onclick="confirmUpiPost()">Confirm Post</button>
