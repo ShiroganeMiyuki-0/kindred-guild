@@ -15,6 +15,7 @@
       --accent-glow: rgba(212, 175, 55, 0.15);
       --border: #262636;
       --error: #ef4444;
+      --success: #10b981;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,6 +58,7 @@
       display: flex;
       align-items: center;
       gap: 24px;
+      flex-wrap: wrap;
     }
     .avatar {
       width: 80px;
@@ -174,9 +176,60 @@
       font-weight: bold;
     }
     .quest-item a:hover { color: var(--accent); }
+
+    /* Custom Confirmation Modal System */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    .custom-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+    .custom-modal h4 {
+      color: var(--accent);
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+    .custom-modal p {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .custom-modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .custom-modal-actions button {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Custom Alert overlays replacing standard alert() and confirm() -->
+  <div id="customModalOverlay" class="custom-modal-overlay">
+    <div class="custom-modal">
+      <h4 id="customModalTitle">Confirmation Required</h4>
+      <p id="customModalText">Are you sure you want to proceed?</p>
+      <div class="custom-modal-actions">
+        <button id="customModalCancel" class="btn" style="background: var(--surface-2); color: var(--text);">Cancel</button>
+        <button id="customModalConfirm" class="btn">Confirm</button>
+      </div>
+    </div>
+  </div>
 
   <div class="container">
     <div class="header-bar">
@@ -224,6 +277,7 @@
       </div>
     </div>
 
+    <!-- Upgraded Settings Tab (with UPI and QR uploads) -->
     <div id="tab-edit" class="tab-content">
       <div class="card">
         <div class="form-group">
@@ -234,7 +288,25 @@
           <label>Avatar URL Link</label>
           <input type="text" id="editAvatarUrl" placeholder="https://image-links-here.com">
         </div>
-        <button class="btn" onclick="saveProfileChanges()">Save Profile</button>
+        
+        <!-- UPI Configurations Section -->
+        <div style="border-top: 1px solid var(--border); margin: 20px 0; padding-top: 20px;">
+          <h3 style="color: var(--accent); font-size: 1.1rem; margin-bottom: 12px;">Payment Settings (UPI Direct Quests)</h3>
+          
+          <div class="form-group">
+            <label>UPI Payment Address (ID)</label>
+            <input type="text" id="editUpiId" placeholder="username@okhdfcbank">
+          </div>
+
+          <div class="form-group">
+            <label>Upload UPI QR Code (Image Attachment)</label>
+            <input type="file" id="editUpiQrFile" onchange="handleQrFileUpload(this)">
+            <input type="hidden" id="editUpiQrUrl">
+            <div id="upiQrStatus" style="font-size: 0.8rem; color: var(--success); margin-top: 6px; display: none;"></div>
+          </div>
+        </div>
+
+        <button class="btn" id="saveProfileBtn" onclick="saveProfileChanges()">Save Profile Details</button>
       </div>
     </div>
 
