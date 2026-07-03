@@ -8,6 +8,34 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let profileUser = null;
+let customModalResolve = null;
+
+function showCustomAlert(title, text, confirmOnly = false) {
+  document.getElementById('customModalTitle').textContent = title;
+  document.getElementById('customModalText').textContent = text;
+  
+  const cancelBtn = document.getElementById('customModalCancel');
+  if (confirmOnly) {
+    cancelBtn.style.display = 'none';
+  } else {
+    cancelBtn.style.display = 'block';
+  }
+
+  document.getElementById('customModalOverlay').style.display = 'flex';
+  return new Promise((resolve) => {
+    customModalResolve = resolve;
+  });
+}
+
+document.getElementById('customModalConfirm').onclick = function() {
+  document.getElementById('customModalOverlay').style.display = 'none';
+  if (customModalResolve) customModalResolve(true);
+};
+
+document.getElementById('customModalCancel').onclick = function() {
+  document.getElementById('customModalOverlay').style.display = 'none';
+  if (customModalResolve) customModalResolve(false);
+};
 
 function getUsernameParam() {
   const params = new URLSearchParams(window.location.search);
@@ -33,7 +61,7 @@ function getUsernameParam() {
 
   const { data: profile, error } = await query;
   if (error || !profile) {
-    alert('Guild profile details not found.');
+    await showCustomAlert('Not Found', 'Guild profile details not found.', true);
     window.location.href = 'quest-board.html';
     return;
   }
@@ -41,12 +69,20 @@ function getUsernameParam() {
   profileUser = profile;
   renderProfileOverview();
   
-  // Settings view access mapping
+  // Settings tab visibility validation
   if (currentUser && currentUser.id === profileUser.user_id) {
     document.getElementById('editProfileTabBtn').style.display = 'block';
     document.getElementById('editDisplayName').value = profileUser.display_name || '';
     document.getElementById('editAvatarUrl').value = profileUser.avatar_url || '';
+    document.getElementById('editUpiId').value = profileUser.upi_id || '';
+    document.getElementById('editUpiQrUrl').value = profileUser.upi_qr_url || '';
     
+    if (profileUser.upi_qr_url) {
+      const qrStatus = document.getElementById('upiQrStatus');
+      qrStatus.textContent = '✅ Verified QR code is saved.';
+      qrStatus.style.display = 'block';
+    }
+
     const { data: balance } = await sb.rpc('get_coin_balance', { p_user_id: currentUser.id });
     document.getElementById('privateBalanceDisplay').textContent = balance || 0;
   } else {
@@ -79,6 +115,41 @@ window.switchProfileTab = function(tabId) {
 
   document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
   document.getElementById(tabId).classList.add('active');
+};
+
+window.handleQrFileUpload = async function(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const status = document.getElementById('upiQrStatus');
+    const saveBtn = document.getElementById('saveProfileBtn');
+    
+    saveBtn.disabled = true;
+    status.textContent = 'Uploading QR code...';
+    status.style.display = 'block';
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `qrs/${currentUser.id}-${Date.now()}.${fileExt}`;
+
+      const { data, error } = await sb.storage
+        .from('quest-images')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: publicData } = sb.storage
+        .from('quest-images')
+        .getPublicUrl(fileName);
+
+      document.getElementById('editUpiQrUrl').value = publicData.publicUrl;
+      status.textContent = '✅ QR code uploaded. Save changes to complete.';
+    } catch (err) {
+      status.textContent = '❌ Upload failed. Choose another file.';
+      console.error(err);
+    } finally {
+      saveBtn.disabled = false;
+    }
+  }
 };
 
 async function loadUserQuestsHistory() {
@@ -124,20 +195,27 @@ async function loadUserQuestsHistory() {
 window.saveProfileChanges = async function() {
   const dName = document.getElementById('editDisplayName').value.trim();
   const avatar = document.getElementById('editAvatarUrl').value.trim();
+  const upiId = document.getElementById('editUpiId').value.trim();
+  const upiQr = document.getElementById('editUpiQrUrl').value.trim();
 
   if (!dName) return;
 
   const { error } = await sb
     .from('user_profiles')
-    .update({ display_name: dName, avatar_url: avatar })
+    .update({ 
+      display_name: dName, 
+      avatar_url: avatar,
+      upi_id: upiId,
+      upi_qr_url: upiQr
+    })
     .eq('user_id', currentUser.id);
 
   if (error) {
-    alert('Failed to update: ' + error.message);
+    await showCustomAlert('Save Failed', 'Failed to update changes: ' + error.message, true);
     return;
   }
 
-  alert('Profile updated successfully!');
+  await showCustomAlert('Save Successful', 'Your profile updates are securely saved!', true);
   window.location.reload();
 };
 
