@@ -38,11 +38,16 @@
   <div class="container">
     <div class="header">
       <h1>⚔️ Adventurers for Hire</h1>
-      <div>Welcome, <span id="userName">...</span></div>
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <a href="index.html" style="color: var(--accent); text-decoration: none;">🏠 Home</a>
+        <a href="quest-board.html" style="color: var(--accent); text-decoration: none;">← Board</a>
+        <span>Welcome, <span id="userName">...</span></span>
+      </div>
     </div>
 
     <div class="post-form">
-      <h3>Post Your Availability</h3>
+      <h3>Post or Update Your Availability</h3>
+      <p style="color: var(--text-dim); margin-bottom: 15px;">Tell quest posters what you can do, then revise your category, payment mode, or value whenever your availability changes.</p>
       <div id="workerMessage" class="message"></div>
       <div class="form-group">
         <input type="text" id="workerTitle" placeholder="Title (e.g., Full Stack Developer, Logo Designer)">

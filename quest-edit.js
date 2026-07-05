@@ -80,6 +80,9 @@ function populateEditForm() {
   document.getElementById('editDescription').value = q.description || '';
   document.getElementById('editTags').value = (q.tags || []).join(', ');
   
+  document.getElementById('editPaymentType').value = q.payment_type || 'free';
+  handlePaymentTypeChange();
+
   if (q.payment_type === 'coins') {
     document.getElementById('editCoinAmount').value = q.coin_amount || 0;
   } else if (q.payment_type === 'upi') {
@@ -102,12 +105,19 @@ window.toggleEditMode = function() {
   }
 };
 
+window.handlePaymentTypeChange = function() {
+  const type = document.getElementById('editPaymentType').value;
+  document.getElementById('coinInputGroup').style.display = type === 'coins' ? 'block' : 'none';
+  document.getElementById('upiInputGroup').style.display = type === 'upi' ? 'block' : 'none';
+};
+
 window.saveQuestChanges = async function() {
   clearMessage();
   
   const title = document.getElementById('editTitle').value.trim();
   const description = document.getElementById('editDescription').value.trim();
   const rawTags = document.getElementById('editTags').value.trim();
+  const paymentType = document.getElementById('editPaymentType').value;
   
   if (!title || !description) {
     showMessage('Title and description are required.', 'error');
@@ -127,13 +137,13 @@ window.saveQuestChanges = async function() {
   let coinAmount = null;
   let upiAmount = null;
 
-  if (currentQuest.payment_type === 'coins') {
+  if (paymentType === 'coins') {
     coinAmount = parseInt(document.getElementById('editCoinAmount').value) || 0;
     if (coinAmount <= 0) {
       showMessage('Coin amount must be greater than 0.', 'error');
       return;
     }
-  } else if (currentQuest.payment_type === 'upi') {
+  } else if (paymentType === 'upi') {
     upiAmount = parseInt(document.getElementById('editUpiAmount').value) || 0;
     if (upiAmount <= 0) {
       showMessage('UPI amount must be greater than 0.', 'error');
@@ -151,6 +161,7 @@ window.saveQuestChanges = async function() {
       p_title: title,
       p_description: description,
       p_tags: tags,
+      p_payment_type: paymentType,
       p_coin_amount: coinAmount,
       p_upi_amount: upiAmount
     });
