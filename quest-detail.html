@@ -463,6 +463,9 @@
     <div class="quest-header">
       <div id="statusBadge" class="status-badge status-open">Loading...</div>
       <span id="paymentTypeBadge" class="badge">--</span>
+      <div style="float: right; margin-right: 10px;" id="posterActions">
+        <a href="#" id="editQuestLink" class="btn btn-accent" style="font-size: 0.8rem; padding: 4px 10px; text-decoration: none; border-radius: 4px;">Edit Quest</a>
+      </div>
       <h2 id="questTitle" class="quest-title">Loading...</h2>
       
       <div class="quest-meta">
@@ -586,5 +589,25 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="quest_detail_controller.js"></script>
+  <script>
+    // Logic to show/hide edit button based on ownership
+    window.addEventListener('load', () => {
+      const checkPoster = setInterval(() => {
+        if (window.currentQuest && window.currentUser) {
+          clearInterval(checkPoster);
+          const isPoster = window.currentQuest.poster_id === window.currentUser.id;
+          const posterActions = document.getElementById('posterActions');
+          const editLink = document.getElementById('editQuestLink');
+          
+          if (isPoster && ['open', 'accepted'].includes(window.currentQuest.status)) {
+            posterActions.style.display = 'block';
+            editLink.href = 'quest-edit.html?id=' + window.currentQuest.id;
+          } else {
+            posterActions.style.display = 'none';
+          }
+        }
+      }, 500);
+    });
+  </script>
 </body>
 </html>

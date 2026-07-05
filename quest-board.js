@@ -106,11 +106,11 @@ async function loadQuests() {
     `);
 
   if (currentView === 'open') {
-    query = query.eq('status', 'open');
+    query = query.eq('status', 'open').eq('is_deleted', false);
   } else if (currentView === 'my_active') {
     query = query.in('status', ['accepted', 'submitted', 'disputed']);
   } else if (currentView === 'my_posted') {
-    query = query.eq('poster_id', currentUser.id);
+    query = query.eq('poster_id', currentUser.id).eq('is_deleted', false);
   } else if (currentView === 'my_completed') {
     query = query.eq('status', 'approved');
   }

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Adventurers for Hire</title>
+  <style>
+    :root {
+      --bg: #09090c;
+      --surface: #12121a;
+      --surface-2: #1e1e2c;
+      --text: #e1e1e9;
+      --text-dim: #8b8b9c;
+      --accent: #c9a84c;
+      --border: #222230;
+      --success: #10b981;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      padding: 40px 20px;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+    .post-form { background: var(--surface); padding: 30px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 40px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .worker-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; background: var(--surface-2); color: var(--accent); margin-bottom: 10px; }
+    .card-footer { margin-top: auto; padding-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .action-btn { padding: 8px 16px; background: var(--accent); color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .action-btn.own { background: #ef4444; color: #fff; }
+    .form-group { margin-bottom: 15px; }
+    input, textarea, select { width: 100%; padding: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚔️ Adventurers for Hire</h1>
+      <div>Welcome, <span id="userName">...</span></div>
+    </div>
+
+    <div class="post-form">
+      <h3>Post Your Availability</h3>
+      <div id="workerMessage" class="message"></div>
+      <div class="form-group">
+        <input type="text" id="workerTitle" placeholder="Title (e.g., Full Stack Developer, Logo Designer)">
+      </div>
+      <div class="form-group">
+        <textarea id="workerDescription" placeholder="Describe your skills and what you can do..."></textarea>
+      </div>
+      <div class="form-group">
+        <input type="text" id="workerTags" placeholder="Tags (e.g., #coding, #art, #writing)">
+      </div>
+      <div style="display: flex; gap: 20px;">
+        <div class="form-group" style="flex: 1;">
+          <select id="preferredPayment">
+            <option value="any">Any Payment Type</option>
+            <option value="coins">Fairy Coins Only</option>
+            <option value="upi">UPI Only</option>
+            <option value="free">Free/Gift Only</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <input type="number" id="minReward" placeholder="Min Reward (optional)">
+        </div>
+      </div>
+      <button id="submitWorkerPostBtn" class="btn action-btn" onclick="handleSubmitWorkerPost()">Post Availability</button>
+    </div>
+
+    <div id="workerGrid" class="grid">
+      <!-- Worker cards will be rendered here -->
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="worker-post.js"></script>
+</body>
+</html>

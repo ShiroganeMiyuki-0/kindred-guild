@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Trust & Safety</title>
+  <style>
+    :root {
+      --bg: #09090c;
+      --surface: #12121a;
+      --surface-2: #1e1e2c;
+      --text: #e1e1e9;
+      --text-dim: #8b8b9c;
+      --accent: #c9a84c;
+      --accent-glow: rgba(201, 168, 76, 0.15);
+      --border: #222230;
+      --success: #10b981;
+      --max-width: 900px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      line-height: 1.6;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(9, 9, 12, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .header-container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      font-size: 0.9rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: var(--accent);
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      color: var(--accent);
+      margin-top: 40px;
+      margin-bottom: 20px;
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 30px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    .section h3 {
+      font-size: 1.3rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section p {
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin: 30px 0;
+    }
+
+    .feature-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .feature-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .feature-card h4 {
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+
+    .highlight {
+      background: rgba(201, 168, 76, 0.1);
+      border-left: 3px solid var(--accent);
+      padding: 16px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+
+    .highlight strong {
+      color: var(--accent);
+    }
+
+    footer {
+      padding: 40px 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #000;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="brand">⚔️ KINDRED GUILD</a>
+      <ul class="nav-links">
+        <li><a href="quest-board.html">Quest Board</a></li>
+        <li><a href="auth.html">Join Guild</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+    <h1>🛡️ Trust & Safety</h1>
+
+    <div class="section">
+      <h2>We're Not a Scam. Here's Why.</h2>
+      <p>Kindred Guild is built on transparency, community accountability, and real systems designed to protect both sides of every transaction. This isn't a get-rich-quick scheme or a corporate platform extracting value from your labor. It's a mutual aid network.</p>
+      
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="icon">🔒</div>
+          <h4>Escrow Protection</h4>
+          <p>Coins are held securely until work is verified. No one gets paid until both sides agree.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📊</div>
+          <h4>Transparent Fees</h4>
+          <p>10% commission on every quest. That's it. No hidden charges, no surprise deductions.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">⭐</div>
+          <h4>Reputation System</h4>
+          <p>Ratings are earned through real work. Your score reflects your actual reliability.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🤝</div>
+          <h4>Dispute Resolution</h4>
+          <p>Disagreements? We have a fair process to resolve them. Both sides have a voice.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>How Your Money is Protected</h2>
+      <p>Every transaction on Kindred Guild follows a clear, auditable path:</p>
+      
+      <div class="highlight">
+        <strong>When you post a quest with coins:</strong><br>
+        Your reward + 10% commission are locked immediately. This ensures you have the funds. The worker knows the money is real. When work is approved, coins release to the worker. If there's a dispute, both sides can appeal.
+      </div>
+
+      <div class="highlight">
+        <strong>When you post a quest with UPI:</strong><br>
+        You pay the worker directly peer-to-peer. We only hold the 10% commission in coins as a safety deposit. This protects us from fraud while keeping your payment direct.
+      </div>
+
+      <div class="highlight">
+        <strong>If something goes wrong:</strong><br>
+        Coins are refunded. UPI payments are documented. Disputes are resolved by reviewing proof of work. We don't take sides—we follow the evidence.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Who We Are</h2>
+      <p>Kindred Guild is built and maintained by a single person, independently. No venture capital. No corporate investors. No ads. We survive on:</p>
+      <ul style="margin-left: 20px; color: var(--text-dim);">
+        <li>10% commission on every quest (transparent, disclosed upfront)</li>
+        <li>Voluntary donations from users who believe in the mission</li>
+        <li>Coin purchases (optional, for users who want to accelerate their earning)</li>
+      </ul>
+      <p style="margin-top: 16px;">This means we have every incentive to keep the platform fair and functional. If users don't trust us, they leave. If they leave, we lose revenue. So we build trust through action, not marketing.</p>
+    </div>
+
+    <div class="section">
+      <h2>What Makes Us Different</h2>
+      <p>Most gig platforms are designed to extract value from workers. Kindred Guild is designed to protect it:</p>
+      
+      <div class="highlight">
+        <strong>No Algorithm Manipulation:</strong> Quests are sorted by date, deadline, or pay—not by what makes us the most money.
+      </div>
+
+      <div class="highlight">
+        <strong>No Deactivation Without Reason:</strong> Your account won't be suspended arbitrarily. We follow clear rules.
+      </div>
+
+      <div class="highlight">
+        <strong>No Data Selling:</strong> We don't sell your information. We don't track you across the web. Your data is yours.
+      </div>
+
+      <div class="highlight">
+        <strong>No Forced Exclusivity:</strong> Work on Kindred Guild and other platforms simultaneously. We don't own you.
+      </div>
+
+      <div class="highlight">
+        <strong>Reversible Actions:</strong> Made a mistake? You can undo it within 24 hours. Delete a quest. Edit a post. Restore a deleted item.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Our Commitment to Safety</h2>
+      <p>We take safety seriously. Here's what we do:</p>
+      <ul style="margin-left: 20px; color: var(--text-dim);">
+        <li><strong>Verification:</strong> Profiles are tied to real email addresses. Repeat offenders are tracked.</li>
+        <li><strong>Reporting:</strong> Users can report scams, harassment, or inappropriate behavior.</li>
+        <li><strong>Moderation:</strong> We review reports and take action against bad actors.</li>
+        <li><strong>Transparency:</strong> Strikes and suspensions are logged. Users can see why they were penalized.</li>
+        <li><strong>Privacy:</strong> Ratings are anonymous. You won't be harassed by someone you rated poorly.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Questions?</h2>
+      <p>We're not hiding anything. If you have concerns about how we operate, how we handle money, or how we protect your data, ask. Email us. We'll answer.</p>
+      <p>Trust isn't given. It's earned. We're committed to earning yours every day.</p>
+      <a href="index.html" class="btn">← Back to Home</a>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Kindred Guild. Built for mutual aid. Help is universal.</p>
+  </footer>
+
+</body>
+</html>
