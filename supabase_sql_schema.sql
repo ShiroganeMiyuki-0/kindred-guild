@@ -45,7 +45,8 @@ CREATE TABLE quests (
   upi_amount INTEGER,
   commission_coins INTEGER,
   status TEXT NOT NULL DEFAULT 'open',
-  proof_url TEXT,
+  proof_url TEXT, -- Backwards compatibility
+  proof_urls TEXT[], -- Array of file URLs for multiple proof files
   deadline TIMESTAMP WITH TIME ZONE NOT NULL,
   appraisal_deadline TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -80,6 +81,7 @@ CREATE TABLE quest_comments (
   quest_id UUID NOT NULL REFERENCES quests(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES user_profiles(user_id) ON DELETE CASCADE,
   content TEXT NOT NULL,
+  attachment_urls TEXT[], -- Array of file URLs for multiple attachments
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -446,3 +448,209 @@ CREATE POLICY "Users can insert ratings" ON ratings FOR INSERT WITH CHECK (auth.
 CREATE POLICY "Users can see their own purchases" ON coin_purchases FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can post buy forms" ON coin_purchases FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Admins have full write access" ON coin_purchases FOR ALL USING (true);
+
+-- =========================================================================
+-- ADDITIONAL RPC FUNCTIONS FOR QUEST WORKFLOW
+-- =========================================================================
+
+-- Function to abandon a quest (worker can leave, returns quest to open status)
+CREATE OR REPLACE FUNCTION abandon_quest(p_quest_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_user_id UUID;
+  v_quest RECORD;
+BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required.';
+  END IF;
+
+  SELECT * INTO v_quest FROM quests WHERE id = p_quest_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Quest not found.';
+  END IF;
+
+  -- Only worker can abandon an accepted/submitted quest
+  IF v_quest.worker_id != v_user_id THEN
+    RAISE EXCEPTION 'Only the assigned worker can abandon this quest.';
+  END IF;
+
+  IF v_quest.status NOT IN ('accepted', 'submitted') THEN
+    RAISE EXCEPTION 'Only active quests can be abandoned.';
+  END IF;
+
+  -- Reset quest status and clear worker assignment
+  UPDATE quests 
+  SET status = 'open', worker_id = NULL, proof_urls = NULL, proof_url = NULL, appraisal_deadline = NULL
+  WHERE id = p_quest_id;
+
+  -- Refund locked coins to the poster
+  IF v_quest.payment_type = 'coins' AND v_quest.coin_amount > 0 THEN
+    INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+    VALUES (v_quest.poster_id, v_quest.coin_amount, 'reward_locked_refund', p_quest_id, NOW());
+  END IF;
+  
+  IF v_quest.payment_type IN ('coins', 'upi') AND v_quest.commission_coins > 0 THEN
+    INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+    VALUES (v_quest.poster_id, v_quest.commission_coins, 'commission_locked_refund', p_quest_id, NOW());
+  END IF;
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- Function to request revision (poster rejects proof, sends back to worker)
+CREATE OR REPLACE FUNCTION request_revision(p_quest_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_user_id UUID;
+  v_quest RECORD;
+BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required.';
+  END IF;
+
+  SELECT * INTO v_quest FROM quests WHERE id = p_quest_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Quest not found.';
+  END IF;
+
+  IF v_quest.poster_id != v_user_id THEN
+    RAISE EXCEPTION 'Only the poster can request revisions.';
+  END IF;
+
+  IF v_quest.status != 'submitted' THEN
+    RAISE EXCEPTION 'Only submitted quests can have revision requests.';
+  END IF;
+
+  -- Reset quest status back to accepted for worker to re-submit
+  UPDATE quests 
+  SET status = 'accepted', appraisal_deadline = NULL
+  WHERE id = p_quest_id;
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- Function to resolve dispute jointly (both parties agree)
+CREATE OR REPLACE FUNCTION resolve_dispute_jointly(p_quest_id UUID, p_release_to_worker BOOLEAN)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_user_id UUID;
+  v_quest RECORD;
+BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required.';
+  END IF;
+
+  SELECT * INTO v_quest FROM quests WHERE id = p_quest_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Quest not found.';
+  END IF;
+
+  -- Both poster and worker must call this with matching decisions
+  -- For simplicity, we allow either party to finalize if they both agree out-of-band
+  IF v_quest.poster_id != v_user_id AND v_quest.worker_id != v_user_id THEN
+    RAISE EXCEPTION 'Only quest participants can resolve disputes.';
+  END IF;
+
+  IF v_quest.status != 'disputed' THEN
+    RAISE EXCEPTION 'Only disputed quests can be resolved.';
+  END IF;
+
+  -- Update quest status
+  UPDATE quests 
+  SET status = 'approved', appraisal_deadline = NULL
+  WHERE id = p_quest_id;
+
+  -- Release or refund based on decision
+  IF p_release_to_worker THEN
+    -- Release reward to worker
+    IF v_quest.payment_type = 'coins' AND v_quest.coin_amount > 0 THEN
+      INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+      VALUES (v_quest.worker_id, v_quest.coin_amount, 'quest_earning', p_quest_id, NOW());
+    END IF;
+  ELSE
+    -- Refund poster
+    IF v_quest.payment_type = 'coins' AND v_quest.coin_amount > 0 THEN
+      INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+      VALUES (v_quest.poster_id, v_quest.coin_amount, 'reward_locked_refund', p_quest_id, NOW());
+    END IF;
+  END IF;
+  
+  -- Always refund commission since dispute means incomplete service
+  IF v_quest.payment_type IN ('coins', 'upi') AND v_quest.commission_coins > 0 THEN
+    INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+    VALUES (v_quest.poster_id, v_quest.commission_coins, 'commission_locked_refund', p_quest_id, NOW());
+  END IF;
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- Function to adjust quest reward (poster can increase only while quest is open)
+CREATE OR REPLACE FUNCTION adjust_quest_reward(p_quest_id UUID, p_new_coin_amount INTEGER, p_new_upi_amount INTEGER)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_user_id UUID;
+  v_quest RECORD;
+  v_balance INTEGER;
+  v_additional_coins INTEGER;
+BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required.';
+  END IF;
+
+  SELECT * INTO v_quest FROM quests WHERE id = p_quest_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Quest not found.';
+  END IF;
+
+  -- Only allow adjustments when quest is still open (not yet accepted)
+  IF v_quest.status != 'open' THEN
+    RAISE EXCEPTION 'Quest reward can only be adjusted while quest is open and unaccepted.';
+  END IF;
+
+  -- Poster can increase reward
+  IF v_quest.poster_id = v_user_id THEN
+    IF v_quest.payment_type = 'coins' THEN
+      IF p_new_coin_amount <= v_quest.coin_amount THEN
+        RAISE EXCEPTION 'Poster can only INCREASE the coin reward, not decrease it.';
+      END IF;
+      
+      v_additional_coins := p_new_coin_amount - v_quest.coin_amount;
+      v_balance := get_coin_balance(v_user_id);
+      
+      IF v_balance < v_additional_coins THEN
+        RAISE EXCEPTION 'Insufficient balance. You need % additional FC but only have % FC.', v_additional_coins, v_balance;
+      END IF;
+      
+      -- Deduct additional coins from poster
+      INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+      VALUES (v_user_id, -v_additional_coins, 'reward_increase_locked', p_quest_id, NOW());
+      
+      -- Update quest with new amount
+      UPDATE quests SET coin_amount = p_new_coin_amount WHERE id = p_quest_id;
+      
+    ELSIF v_quest.payment_type = 'upi' THEN
+      IF p_new_upi_amount <= v_quest.upi_amount THEN
+        RAISE EXCEPTION 'Poster can only INCREASE the UPI reward, not decrease it.';
+      END IF;
+      
+      -- Update quest with new UPI amount (no coin deduction needed for UPI reward itself)
+      UPDATE quests SET upi_amount = p_new_upi_amount WHERE id = p_quest_id;
+    END IF;
+    
+  ELSE
+    RAISE EXCEPTION 'Only the quest poster can adjust the reward.';
+  END IF;
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

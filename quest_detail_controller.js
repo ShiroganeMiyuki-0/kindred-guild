@@ -11,7 +11,7 @@ let currentQuest = null;
 let currentRatingValue = 0;
 let countdownInterval = null;
 let stagedProofFiles = [];
-let pendingCommentAttachment = null;
+let pendingCommentAttachments = []; // Changed to array for multiple files
 
 // Custom Modal Promise configuration replacing alert/confirm
 let customModalResolve = null;
@@ -551,32 +551,62 @@ function renderComments(comments) {
     const timestamp = new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const isSelf = c.user_id === currentUser.id;
 
-    // Rich comment media embedded render check
+    // Build attachment HTML from both legacy content tags and new attachment_urls array
     let embedHtml = '';
+    const allAttachments = [];
+    
+    // Collect from attachment_urls array (new method)
+    if (c.attachment_urls && Array.isArray(c.attachment_urls)) {
+      allAttachments.push(...c.attachment_urls);
+    }
+    
+    // Also collect from legacy content tags for backwards compatibility
     if (c.content && c.content.includes('[ATTACHMENT:')) {
-      const match = c.content.match(/\[ATTACHMENT:\s*([^\]\s]+)\]/);
-      if (match && match[1]) {
-        const fileUrl = match[1];
-        const isImage = fileUrl.match(/\.(jpeg|jpg|gif|png|webp)/i);
-        if (isImage) {
-          embedHtml = `
-            <div class="comment-embed">
-              <img src="${fileUrl}" alt="Embed">
-              <a href="${fileUrl}" target="_blank">🔗 Open Full Image</a>
-            </div>
-          `;
-        } else {
-          embedHtml = `
-            <div class="comment-embed">
-              <a href="${fileUrl}" target="_blank">📄 Download Attached File</a>
-            </div>
-          `;
-        }
+      const matches = c.content.match(/\\[ATTACHMENT:\\s*([^\\]\\s]+)\\]/g);
+      if (matches) {
+        matches.forEach(match => {
+          const urlMatch = match.match(/\\[ATTACHMENT:\\s*([^\\]\\s]+)\\]/);
+          if (urlMatch && urlMatch[1]) {
+            allAttachments.push(urlMatch[1]);
+          }
+        });
       }
     }
 
+    // Render all attachments
+    if (allAttachments.length > 0) {
+      embedHtml = '<div class="comment-attachments">';
+      allAttachments.forEach((fileUrl, idx) => {
+        const isImage = fileUrl.match(/\\.(jpeg|jpg|gif|png|webp)/i);
+        const isVideo = fileUrl.match(/\\.(mp4|webm|ogg|mov)/i);
+        
+        if (isImage) {
+          embedHtml += `
+            <div class="comment-embed">
+              <img src="${fileUrl}" alt="Attachment ${idx + 1}">
+              <a href="${fileUrl}" target="_blank">🔗 View Image ${idx + 1}</a>
+            </div>
+          `;
+        } else if (isVideo) {
+          embedHtml += `
+            <div class="comment-embed">
+              <video src="${fileUrl}" controls muted></video>
+              <a href="${fileUrl}" target="_blank">🎬 View Video ${idx + 1}</a>
+            </div>
+          `;
+        } else {
+          embedHtml += `
+            <div class="comment-embed">
+              <a href="${fileUrl}" target="_blank">📄 Download File ${idx + 1}</a>
+            </div>
+          `;
+        }
+      });
+      embedHtml += '</div>';
+    }
+
     // Clean bracket tags from textual display
-    const cleanContent = c.content.replace(/\[ATTACHMENT:\s*[^\]\s]+\]/g, '').trim();
+    const cleanContent = c.content ? c.content.replace(/\\[ATTACHMENT:\\s*[^\\]\\s]+\\]/g, '').trim() : '';
 
     return `
       <div class="comment-card" style="${isSelf ? 'border-color: var(--accent);' : ''}">
@@ -594,50 +624,74 @@ function renderComments(comments) {
 }
 
 window.handleCommentAttachment = async function(input) {
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    const indicator = document.getElementById('commentAttachmentName');
-    indicator.textContent = `📎 Staged attachment: ${file.name}`;
-    indicator.style.display = 'block';
-    pendingCommentAttachment = file;
+  if (input.files) {
+    for (let i = 0; i < input.files.length; i++) {
+      pendingCommentAttachments.push(input.files[i]);
+    }
+    input.value = ''; // Reset input to allow re-selecting same files
+    renderPendingAttachmentsList();
   }
+};
+
+function renderPendingAttachmentsList() {
+  const indicator = document.getElementById('commentAttachmentName');
+  
+  if (pendingCommentAttachments.length === 0) {
+    indicator.style.display = 'none';
+    return;
+  }
+
+  indicator.style.display = 'block';
+  const fileNames = pendingCommentAttachments.map(f => f.name).join(', ');
+  indicator.textContent = `📎 ${pendingCommentAttachments.length} attachment(s): ${fileNames}`;
+}
+
+window.removePendingAttachment = function(index) {
+  pendingCommentAttachments.splice(index, 1);
+  renderPendingAttachmentsList();
 };
 
 window.postCommentText = async function() {
   const input = document.getElementById('commentText');
   const text = input.value.trim();
   
-  if (!text && !pendingCommentAttachment) return;
+  if (!text && pendingCommentAttachments.length === 0) return;
 
   const sendBtn = document.getElementById('sendCommentBtn');
   sendBtn.disabled = true;
 
   try {
     let finalContent = text;
+    let attachmentUrls = [];
 
-    if (pendingCommentAttachment) {
-      const fileExt = pendingCommentAttachment.name.split('.').pop();
-      const fileName = `comments/${currentQuest.id}-${Date.now()}.${fileExt}`;
+    if (pendingCommentAttachments.length > 0) {
+      const uploadPromises = pendingCommentAttachments.map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `comments/${currentQuest.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { data, error } = await sb.storage
+          .from('quest-images')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: publicData } = sb.storage
+          .from('quest-images')
+          .getPublicUrl(fileName);
+
+        return publicData.publicUrl;
+      });
+
+      attachmentUrls = await Promise.all(uploadPromises);
       
-      const { data, error } = await sb.storage
-        .from('quest-images')
-        .upload(fileName, pendingCommentAttachment);
-
-      if (error) {
-        showAlert('Failed to upload file attachment.', 'error');
-        sendBtn.disabled = false;
-        return;
-      }
-
-      const { data: publicData } = sb.storage
-        .from('quest-images')
-        .getPublicUrl(fileName);
-
-      finalContent = `${finalContent} [ATTACHMENT:${publicData.publicUrl}]`.trim();
+      // Append attachment URLs to content for backwards compatibility
+      attachmentUrls.forEach(url => {
+        finalContent = `${finalContent} [ATTACHMENT:${url}]`.trim();
+      });
     }
 
     input.value = '';
-    pendingCommentAttachment = null;
+    pendingCommentAttachments = [];
     document.getElementById('commentAttachmentName').style.display = 'none';
 
     const { error } = await sb
@@ -645,7 +699,8 @@ window.postCommentText = async function() {
       .insert({
         quest_id: currentQuest.id,
         user_id: currentUser.id,
-        content: finalContent
+        content: finalContent,
+        attachment_urls: attachmentUrls // Store as array in new column
       });
 
     if (error) {
@@ -653,6 +708,7 @@ window.postCommentText = async function() {
     }
   } catch (err) {
     console.error(err);
+    showAlert(`Upload failed: ${err.message}`, 'error');
   } finally {
     sendBtn.disabled = false;
   }

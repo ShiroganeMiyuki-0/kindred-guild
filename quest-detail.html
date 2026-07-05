@@ -573,8 +573,8 @@
       </div>
       
       <div class="comment-form">
-        <button class="btn attach-btn" onclick="document.getElementById('commentAttachmentInput').click()" title="Attach document/image">📎</button>
-        <input type="file" id="commentAttachmentInput" style="display: none;" onchange="handleCommentAttachment(this)">
+        <button class="btn attach-btn" onclick="document.getElementById('commentAttachmentInput').click()" title="Attach documents/images">📎</button>
+        <input type="file" id="commentAttachmentInput" style="display: none;" onchange="handleCommentAttachment(this)" multiple>
         
         <input type="text" id="commentText" placeholder="Type coordination details message..." onkeydown="if(event.key === 'Enter') postCommentText()">
         <button class="btn btn-accent" id="sendCommentBtn" onclick="postCommentText()">Send</button>
