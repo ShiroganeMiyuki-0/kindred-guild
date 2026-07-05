@@ -84,7 +84,7 @@ function createOnboardingOverlay() {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.72);
     z-index: 9998;
     display: flex;
     align-items: center;
@@ -112,8 +112,10 @@ function createOnboardingOverlay() {
   return { overlay, modal };
 }
 
-function showOnboarding() {
-  if (onboardingActive) return;
+function showOnboarding(forceRestart = false) {
+  if (onboardingActive && !forceRestart) return;
+  document.getElementById('onboardingOverlay')?.remove();
+  document.querySelectorAll('.onboarding-highlight').forEach(el => el.classList.remove('onboarding-highlight'));
   onboardingActive = true;
   onboardingStep = 0;
 
@@ -121,6 +123,14 @@ function showOnboarding() {
 
   function updateStep() {
     const step = onboardingSteps[onboardingStep];
+    document.querySelectorAll('.onboarding-highlight').forEach(el => el.classList.remove('onboarding-highlight'));
+    if (step.target) {
+      const target = document.querySelector(step.target);
+      if (target) {
+        target.classList.add('onboarding-highlight');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
     
     modal.innerHTML = `
       <div style="text-align: center;">
@@ -136,7 +146,16 @@ function showOnboarding() {
         ">
           "${step.emotionalMessage}"
         </blockquote>
-        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px;">
+        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap;">
+          <button onclick="window.scrollBy({ top: Math.round(window.innerHeight * 0.7), behavior: 'smooth' })" style="
+            padding: 10px 20px;
+            background: #252530;
+            color: #e1e1e9;
+            border: 1px solid #3a3a4c;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+          ">↓ Show me</button>
           ${onboardingStep > 0 ? `
             <button onclick="window.OnboardingController.previousStep()" style="
               padding: 10px 20px;
@@ -203,10 +222,12 @@ function showOnboarding() {
     completeOnboarding() {
       markOnboardingComplete();
       overlay.remove();
+      document.querySelectorAll('.onboarding-highlight').forEach(el => el.classList.remove('onboarding-highlight'));
       onboardingActive = false;
     },
     skipOnboarding() {
       overlay.remove();
+      document.querySelectorAll('.onboarding-highlight').forEach(el => el.classList.remove('onboarding-highlight'));
       onboardingActive = false;
     }
   };
@@ -230,3 +251,7 @@ async function markOnboardingComplete() {
 
 window.showOnboarding = showOnboarding;
 window.markOnboardingComplete = markOnboardingComplete;
+
+const onboardingStyle = document.createElement('style');
+onboardingStyle.textContent = `.onboarding-highlight { position: relative; z-index: 9999 !important; outline: 3px solid #c9a84c; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45), 0 0 28px rgba(201,168,76,0.65); border-radius: 12px; }`;
+document.head.appendChild(onboardingStyle);

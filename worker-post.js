@@ -8,6 +8,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let workerPosts = [];
+let editingWorkerPostId = null;
 
 const titleInput = document.getElementById('workerTitle');
 const descInput = document.getElementById('workerDescription');
@@ -63,6 +64,17 @@ function parseAndFormatTags(rawText) {
     .filter(el => el !== null);
 }
 
+function setWorkerFormMode(post) {
+  editingWorkerPostId = post?.id || null;
+  submitBtn.textContent = editingWorkerPostId ? 'Save Availability Changes' : 'Post Availability';
+  titleInput.value = post?.title || '';
+  descInput.value = post?.description || '';
+  tagsInput.value = (post?.tags || []).join(', ');
+  paymentInput.value = post?.preferred_payment || 'any';
+  minRewardInput.value = post?.min_reward || '';
+  document.querySelector('.post-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 window.handleSubmitWorkerPost = async function() {
   clearMessage();
 
@@ -80,30 +92,36 @@ window.handleSubmitWorkerPost = async function() {
   const formattedTags = parseAndFormatTags(rawTags);
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Posting...';
+  submitBtn.textContent = editingWorkerPostId ? 'Saving...' : 'Posting...';
 
   try {
-    const { data: postId, error } = await sb.rpc('post_worker_availability', {
+    const rpcName = editingWorkerPostId ? 'edit_worker_availability' : 'post_worker_availability';
+    const payload = {
       p_title: title,
       p_description: description,
       p_tags: formattedTags,
       p_preferred_payment: preferredPayment,
       p_min_reward: minReward
-    });
+    };
+    if (editingWorkerPostId) payload.p_post_id = editingWorkerPostId;
+
+    const { data: postId, error } = await sb.rpc(rpcName, payload);
 
     if (error) {
       showMessage(error.message, 'error');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Post Availability';
+      submitBtn.textContent = editingWorkerPostId ? 'Save Availability Changes' : 'Post Availability';
       return;
     }
 
-    showMessage('Your availability has been posted!', 'success');
+    showMessage(editingWorkerPostId ? 'Your availability has been updated!' : 'Your availability has been posted!', 'success');
     titleInput.value = '';
     descInput.value = '';
     tagsInput.value = '';
     paymentInput.value = 'any';
     minRewardInput.value = '';
+    editingWorkerPostId = null;
+    submitBtn.textContent = 'Post Availability';
 
     setTimeout(() => {
       loadWorkerPosts();
@@ -112,7 +130,7 @@ window.handleSubmitWorkerPost = async function() {
   } catch (err) {
     showMessage('Unexpected error occurred.', 'error');
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Post Availability';
+    submitBtn.textContent = editingWorkerPostId ? 'Save Availability Changes' : 'Post Availability';
   }
 };
 
@@ -165,9 +183,10 @@ function renderWorkerPosts() {
     let actionButtonHtml = '';
     if (isOwn) {
       actionButtonHtml = `
-        <button class="action-btn own" onclick="deleteWorkerPost('${post.id}')">
-          Delete Post
-        </button>
+        <div style="display: flex; gap: 8px;">
+          <button class="action-btn" onclick="editWorkerPost('${post.id}')">Edit</button>
+          <button class="action-btn own" onclick="deleteWorkerPost('${post.id}')">Delete</button>
+        </div>
       `;
     } else {
       actionButtonHtml = `
@@ -202,6 +221,13 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+
+window.editWorkerPost = function(postId) {
+  const post = workerPosts.find(item => item.id === postId);
+  if (!post) return;
+  clearMessage();
+  setWorkerFormMode(post);
+};
 
 window.deleteWorkerPost = async function(postId) {
   if (!confirm('Delete this availability post?')) {

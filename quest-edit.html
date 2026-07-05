@@ -59,6 +59,7 @@
 <body>
   <div class="container">
     <h1>Edit Quest</h1>
+    <p style="color: var(--text-dim); margin-bottom: 20px;">Adjust the name, type, tags, and value while the quest is still reversible.</p>
     <div id="editMessage" class="message"></div>
     <div id="editForm">
       <div class="form-group">
@@ -70,7 +71,15 @@
         <textarea id="editDescription" rows="5"></textarea>
       </div>
       <div class="form-group">
-        <label>Tags (comma separated)</label>
+        <label>Quest Type / Payment Mode</label>
+        <select id="editPaymentType" onchange="handlePaymentTypeChange()">
+          <option value="coins">🪙 Fairy Coins</option>
+          <option value="upi">₹ UPI Direct</option>
+          <option value="free">🎁 Free Goodwill</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Category / Tags (comma separated)</label>
         <input type="text" id="editTags">
       </div>
       <div class="form-group" id="coinInputGroup">

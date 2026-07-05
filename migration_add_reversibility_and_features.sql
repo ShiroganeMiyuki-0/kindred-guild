@@ -133,6 +133,7 @@ CREATE OR REPLACE FUNCTION edit_quest(
   p_title TEXT DEFAULT NULL,
   p_description TEXT DEFAULT NULL,
   p_tags TEXT[] DEFAULT NULL,
+  p_payment_type TEXT DEFAULT NULL,
   p_coin_amount INTEGER DEFAULT NULL,
   p_upi_amount INTEGER DEFAULT NULL
 )
@@ -144,6 +145,9 @@ DECLARE
   v_new_data JSONB;
   v_coin_diff INTEGER;
   v_balance INTEGER;
+  v_next_payment_type TEXT;
+  v_next_coin_amount INTEGER;
+  v_next_upi_amount INTEGER;
 BEGIN
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
@@ -166,11 +170,24 @@ BEGIN
   
   -- Store old data
   v_old_data := row_to_json(v_quest);
+  v_next_payment_type := COALESCE(p_payment_type, v_quest.payment_type);
+  IF v_next_payment_type NOT IN ('coins', 'upi', 'free') THEN
+    RAISE EXCEPTION 'Invalid payment type.';
+  END IF;
+  v_next_coin_amount := COALESCE(p_coin_amount, v_quest.coin_amount);
+  v_next_upi_amount := COALESCE(p_upi_amount, v_quest.upi_amount);
   
   -- Handle coin amount changes
-  IF p_coin_amount IS NOT NULL AND p_coin_amount != v_quest.coin_amount THEN
+  IF v_next_payment_type = 'coins' AND COALESCE(v_next_coin_amount, 0) <= 0 THEN
+    RAISE EXCEPTION 'Coin amount must be greater than 0.';
+  END IF;
+  IF v_next_payment_type = 'upi' AND COALESCE(v_next_upi_amount, 0) <= 0 THEN
+    RAISE EXCEPTION 'UPI amount must be greater than 0.';
+  END IF;
+
+  IF v_next_payment_type = 'coins' AND COALESCE(v_next_coin_amount, 0) != COALESCE(v_quest.coin_amount, 0) THEN
     IF v_quest.payment_type = 'coins' THEN
-      v_coin_diff := p_coin_amount - v_quest.coin_amount;
+      v_coin_diff := v_next_coin_amount - v_quest.coin_amount;
       
       -- If increasing reward, check balance
       IF v_coin_diff > 0 THEN
@@ -186,7 +203,17 @@ BEGIN
         INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
         VALUES (v_user_id, -v_coin_diff, 'reward_decrease_refund', p_quest_id, NOW());
       END IF;
+    ELSE
+      v_balance := get_coin_balance(v_user_id);
+      IF v_balance < v_next_coin_amount THEN
+        RAISE EXCEPTION 'Insufficient balance to lock % FC.', v_next_coin_amount;
+      END IF;
+      INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+      VALUES (v_user_id, -v_next_coin_amount, 'reward_type_change_locked', p_quest_id, NOW());
     END IF;
+  ELSIF v_quest.payment_type = 'coins' AND v_next_payment_type != 'coins' AND COALESCE(v_quest.coin_amount, 0) > 0 THEN
+    INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+    VALUES (v_user_id, v_quest.coin_amount, 'reward_type_change_refund', p_quest_id, NOW());
   END IF;
   
   -- Update quest fields
@@ -195,8 +222,9 @@ BEGIN
     title = COALESCE(p_title, title),
     description = COALESCE(p_description, description),
     tags = COALESCE(p_tags, tags),
-    coin_amount = COALESCE(p_coin_amount, coin_amount),
-    upi_amount = COALESCE(p_upi_amount, upi_amount),
+    payment_type = v_next_payment_type,
+    coin_amount = CASE WHEN v_next_payment_type = 'coins' THEN v_next_coin_amount ELSE NULL END,
+    upi_amount = CASE WHEN v_next_payment_type = 'upi' THEN v_next_upi_amount ELSE NULL END,
     edited_at = NOW(),
     edit_history = edit_history || jsonb_build_array(jsonb_build_object('edited_at', NOW(), 'old_data', v_old_data))
   WHERE id = p_quest_id;
@@ -274,7 +302,59 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 11. Update RLS policies for new tables
+
+-- 11. Function to edit worker availability
+CREATE OR REPLACE FUNCTION edit_worker_availability(
+  p_post_id UUID,
+  p_title TEXT,
+  p_description TEXT,
+  p_tags TEXT[],
+  p_preferred_payment TEXT,
+  p_min_reward INTEGER
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_user_id UUID;
+  v_post RECORD;
+  v_old_data JSONB;
+  v_new_data JSONB;
+BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required.';
+  END IF;
+
+  SELECT * INTO v_post FROM worker_posts WHERE id = p_post_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Worker post not found.';
+  END IF;
+  IF v_post.user_id != v_user_id THEN
+    RAISE EXCEPTION 'Only the post author can edit this post.';
+  END IF;
+  IF p_preferred_payment NOT IN ('free', 'coins', 'upi', 'any') THEN
+    RAISE EXCEPTION 'Invalid preferred payment.';
+  END IF;
+
+  v_old_data := row_to_json(v_post);
+
+  UPDATE worker_posts
+  SET title = p_title,
+      description = p_description,
+      tags = p_tags,
+      preferred_payment = p_preferred_payment,
+      min_reward = p_min_reward,
+      updated_at = NOW()
+  WHERE id = p_post_id;
+
+  SELECT row_to_json(wp) INTO v_new_data FROM worker_posts wp WHERE id = p_post_id;
+  INSERT INTO action_log (user_id, action_type, worker_post_id, old_data, new_data, can_undo, undo_until)
+  VALUES (v_user_id, 'worker_post_edited', p_post_id, v_old_data, v_new_data, TRUE, NOW() + INTERVAL '24 hours');
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 12. Update RLS policies for new tables
 ALTER TABLE worker_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE action_log ENABLE ROW LEVEL SECURITY;
 
