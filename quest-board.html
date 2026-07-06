@@ -52,6 +52,7 @@
       display: flex;
       gap: 12px;
       align-items: center;
+      flex-wrap: wrap;
     }
     .btn {
       padding: 10px 20px;
@@ -365,11 +366,27 @@
     }
     .scroll-cue {
       position: fixed;
-      right: 20px;
-      bottom: 20px;
+      right: 24px;
+      bottom: 24px;
       z-index: 90;
-      border-radius: 999px;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      background: var(--accent);
+      color: #000;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+      60% { transform: translateY(-3px); }
     }
   </style>
 </head>
@@ -379,7 +396,7 @@
       <h1>⚔️ Kindred Guild Board</h1>
       <div class="actions">
         <a href="index.html" class="btn btn-outline">🏠 Home</a>
-        <button type="button" class="btn btn-outline" onclick="history.length > 1 ? history.back() : window.location.href='index.html'">← Back</button>
+        <button type="button" class="btn btn-outline" onclick="window.location.href='index.html'">← Back</button>
         <button type="button" class="btn btn-outline" onclick="window.showOnboarding && window.showOnboarding(true)">🎮 Guide</button>
         <a href="fairy-wishes.html" class="btn btn-outline">✨ Wishes</a>
         <a href="worker-post.html" class="btn btn-outline">🛡️ Adventurers</a>
@@ -393,7 +410,7 @@
       <div class="user-info">
         <a href="profile.html" class="name-link" id="userName">Loading...</a>
       </div>
-      <div class="coins">💰 <span id="coinBalance">--</span> FC</div>
+      <div class="coins" id="coinBalanceContainer">💰 <span id="coinBalance">--</span> FC</div>
     </div>
 
     <div class="filters-section">
@@ -431,12 +448,12 @@
 
     <div class="quest-grid" id="questGrid">
       <div class="empty-state">
-        <h2>Loading board...</h2>
+        <h2>Loading board updates...</h2>
       </div>
     </div>
   </div>
 
-  <button type="button" class="btn scroll-cue" onclick="window.scrollBy({ top: Math.round(window.innerHeight * 0.85), behavior: 'smooth' })">↓ Next</button>
+  <button type="button" class="scroll-cue" onclick="window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' })" title="Explore more quests below">↓</button>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="modals_controller.js"></script>
