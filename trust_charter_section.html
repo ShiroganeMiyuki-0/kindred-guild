@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — The Sovereign Charter</title>
+  <style>
+    :root {
+      --bg: #09090c;
+      --surface: #12121a;
+      --surface-2: #1e1e2c;
+      --text: #e1e1e9;
+      --text-dim: #8b8b9c;
+      --accent: #c9a84c;
+      --accent-glow: rgba(201, 168, 76, 0.15);
+      --border: #222230;
+      --success: #10b981;
+      --max-width: 900px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      line-height: 1.6;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(9, 9, 12, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .header-container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      font-size: 0.9rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+
+    h1 {
+      font-family: 'Cinzel', 'Georgia', serif;
+      font-size: 2.2rem;
+      color: var(--accent);
+      margin-bottom: 20px;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-dim);
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+      font-style: italic;
+    }
+
+    h2 {
+      font-family: 'Cinzel', 'Georgia', serif;
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin-top: 40px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    .section h3 {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section p {
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin: 30px 0;
+    }
+
+    .feature-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: 8px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+    }
+
+    .feature-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .feature-card h4 {
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+
+    .highlight {
+      background: rgba(201, 168, 76, 0.05);
+      border-left: 3px solid var(--accent);
+      padding: 16px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+
+    .highlight strong {
+      color: var(--accent);
+    }
+
+    footer {
+      padding: 40px 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #000;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: all 0.2s;
+      border: 1px solid var(--accent);
+    }
+
+    .btn:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="brand">⚔️ KINDRED GUILD</a>
+      <ul class="nav-links">
+        <li><a href="quest-board.html" class="btn btn-outline" style="padding: 6px 12px;">Quest Board</a></li>
+        <li><a href="index.html" class="btn btn-outline" style="padding: 6px 12px;">← Back</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <div class="container">
+    <h1>🛡️ The Sovereign Trust Charter</h1>
+    <p class="subtitle">Architecting Programmatic Grace and Mutual Accountability</p>
+
+    <div class="section">
+      <h2>I. Principles of Peer Security</h2>
+      <p>Kindred Guild replaces extraction algorithms with values of collaborative defense, strict escrow execution, and double-blind reputational transparency.</p>
+      
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="icon">🔒</div>
+          <h4>Sovereign Escrow</h4>
+          <p>Task payments and commission structures are securely pre-funded into independent escrow ledgers prior to acceptance.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📈</div>
+          <h4>Clear Resource Flow</h4>
+          <p>We lock a transparent 10% platform fee to fuel mutual space acquisition and physical land-resource pooling.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">⭐</div>
+          <h4>Double-Blind Honor</h4>
+          <p>Reviews remain absolutely unrevealed until both participants have checked their evaluations, preventing retaliatory bias.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🕊️</div>
+          <h4>Perfect Reversibility</h4>
+          <p>Plans shift. Active tasks, metadata, and categories are gracefully reversible within our 24-hour grace window.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>II. Escrow Protections</h2>
+      <p>Each milestone transaction executed on our board adheres to rigid structural protocols:</p>
+      
+      <div class="highlight">
+        <strong>Fairy Coin Pledges:</strong><br>
+        Your locked reward + platform verification commission are programmatically frozen. This shields developers, artists, and creators from standard default or non-payment risks.
+      </div>
+
+      <div class="highlight">
+        <strong>UPI Direct Payouts:</strong><br>
+        Peer-to-peer transfers are completed externally directly into user bank accounts. The 10% platform safety deposit is maintained in utility credits to secure platform resources.
+      </div>
+
+      <div class="highlight">
+        <strong>Conflict Arbitration:</strong><br>
+        Disputed ledgers are paused. We facilitate collaborative compromise or administrator review based entirely on uploaded deliverables.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>III. Organic Governance</h2>
+      <p>Kindred Guild is engineered by independent mutualists without corporate interests, algorithm manipulation, or investor extraction databases. Our focus is entirely community-aligned:</p>
+      <ul style="margin-left: 20px; color: var(--text-dim); line-height: 2;">
+        <li>Zero data exploitation or ad-tracking dependencies.</li>
+        <li>No automated bans without clear logs or public dispute review.</li>
+        <li>All resources are returned directly to building physical-digital shared spaces.</li>
+      </ul>
+      <p style="margin-top: 16px;">We build trust through structural grace, clear execution, and non-exploitative utility models. Welcome to the fellowship.</p>
+      <a href="quest-board.html" class="btn">Enter Fellowship</a>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Kindred Guild. Built for mutual aid. Help is universal.</p>
+  </footer>
+
+</body>
+</html>
