@@ -72,6 +72,7 @@ function clearAlert() {
     return;
   }
   currentUser = user;
+  window.currentUser = user;
 
   const { data: userProfile } = await sb
     .from('user_profiles')
@@ -108,6 +109,7 @@ async function refreshQuestData() {
   }
 
   currentQuest = quest;
+  window.currentQuest = quest;
   renderQuestUI();
 }
 

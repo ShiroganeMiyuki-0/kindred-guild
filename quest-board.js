@@ -230,10 +230,13 @@ function renderQuests() {
 
     let actionButtonHtml = '';
     if (quest.status === 'open') {
-      actionButtonHtml = `
-        <button class="action-btn ${isOwn ? 'own' : ''}" 
-                ${isOwn ? 'disabled' : 'onclick="openAcceptPrompt(\'' + quest.id + '\')"'}>
-          ${isOwn ? 'Your Project' : 'Accept Quest'}
+      actionButtonHtml = isOwn ? `
+        <a href="quest-edit.html?id=${quest.id}" class="action-btn own">
+          ✏️ Edit / Cancel
+        </a>
+      ` : `
+        <button class="action-btn" onclick="openAcceptPrompt('${quest.id}')">
+          Accept Quest
         </button>
       `;
     } else {

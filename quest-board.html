@@ -325,9 +325,13 @@
       cursor: not-allowed;
     }
     .quest-card .action-btn.own {
-      background: var(--surface-2);
-      color: var(--text-dim);
-      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .quest-card .action-btn.own:hover {
+      background: var(--accent-glow, rgba(201,168,76,0.15));
+      opacity: 1;
     }
     .empty-state {
       text-align: center;
