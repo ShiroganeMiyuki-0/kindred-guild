@@ -311,6 +311,36 @@
     .footer-links a:hover {
       color: var(--accent);
     }
+
+    /* Scroll Cue */
+    .scroll-down-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+      z-index: 999;
+      animation: bounce 2s infinite;
+      transition: all 0.2s ease;
+    }
+    .scroll-down-btn:hover {
+      transform: scale(1.1);
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-8px); }
+      60% { transform: translateY(-4px); }
+    }
   </style>
 </head>
 <body>
@@ -320,8 +350,8 @@
       <a href="index.html" class="brand">⚔️ KINDRED GUILD</a>
       <ul class="nav-links">
         <li><a href="quest-board.html">Quest Board</a></li>
-        <li><a href="trust-and-safety.html">Trust & Safety</a></li>
-        <li><a href="auth.html">Join Guild</a></li>
+        <li><a href="trust-and-safety.html">Guild Charter</a></li>
+        <li><a href="auth.html">Join Fellowship</a></li>
       </ul>
     </div>
   </header>
@@ -329,7 +359,7 @@
   <section class="hero">
     <div class="hero-content">
       <h2>What goes comes back</h2>
-      <p class="tagline">Help someone today. Get help tomorrow. No strings.</p>
+      <p class="tagline">Offer assistance today. Summons support tomorrow. Guided by community honor.</p>
       <div class="cta-group">
         <a href="quest-board.html" class="btn btn-primary">Browse Quests</a>
         <a href="auth.html" class="btn btn-secondary">Enter the Guild</a>
@@ -340,18 +370,18 @@
   <section class="hooks">
     <div class="hook-card">
       <div class="icon">🎁</div>
-      <h3>Need free assistance?</h3>
-      <p>Give free support first. Join a fellowship where mutual assistance flows natively without financial friction or commercial boundaries.</p>
+      <h3>Sovereign Cooperation</h3>
+      <p>Initiate community aid natively. Participate in a digital fellowship designed around collaborative honor, zero platform exploitation, and open aid frameworks.</p>
     </div>
     <div class="hook-card">
       <div class="icon">🪙</div>
-      <h3>Looking to earn?</h3>
-      <p>Accept verified quests. Get rewarded directly in Fairy Coins, our sovereign, self-contained guild utility token model.</p>
+      <h3>Value Verification</h3>
+      <p>Execute verified tasks. Earn utility-settled credits in Fairy Coins, keeping economic power locked purely in local hands.</p>
     </div>
     <div class="hook-card">
       <div class="icon">🤝</div>
-      <h3>Require premium skills?</h3>
-      <p>Post paid quests. Pay workers directly in secure coins or use peer-to-peer UPI transfers protected by our robust double-blind trust framework.</p>
+      <h3>Protected Agreements</h3>
+      <p>Coordinate premium builds. Benefit from secure programmatic escrows or direct peer-to-peer exchanges secured by uncompromised reputation metrics.</p>
     </div>
   </section>
 
@@ -360,39 +390,42 @@
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <h3>Post a Quest</h3>
-        <p>Post your requirements, specify dates, and set terms. Optionally pledge Fairy Coins or lock equivalent security guarantees.</p>
+        <h3>Post requirements</h3>
+        <p>Post parameters, tags, and terms. Rewards and commissions lock safely inside peer-escrow deposits upfront.</p>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <h3>Workers Engage</h3>
-        <p>Competent guild members accept, coordinate tasks in private secure boards, and submit completion credentials.</p>
+        <h3>Fellows Align</h3>
+        <p>Competent guild workers accept missions, coordinate milestones in private channels, and upload completed credentials.</p>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <h3>Pay, Rate & Build</h3>
-        <p>Once finalized, release escrow securely, swap anonymous ratings to construct mutual trust, and build community honor.</p>
+        <h3>Verify & Complete</h3>
+        <p>Validate proofs, approve escrow payout instantly, and swap double-blind reviews to build long-term reputation scores.</p>
       </div>
     </div>
   </section>
 
   <section class="manifesto">
     <h2>The Manifesto</h2>
-    <p>Kindred Guild isn't another gig-economy marketplace. It's a philosophy made real.</p>
-    <p>Want someone to help you without expecting profit? You have to start. Want someone to pay for your work? Start by paying others. There are no hand-outs, only reciprocal investment.</p>
+    <p>Kindred Guild is a rejection of modern platform-capitalist extraction. It is an exploration of programmatic trust and real-world mutualist defense.</p>
+    <p>To experience reliable collaboration, one must initiate it. We build mutual infrastructure so that citizens can build local abundance together.</p>
     <blockquote>"One day, every city has a guild hall. This is how it starts."</blockquote>
   </section>
 
   <section class="support">
-    <h3>Transparency & Trust</h3>
-    <p>Kindred Guild is built and maintained by one person independently, with no venture capital backing and no corporate alignment. Every transaction is protected by escrow. Every fee is transparent. Your data is yours.</p>
-    <a href="trust-and-safety.html" class="btn btn-primary">🛡️ How We Protect You</a>
+    <h3>Open Infrastructure & Peer Escrow</h3>
+    <p>Kindred Guild is independently coordinated with zero corporate backing or venture manipulation. Every feature is structured around user protection, secure escrow guarantees, and auditable mutual ratings.</p>
+    <a href="trust-and-safety.html" class="btn btn-primary">🛡️ Read the Guild Charter</a>
     <a href="donation.html" class="btn btn-secondary">💝 Support the Guild</a>
   </section>
 
+  <!-- Interactive Scroll Cue -->
+  <button class="scroll-down-btn" onclick="window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' })" title="Explore Below">↓</button>
+
   <footer>
     <div class="footer-links">
-      <a href="index.html">Manifesto</a>
+      <a href="index.html">Charter</a>
       <a href="quest-board.html">Quest Board</a>
       <a href="trust-and-safety.html">Trust & Safety</a>
       <a href="auth.html">Join Us</a>
