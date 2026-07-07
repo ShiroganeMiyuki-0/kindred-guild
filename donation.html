@@ -4,176 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Support Kindred Guild — Donate via UPI</title>
+  <meta name="description" content="Support Kindred Guild with a donation. Help keep the community platform running.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <style>
-    :root {
-      --bg: #0f0f13;
-      --surface: #1a1a22;
-      --surface-2: #252530;
-      --text: #e8e8f0;
-      --text-dim: #9090a0;
-      --accent: #c9a84c;
-      --accent-glow: rgba(201, 168, 76, 0.2);
-      --border: #222230;
-      --success: #2ecc71;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--surface-2);
-    }
-    .header h1 { font-size: 1.5rem; color: var(--accent); }
-    .header a { color: var(--text-dim); text-decoration: none; }
-
-    .donation-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 30px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-    }
-    select, input {
-      width: 100%;
-      padding: 12px;
-      background: var(--bg);
-      border: 1px solid var(--surface-2);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 1rem;
-    }
-    select:focus, input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .qr-box {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .qr-box h3 {
-      margin-bottom: 12px;
-      color: var(--accent);
-    }
-    .qr-box p {
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-bottom: 16px;
-    }
-    .qr-image {
-      width: 200px;
-      height: 200px;
-      background: #fff;
-      margin: 10px auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-    }
-    .qr-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    .upi-link {
-      margin-top: 16px;
-      padding: 12px;
-      background: var(--bg);
-      border-radius: 6px;
-      border: 1px solid var(--border);
-    }
-    .upi-link a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .upi-link a:hover {
-      text-decoration: underline;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--accent);
-      color: #000;
-      font-weight: bold;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-      margin-top: 8px;
-    }
-    .btn:hover {
-      opacity: 0.9;
-    }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .message {
-      padding: 12px;
-      border-radius: 6px;
-      margin-top: 16px;
-      display: none;
-    }
-    .message.success { display: block; background: rgba(46,204,113,0.15); color: var(--success); }
-    .message.info { display: block; background: rgba(52, 152, 219, 0.15); color: #3498db; }
-
-    .info-box {
-      background: rgba(201, 168, 76, 0.1);
-      border: 1px solid var(--accent);
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-    .info-box strong {
-      color: var(--accent);
-    }
+    .container { max-width: 600px; }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+    .page-header h1 { font-size:1.4rem; color:var(--accent); }
+    .info-box { background:var(--accent-glow); border:1px solid var(--accent); padding:16px; border-radius:var(--radius-sm); margin-bottom:24px; font-size:0.9rem; line-height:1.6; }
+    .info-box strong { color:var(--accent); }
+    .qr-box { background:var(--surface-2); border:1px solid var(--border); padding:20px; border-radius:var(--radius-sm); text-align:center; margin-bottom:20px; }
+    .qr-box h3 { margin-bottom:8px; color:var(--accent); }
+    .qr-box p { font-size:0.85rem; color:var(--text-dim); margin-bottom:12px; }
+    .qr-image { width:200px; height:200px; background:#fff; margin:10px auto; display:flex; align-items:center; justify-content:center; border-radius:4px; }
+    .qr-image img { width:100%; height:100%; object-fit:contain; }
+    .upi-link { margin-top:12px; padding:12px; background:var(--bg); border-radius:var(--radius-sm); border:1px solid var(--border); }
+    .upi-link a { color:var(--accent); font-weight:bold; }
+    .footer-note { margin-top:32px; padding-top:20px; border-top:1px solid var(--border); font-size:0.85rem; color:var(--text-dim); text-align:center; }
   </style>
 </head>
 <body>
-
   <div class="container">
-    <div class="header">
+    <div class="page-header">
       <h1>💝 Support the Guild</h1>
-      <a href="index.html">← Back to Home</a>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Home</a>
     </div>
 
     <div class="info-box">
-      <strong>Why donate?</strong> Kindred Guild is independently maintained with no venture capital backing. Your support helps keep our mutual aid platform running, secure, and accessible to everyone.
+      <strong>Why donate?</strong> Kindred Guild is independently maintained with no venture capital. Your support keeps the platform running, secure, and free to use.
     </div>
 
-    <div class="donation-card">
+    <div class="card">
       <form id="donationForm" onsubmit="event.preventDefault(); handleDonation();">
         <div class="form-group">
           <label>Donation Amount</label>
@@ -185,80 +46,58 @@
             <option value="custom">Custom Amount</option>
           </select>
         </div>
-
-        <div id="customAmountGroup" class="form-group" style="display: none;">
-          <label>Enter Custom Amount (₹)</label>
-          <input type="number" id="customAmount" placeholder="Enter amount in rupees" min="10" max="100000">
+        <div id="customAmountGroup" class="form-group" style="display:none">
+          <label>Custom Amount (₹)</label>
+          <input type="number" id="customAmount" placeholder="Enter amount" min="10">
         </div>
-
         <div class="qr-box">
           <h3>🎯 Scan to Donate</h3>
-          <p>Use any UPI app to scan the QR code below, or click the direct link</p>
+          <p>Use any UPI app to scan below, or click the link</p>
           <div class="qr-image">
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCAQAAAABUY/ToAAADjUlEQVR4nO2cTY7jNhBGX0UGvJSBOYCPQt9gjjRnyg2so/gAAaSlAQpfFiyKtLuTxaQN252qRTcl+UEiUKh/ycTvyfTHb4IQZJBBBhlkkEEG+XqkueyAZVcOy+rEWlaw1F+dnvy0Qb4kmSRJM9gJ0BkwO2aYDoOYDqvZiUGSpFvyGU8b5EuRO/+/HCD9CYKMMf61c11ZDNJ8QCxgMOQnPm2Q70AWh5YuO5gOq5FmYDpKdnrYPYN8b3J3d6zp54wg7yzNKwIByy5/IN9rn0E+jqw6NAqKtxrXHek8CBgEy4/M9PNqQNGn/37PIL8lOZmZ2QFIl708JSt5Gdivy17Aap6wPftpg3wpstihZl80HTCxAIxXYzpmBFdzU/UV9wzye5F06XqaAcZczuk8ZqQZpHnww3O7+l77DPJxpGuE5kEkZUjzUFRKZwDGXKpHJGXXptChID+SZoetHD1mV580D9J58VColq29DPme+wzyEaT7sqRMVZ9BMErF+rhrc70qq7BDQd6INinxUJoHuQka6zlgs02EDgV5J80Otciob4sBrk3KZRU6FOSnZCkImQGr2YnVvA8rqVyYDh5s2+npTxvkK5FbHl+Doi39qqm+5P5NHiOFHQryVjod+uScl4bKae9/hA4F+SlZ0nrXHDPbYb8uZkzHUqIWjFfTebxGryPIO6kpWXVeSXLD46uhJPhFmkMLOxSky9a3z7SOmM+gLT+ywWpi2XsHH9ZKvNc+g3wcuWX0dL0xrw8xeBOkSYpeR5Af5L5ftkXNrQVby9ZexQ4dCvJWWo2xk1ZydKXZkn5lIh4K8lZ6X1a1RJqh9cu6lr3XkUKHguzE+xqjZ2NNkerVujozdNXG0KEgN+lin82DAUPfy5e2Dv4cPdcg/4kc1CaEdGY1JtsLlr33y9LFs3o7fdU9g/wWZPdukKZjrlUhrw+h6bSaQBijsHTOUR8K8k5qXuYOrU0NtfCok66U/V77DPJxZDeD1kKhu3y/ZfT9xP577TPIR5P9dz/Ga5kfKqPUSVKNjCIeCvJTab6sjjDmruHRTVbf/gk7FOQmfW4/D723aoHSnYQOBfnv5LL3+aEyAWtmfWC9TYG8yNMG+aJkqQ/55Jlkdhi2dxQfdc8g356svQ4A7DRKUEf0SRf/tF4bzH/XfQb59WT/vj2tI1b7qz7HSB2qjvpQkB/E4hvnQQYZZJBBBhnk/5z8G618TVIt3ja3AAAAAElFTkSuQmCC" alt="UPI QR Code for Donation">
+            <img src="upi_qr_code.png" alt="UPI QR Code" onerror="this.parentElement.innerHTML='<div style=&quot;color:#666;font-size:0.85rem&quot;>QR code image<br>not found</div>'">
           </div>
           <div class="upi-link">
-            <p>Or pay directly:</p>
-            <a href="upi://pay?pa=yashwanthrangaswamy72@okhdfcbank&pn=Kindred%20Guild&am=100&tn=Guild%20Donation" id="upiDeepLink">
-              💳 Open in UPI App
-            </a>
+            <a href="upi://pay?pa=yashwanthrangaswamy72@okhdfcbank&pn=Kindred%20Guild&am=100&tn=Guild%20Donation" id="upiDeepLink">💳 Open in UPI App</a>
           </div>
-          <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-dim);">
-            <strong>UPI ID:</strong> yashwanthrangaswamy72@okhdfcbank
-          </div>
+          <div style="margin-top:10px;font-size:0.8rem;color:var(--text-dim)">UPI ID: yashwanthrangaswamy72@okhdfcbank</div>
         </div>
-
         <div class="form-group">
-          <label>Your Name (Optional)</label>
-          <input type="text" id="donorName" placeholder="Leave blank to donate anonymously">
+          <label>Your Name (optional)</label>
+          <input type="text" id="donorName" placeholder="Leave blank for anonymous">
         </div>
-
         <div class="form-group">
-          <label>Message (Optional)</label>
-          <input type="text" id="donorMessage" placeholder="Share why you support the guild...">
+          <label>Message (optional)</label>
+          <input type="text" id="donorMessage" placeholder="Why you support the guild...">
         </div>
-
-        <button type="submit" id="submitBtn" class="btn">✓ I've Sent the Donation</button>
+        <button type="submit" id="submitBtn" class="btn btn-primary" style="width:100%;padding:14px">✓ I've Sent the Donation</button>
       </form>
-
       <div id="statusAlert" class="message"></div>
     </div>
 
-    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-dim); text-align: center;">
+    <div class="footer-note">
       <p>All donations are voluntary and go directly to maintaining Kindred Guild infrastructure.</p>
-      <p style="margin-top: 12px;">Your contribution helps us serve the community better. Thank you! 🙏</p>
+      <p style="margin-top:8px">Thank you for your support! 🙏</p>
     </div>
   </div>
 
   <script>
-    const donationForm = document.getElementById('donationForm');
     const donationAmountSelect = document.getElementById('donationAmount');
     const customAmountGroup = document.getElementById('customAmountGroup');
     const customAmountInput = document.getElementById('customAmount');
     const upiDeepLink = document.getElementById('upiDeepLink');
     const statusAlert = document.getElementById('statusAlert');
 
-    // Show/hide custom amount input
     donationAmountSelect.addEventListener('change', updateQRDisplay);
 
     function updateQRDisplay() {
-      const selectedValue = donationAmountSelect.value;
-      if (selectedValue === 'custom') {
-        customAmountGroup.style.display = 'block';
-        customAmountInput.focus();
-      } else {
-        customAmountGroup.style.display = 'none';
-      }
+      customAmountGroup.style.display = donationAmountSelect.value === 'custom' ? 'block' : 'none';
       updateUPILink();
     }
 
     function updateUPILink() {
       let amount = donationAmountSelect.value;
-      if (amount === 'custom') {
-        amount = customAmountInput.value || '100';
-      }
-      const upiString = `upi://pay?pa=yashwanthrangaswamy72@okhdfcbank&pn=Kindred%20Guild&am=${amount}&tn=Guild%20Donation`;
-      upiDeepLink.href = upiString;
+      if (amount === 'custom') amount = customAmountInput.value || '100';
+      upiDeepLink.href = `upi://pay?pa=yashwanthrangaswamy72@okhdfcbank&pn=Kindred%20Guild&am=${amount}&tn=Guild%20Donation`;
     }
 
     customAmountInput.addEventListener('change', updateUPILink);
@@ -267,37 +106,12 @@
       let amount = donationAmountSelect.value;
       if (amount === 'custom') {
         amount = customAmountInput.value;
-        if (!amount || amount < 10) {
-          alert('Please enter a valid amount (minimum ₹10)');
-          return;
-        }
+        if (!amount || amount < 10) { alert('Minimum ₹10'); return; }
       }
-
-      const donorName = document.getElementById('donorName').value.trim();
-      const donorMessage = document.getElementById('donorMessage').value.trim();
-
-      // Show success message
       statusAlert.className = 'message success';
-      statusAlert.textContent = `✓ Thank you for your support! We've recorded your donation of ₹${amount}. Your contribution will help keep Kindred Guild running.`;
-      statusAlert.style.display = 'block';
-
-      // Reset form
-      setTimeout(() => {
-        donationForm.reset();
-        customAmountGroup.style.display = 'none';
-        updateUPILink();
-      }, 2000);
-
-      // Log donation (in a real app, this would be sent to a server)
-      console.log('Donation recorded:', {
-        amount,
-        donorName: donorName || 'Anonymous',
-        donorMessage,
-        timestamp: new Date().toISOString()
-      });
+      statusAlert.textContent = `✓ Thank you! We've recorded your ₹${amount} donation.`;
+      setTimeout(() => { document.getElementById('donationForm').reset(); customAmountGroup.style.display = 'none'; updateUPILink(); }, 2000);
     }
-
-    // Initialize UPI link
     updateUPILink();
   </script>
   <script src="site-nav.js"></script>
