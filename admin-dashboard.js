@@ -211,26 +211,12 @@ function getTimeAgo(dateString) {
 window.approvePurchase = async function(purchaseId, userId, coins) {
   if (!confirm(`Verify and approve ${coins} FC to ledger?\n\nPlease confirm you received ₹${coins} in your UPI app with matching payment note/UTR.`)) return;
 
-  const { error: txErr } = await sb
-    .from('coin_purchases')
-    .update({ status: 'verified' })
-    .eq('id', purchaseId);
+  const { error } = await sb.rpc('approve_coin_purchase', {
+    p_purchase_id: purchaseId
+  });
 
-  if (txErr) {
-    alert(txErr.message);
-    return;
-  }
-
-  const { error: ledgerErr } = await sb
-    .from('fairy_ledger')
-    .insert({
-      user_id: userId,
-      amount: coins,
-      reason: 'upi_purchase'
-    });
-
-  if (ledgerErr) {
-    alert('Purchase status updated, but failed to credit coin ledger: ' + ledgerErr.message);
+  if (error) {
+    alert('Failed to approve: ' + error.message);
   } else {
     alert('✅ Approved successfully! Coins credited.');
   }
@@ -243,10 +229,9 @@ window.approvePurchase = async function(purchaseId, userId, coins) {
 window.rejectPurchase = async function(purchaseId) {
   if (!confirm('Reject transaction entry request?\n\nUser will not receive coins.')) return;
 
-  const { error } = await sb
-    .from('coin_purchases')
-    .update({ status: 'rejected' })
-    .eq('id', purchaseId);
+  const { error } = await sb.rpc('reject_coin_purchase', {
+    p_purchase_id: purchaseId
+  });
 
   if (error) {
     alert(error.message);
