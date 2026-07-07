@@ -4,66 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kindred Guild — Action History</title>
-  <style>
-    :root {
-      --bg: #09090c;
-      --surface: #12121a;
-      --surface-2: #1e1e2c;
-      --text: #e1e1e9;
-      --text-dim: #8b8b9c;
-      --accent: #c9a84c;
-      --border: #222230;
-      --error: #ef4444;
-    }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
-      padding: 40px 20px;
-    }
-    .container { max-width: 800px; margin: 0 auto; }
-    h1 { color: var(--accent); margin-bottom: 30px; }
-    .action-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .action-info { display: flex; flex-direction: column; gap: 5px; }
-    .action-type { font-weight: bold; color: var(--accent); }
-    .action-time { font-size: 0.85rem; color: var(--text-dim); }
-    .undo-btn {
-      padding: 8px 16px;
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .undo-btn:hover { background: var(--accent); color: #000; }
-    .expired { opacity: 0.6; }
-    .expired-label { font-size: 0.75rem; color: var(--error); }
-  </style>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Action History & Undo</h1>
-    <p style="color: var(--text-dim); margin-bottom: 30px;">
-      Made a mistake? You can undo most actions within 24 hours.
-    </p>
-    <div id="actionHistoryContainer">
-      <!-- Action history will be rendered here -->
+  <div class="container" style="max-width:700px;padding-top:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <h1 style="font-size:1.4rem;color:var(--accent)">📜 Action History</h1>
+      <a href="quest-board.html" class="btn btn-ghost btn-sm">← Board</a>
     </div>
-    <div style="margin-top: 40px;">
-      <a href="quest-board.html" style="color: var(--accent); text-decoration: none;">← Back to Board</a>
+    <p style="color:var(--text-dim);margin-bottom:20px;font-size:0.9rem">Actions within the grace window can be undone. After the window closes, changes are permanent.</p>
+    <div id="actionHistoryContainer">
+      <p style="color:var(--text-dim);text-align:center;padding:40px">Loading...</p>
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="undo-actions.js"></script>
   <script src="site-nav.js"></script>
 </body>

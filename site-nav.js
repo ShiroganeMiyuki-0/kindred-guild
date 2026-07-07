@@ -1,24 +1,23 @@
 // ============================================
-// KINDRED GUILD — GLOBAL NAV + SCROLL GUIDE
+// KINDRED GUILD — GLOBAL NAVIGATION
 // Include on EVERY page: <script src="site-nav.js"></script>
-// Add this line right before </body>, after your other scripts.
+// Add right before </body>, after other scripts.
 // ============================================
 (function () {
-  // Pages where a "back to homepage" button would be redundant/confusing
-  const HOME_PAGE = 'index.html';
-  const path = window.location.pathname.split('/').pop() || 'index.html';
+  const HOME = 'index.html';
+  const path = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
 
-  // ---- 1. Floating Home / Back button ----
+  // ---- 1. Floating back + home buttons ----
   const nav = document.createElement('div');
   nav.id = 'kg-floating-nav';
   nav.innerHTML = `
     <button id="kg-back-btn" title="Go back" aria-label="Go back">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
     <button id="kg-home-btn" title="Homepage" aria-label="Go to homepage">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M3 10.5L12 3l9 7.5" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M5 9.5V21h14V9.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -26,103 +25,102 @@
   `;
   document.body.appendChild(nav);
 
-  if (path === HOME_PAGE) {
+  if (path === HOME) {
     document.getElementById('kg-back-btn').style.display = 'none';
   }
 
   document.getElementById('kg-back-btn').addEventListener('click', () => {
-    // Prefer real browser history; fall back to homepage if this was a fresh tab/login redirect
     if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
       window.history.back();
     } else {
-      window.location.href = HOME_PAGE;
+      window.location.href = HOME;
     }
   });
   document.getElementById('kg-home-btn').addEventListener('click', () => {
-    window.location.href = HOME_PAGE;
+    window.location.href = HOME;
   });
 
-  // ---- 2. Interactive scroll guide ----
-  // Shows a pulsing "scroll for more" nudge if the page has more content below the fold,
-  // and hides itself once the user reaches the bottom (or clicks it, which auto-scrolls).
+  // ---- 2. Scroll guide (bottom center nudge) ----
   const scrollBtn = document.createElement('button');
   scrollBtn.id = 'kg-scroll-guide';
   scrollBtn.setAttribute('aria-label', 'Scroll for more');
   scrollBtn.innerHTML = `
     <span>More below</span>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   `;
   document.body.appendChild(scrollBtn);
 
   function updateScrollGuide() {
-    const scrollable = document.body.scrollHeight - window.innerHeight > 120;
-    const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 40;
+    const scrollable = document.body.scrollHeight - window.innerHeight > 100;
+    const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 30;
     scrollBtn.style.display = scrollable && !atBottom ? 'flex' : 'none';
   }
   scrollBtn.addEventListener('click', () => {
-    window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+    window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' });
   });
   window.addEventListener('scroll', updateScrollGuide, { passive: true });
   window.addEventListener('resize', updateScrollGuide);
-  setTimeout(updateScrollGuide, 400); // after layout/content settles
+  setTimeout(updateScrollGuide, 300);
 
-  // ---- 3. Styles (uses each page's existing theme variables, with safe fallbacks) ----
+  // ---- 3. Inject styles ----
   const style = document.createElement('style');
   style.textContent = `
     #kg-floating-nav {
       position: fixed;
-      top: 16px;
-      left: 16px;
+      top: 14px;
+      left: 14px;
       z-index: 9999;
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
     #kg-floating-nav button {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
-      border: 1px solid var(--surface-2, #2a2a35);
-      background: var(--surface, #1a1a22);
-      color: var(--accent, #c9a84c);
+      border: 1px solid var(--border, #262636);
+      background: var(--surface, #14141e);
+      color: var(--accent, #d4af37);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
-      transition: transform 0.15s ease, background 0.15s ease;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      transition: transform 0.15s, background 0.15s;
     }
     #kg-floating-nav button:hover {
-      background: var(--surface-2, #252530);
+      background: var(--surface-2, #20202d);
       transform: translateY(-1px);
     }
     #kg-scroll-guide {
       position: fixed;
-      bottom: 22px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 9999;
       display: none;
       align-items: center;
       gap: 6px;
-      padding: 8px 14px;
+      padding: 8px 16px;
       border-radius: 20px;
-      border: 1px solid var(--surface-2, #2a2a35);
-      background: var(--surface, #1a1a22);
-      color: var(--accent, #c9a84c);
-      font-size: 13px;
+      border: 1px solid var(--border, #262636);
+      background: var(--surface, #14141e);
+      color: var(--accent, #d4af37);
+      font-size: 12px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       cursor: pointer;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-      animation: kg-bounce 1.6s ease-in-out infinite;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+      animation: kg-bounce 1.8s ease-in-out infinite;
     }
     @keyframes kg-bounce {
       0%, 100% { transform: translateX(-50%) translateY(0); }
-      50% { transform: translateX(-50%) translateY(5px); }
+      50% { transform: translateX(-50%) translateY(4px); }
     }
-    @media (max-width: 480px) {
+    @media (max-width: 768px) {
       #kg-floating-nav { top: 10px; left: 10px; }
-      #kg-floating-nav button { width: 36px; height: 36px; }
+      #kg-floating-nav button { width: 34px; height: 34px; }
+      #kg-scroll-guide { font-size: 11px; padding: 6px 12px; }
     }
   `;
   document.head.appendChild(style);

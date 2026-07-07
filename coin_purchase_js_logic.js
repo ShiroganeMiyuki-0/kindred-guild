@@ -1,10 +1,7 @@
 // ============================================
-// KINDRED GUILD — COIN PURCHASE CONTROLLER (IMPROVED)
+// KINDRED GUILD — COIN PURCHASE CONTROLLER
+// Uses shared window.sb from supabase-client.js
 // ============================================
-const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
-
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const UPI_ID = 'yashwanthrangaswamy72@okhdfcbank';
 const PAYEE_NAME = 'Kindred Guild';

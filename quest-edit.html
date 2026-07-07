@@ -4,64 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kindred Guild — Edit Quest</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <style>
-    :root {
-      --bg: #09090c;
-      --surface: #12121a;
-      --surface-2: #1e1e2c;
-      --text: #e1e1e9;
-      --text-dim: #8b8b9c;
-      --accent: #c9a84c;
-      --border: #222230;
-      --success: #10b981;
-      --error: #ef4444;
-    }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
-      padding: 40px 20px;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: var(--surface);
-      padding: 30px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-    h1 { color: var(--accent); margin-bottom: 24px; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; color: var(--text-dim); }
-    input, textarea, select {
-      width: 100%;
-      padding: 12px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 4px;
-    }
-    .btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-right: 10px;
-    }
-    .btn-primary { background: var(--accent); color: #000; }
-    .btn-danger { background: var(--error); color: #fff; }
-    .message { padding: 10px; border-radius: 4px; margin-bottom: 20px; display: none; }
-    .message.success { display: block; background: rgba(16, 185, 129, 0.1); color: var(--success); }
-    .message.error { display: block; background: rgba(239, 68, 68, 0.1); color: var(--error); }
+    .container { max-width:600px; margin:0 auto; padding:20px; }
+    .card { padding:28px; }
+    h1 { color:var(--accent); margin-bottom:8px; font-size:1.4rem; }
+    .subtitle { color:var(--text-dim); margin-bottom:20px; font-size:0.9rem; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Edit Quest</h1>
-    <p style="color: var(--text-dim); margin-bottom: 20px;">Adjust the name, type, tags, and value while the quest is still reversible.</p>
+    <h1>✏️ Edit Quest</h1>
+    <p class="subtitle">Change the name, type, tags, or reward. Changes are saved immediately.</p>
     <div id="editMessage" class="message"></div>
-    <div id="editForm">
+    <div class="card">
       <div class="form-group">
         <label>Title</label>
         <input type="text" id="editTitle">
@@ -71,15 +28,15 @@
         <textarea id="editDescription" rows="5"></textarea>
       </div>
       <div class="form-group">
-        <label>Quest Type / Payment Mode</label>
+        <label>Payment Type</label>
         <select id="editPaymentType" onchange="handlePaymentTypeChange()">
           <option value="coins">🪙 Fairy Coins</option>
           <option value="upi">₹ UPI Direct</option>
-          <option value="free">🎁 Free Goodwill</option>
+          <option value="free">🎁 Free</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Category / Tags (comma separated)</label>
+        <label>Tags (comma separated)</label>
         <input type="text" id="editTags">
       </div>
       <div class="form-group" id="coinInputGroup">
@@ -90,14 +47,15 @@
         <label>UPI Reward (₹)</label>
         <input type="number" id="editUpiAmount">
       </div>
-      <div style="margin-top: 30px;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px">
         <button id="saveEditBtn" class="btn btn-primary" onclick="saveQuestChanges()">Save Changes</button>
-        <button id="cancelQuestBtn" class="btn btn-danger" onclick="cancelQuest()">Cancel & Refund Quest</button>
-        <a href="quest-board.html" style="color: var(--text-dim); text-decoration: none; margin-left: 10px;">Back to Board</a>
+        <button id="cancelQuestBtn" class="btn btn-error" onclick="cancelQuest()">Cancel & Refund</button>
+        <a href="quest-board.html" class="btn btn-ghost">Back to Board</a>
       </div>
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="quest-edit.js"></script>
   <script src="site-nav.js"></script>
 </body>

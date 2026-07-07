@@ -3,331 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — Post a Showcase or Quest</title>
+  <title>Kindred Guild — Post a Task</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <style>
-    :root {
-      --bg: #0c0c0f;
-      --surface: #14141e;
-      --surface-2: #20202d;
-      --text: #f0f0f5;
-      --text-dim: #9494a8;
-      --accent: #d4af37;
-      --accent-glow: rgba(212, 175, 55, 0.15);
-      --border: #262636;
-      --error: #ef4444;
-      --success: #10b981;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .container {
-      max-width: 640px;
-      margin: 0 auto;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 32px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .header h1 {
-      font-size: 1.5rem;
-      color: var(--accent);
-    }
-    .header a {
-      color: var(--text-dim);
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .header a:hover { color: var(--accent); }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-    }
-    .form-group {
-      margin-bottom: 24px;
-    }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 14px 16px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 1rem;
-      font-family: inherit;
-    }
-    input:focus, textarea:focus, select:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-    textarea {
-      min-height: 120px;
-      resize: vertical;
-    }
-    .payment-types {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .payment-type {
-      flex: 1;
-      min-width: 140px;
-      padding: 16px;
-      background: var(--bg);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      cursor: pointer;
-      text-align: center;
-      transition: border-color 0.2s;
-    }
-    .payment-type.selected {
-      border-color: var(--accent);
-      background: var(--accent-glow);
-    }
-    .payment-type .icon { font-size: 1.5rem; margin-bottom: 8px; }
-    .payment-type .name { font-weight: 600; font-size: 0.95rem; }
-    .payment-type .desc { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; }
-    .amount-input { display: none; }
-    .amount-input.active { display: block; }
-    
-    .commission-note {
-      background: var(--accent-glow);
-      border: 1px solid var(--accent);
-      border-radius: 10px;
-      padding: 16px;
-      margin-top: 16px;
-      font-size: 0.9rem;
-      color: var(--text-dim);
-    }
-    .commission-note strong { color: var(--accent); }
-    .coin-balance {
-      text-align: right;
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-bottom: 8px;
-    }
-    .coin-balance span { color: var(--accent); font-weight: 600; }
-    
-    button[type="submit"] {
-      width: 100%;
-      padding: 16px;
-      background: var(--accent);
-      color: #0c0c0f;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-    button[type="submit"]:disabled { opacity: 0.5; }
-    .message {
-      margin-top: 16px;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      display: none;
-    }
-    .message.error { background: rgba(239, 68, 68, 0.15); color: var(--error); display: block; }
-    .message.success { background: rgba(16, 185, 129, 0.15); color: var(--success); display: block; }
-    
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      max-width: 480px;
-      width: 100%;
-    }
-    .modal h3 {
-      color: var(--accent);
-      margin-bottom: 16px;
-    }
-    .modal p {
-      color: var(--text-dim);
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-    .modal-buttons {
-      display: flex;
-      gap: 12px;
-    }
-    .modal-buttons button {
-      flex: 1;
-      padding: 14px;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-    }
-    .modal-buttons .confirm {
-      background: var(--accent);
-      color: #0c0c0f;
-    }
-    .modal-buttons .cancel {
-      background: var(--surface-2);
-      color: var(--text);
-    }
-    .user-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .user-bar .name { font-weight: 600; }
-    .user-bar .coins { font-size: 0.85rem; color: var(--text-dim); }
-    .user-bar .coins span { color: var(--accent); }
-    
-    .country-blend-card {
-      margin-top: 24px;
-      padding: 16px;
-      background: rgba(212, 175, 55, 0.05);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      font-size: 0.85rem;
-      line-height: 1.5;
-    }
-    .country-blend-card h4 {
-      color: var(--accent);
-      margin-bottom: 6px;
-      font-size: 0.95rem;
-    }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:12px; }
+    .page-header h1 { font-size:1.4rem; color:var(--accent); }
+    .user-bar { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+    .user-bar .name { font-weight:600; }
+    .user-bar .coins { font-size:0.85rem; color:var(--text-dim); }
+    .user-bar .coins span { color:var(--accent); }
+    .payment-types { display:flex; gap:12px; flex-wrap:wrap; }
+    .payment-type { flex:1; min-width:140px; padding:16px; background:var(--bg); border:2px solid var(--border); border-radius:var(--radius); cursor:pointer; text-align:center; transition:border-color 0.2s; }
+    .payment-type.selected { border-color:var(--accent); background:var(--accent-glow); }
+    .payment-type .icon { font-size:1.5rem; margin-bottom:6px; }
+    .payment-type .name { font-weight:600; font-size:0.9rem; }
+    .payment-type .desc { font-size:0.75rem; color:var(--text-dim); margin-top:4px; }
+    .amount-input { display:none; }
+    .amount-input.active { display:block; }
+    .commission-note { background:var(--accent-glow); border:1px solid var(--accent); border-radius:var(--radius-sm); padding:14px; margin-top:12px; font-size:0.85rem; color:var(--text-dim); }
+    .commission-note strong { color:var(--accent); }
+    .coin-balance { text-align:right; font-size:0.8rem; color:var(--text-dim); margin-bottom:6px; }
+    .coin-balance span { color:var(--accent); font-weight:600; }
+    .country-blend-card { margin-top:20px; padding:14px; background:rgba(212,175,55,0.04); border:1px solid var(--border); border-radius:var(--radius); font-size:0.85rem; line-height:1.5; }
+    .country-blend-card h4 { color:var(--accent); margin-bottom:4px; font-size:0.9rem; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; max-width:460px; width:100%; }
+    .modal h3 { color:var(--accent); margin-bottom:12px; }
+    .modal p { color:var(--text-dim); line-height:1.6; margin-bottom:20px; }
+    .modal-buttons { display:flex; gap:12px; }
+    .modal-buttons button { flex:1; padding:12px; border-radius:var(--radius-sm); font-weight:600; cursor:pointer; border:none; }
+    .modal-buttons .confirm { background:var(--accent); color:#000; }
+    .modal-buttons .cancel { background:var(--surface-2); color:var(--text); }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>⚔️ Post Creative Project / Quest</h1>
-      <a href="quest-board.html">← Back to Board</a>
+    <div class="page-header">
+      <h1>⚔️ Post a Task</h1>
+      <a href="quest-board.html" class="btn btn-ghost btn-sm">← Back to Board</a>
     </div>
-
-    <div class="user-bar" id="userBar">
+    <div class="user-bar">
       <div class="name" id="userName">Loading...</div>
-      <div class="coins">💰 <span id="coinBalance">--</span> Fairy Coins</div>
+      <div class="coins">💰 <span id="coinBalance">--</span> FC</div>
     </div>
-
     <div class="card">
       <form id="questForm" onsubmit="event.preventDefault(); handleSubmit();">
         <div class="form-group">
-          <label for="title">Project / Quest Title</label>
-          <input type="text" id="title" placeholder="e.g. Crowdfunding for new guild emblem designs" maxlength="100" required />
+          <label for="title">Task Title</label>
+          <input type="text" id="title" placeholder="e.g. Need a logo for my bakery" maxlength="100" required>
         </div>
-
         <div class="form-group">
-          <label for="description">Detailed Description</label>
-          <textarea id="description" placeholder="Showcase parameters, milestone goals, portfolio references, or fundraising targets..." required></textarea>
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="Describe what you need, any requirements, deadlines..." required></textarea>
         </div>
-
         <div class="form-group">
-          <label for="tags">Hashtag Categorization (Separate with spaces or commas)</label>
-          <input type="text" id="tags" placeholder="e.g. #Showcase, #Coding, #Fundraiser, #Art" />
-          <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 6px;">You can write any custom tags! If you miss the # prefix, we'll automatically format it.</p>
+          <label for="tags">Tags (comma or space separated)</label>
+          <input type="text" id="tags" placeholder="e.g. #Design, #Logo, #Urgent">
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Custom tags help workers find your task. We'll add # if you forget.</p>
         </div>
-
         <div class="form-group">
-          <label>Economic Settlement Mode</label>
+          <label>Payment Type</label>
           <div class="payment-types">
             <div class="payment-type selected" data-type="coins" onclick="selectPayment('coins')">
-              <div class="icon">🪙</div>
-              <div class="name">Fairy Coins</div>
-              <div class="desc">Locked upfront - Full Protection</div>
+              <div class="icon">🪙</div><div class="name">Fairy Coins</div><div class="desc">Locked in escrow — safest option</div>
             </div>
             <div class="payment-type" data-type="upi" onclick="selectPayment('upi')">
-              <div class="icon">₹</div>
-              <div class="name">UPI Direct</div>
-              <div class="desc">Pay worker directly via external UPI</div>
+              <div class="icon">₹</div><div class="name">UPI Direct</div><div class="desc">Pay worker directly via UPI</div>
             </div>
             <div class="payment-type" data-type="free" onclick="selectPayment('free')">
-              <div class="icon">🎁</div>
-              <div class="name">Free / Goodwill</div>
-              <div class="desc">Pure community cooperative showcase</div>
+              <div class="icon">🎁</div><div class="name">Free</div><div class="desc">Community goodwill task</div>
             </div>
           </div>
         </div>
-
         <div class="form-group amount-input active" id="coinsInput">
-          <label for="coinAmount">Coins Payout / Target Amount</label>
-          <div class="coin-balance">Your active balance: <span id="coinBalance2">--</span> FC</div>
-          <input type="number" id="coinAmount" placeholder="e.g. 500" min="1" />
-          <div class="commission-note" id="coinsCommission">
-            <strong>💛 10% Platform Enclave Fee:</strong> <span id="commissionCoins">0</span> FC will be locked upfront.
-          </div>
+          <label for="coinAmount">Reward (Fairy Coins)</label>
+          <div class="coin-balance">Your balance: <span id="coinBalance2">--</span> FC</div>
+          <input type="number" id="coinAmount" placeholder="e.g. 500" min="1">
+          <div class="commission-note" id="coinsCommission"><strong>10% fee:</strong> <span id="commissionCoins">0</span> FC locked upfront.</div>
         </div>
-
         <div class="form-group amount-input" id="upiInput">
-          <label for="upiAmount">UPI Target Payout Amount (₹)</label>
-          <div class="coin-balance">Your active balance: <span id="coinBalance3">--</span> FC</div>
-          <input type="number" id="upiAmount" placeholder="e.g. 500" min="1" />
-          <div class="commission-note" id="upiCommission">
-            <strong>💛 10% Platform Enclave Fee:</strong> You need <span id="commissionUpi">0</span> FC in balance (locked upfront). UPI transactions happen externally.
-          </div>
+          <label for="upiAmount">Reward (₹)</label>
+          <div class="coin-balance">Your balance: <span id="coinBalance3">--</span> FC</div>
+          <input type="number" id="upiAmount" placeholder="e.g. 500" min="1">
+          <div class="commission-note" id="upiCommission"><strong>10% fee:</strong> <span id="commissionUpi">0</span> FC commission locked. UPI happens externally.</div>
         </div>
-
         <div class="country-blend-card">
-          <h4>🏰 Building the Enclave Blend</h4>
-          <p>The 10% platform fee is directly channeled towards orchestrating the physical-digital blend country being built by Kindred Guild. Your contribution directly funds land resource pooling, sovereign operations management, and active guild rewards.</p>
+          <h4>🏰 About the 10% Fee</h4>
+          <p>The fee supports the platform and community rewards. It's locked upfront alongside your reward, so workers know the full amount is secure.</p>
         </div>
-
-        <div class="form-group" style="margin-top: 24px;">
-          <label>Target Expiration / Deadline</label>
-          <div style="display: flex; gap: 12px;">
-            <div style="flex: 1;">
-              <input type="date" id="deadlineDate" required />
-            </div>
-            <div style="flex: 1;">
-              <input type="time" id="deadlineTime" required />
-            </div>
+        <div class="form-group" style="margin-top:20px">
+          <label>Deadline</label>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><input type="date" id="deadlineDate" required></div>
+            <div style="flex:1"><input type="time" id="deadlineTime" required></div>
           </div>
         </div>
-
-        <button type="submit" id="submitBtn">Deploy to Guild Board</button>
+        <button type="submit" id="submitBtn" class="btn btn-primary" style="width:100%;padding:14px">Post Task</button>
         <div id="message" class="message"></div>
       </form>
     </div>
   </div>
-
   <div class="modal-overlay" id="upiModal">
     <div class="modal">
-      <h3>⚠️ UPI Direct Transaction Warnings</h3>
-      <p>UPI direct transfers occur externally. Kindred Guild holds no programmatic custody, but enforces absolute reputational exile (suspensions) if validated milestones are left unpaid.</p>
+      <h3>⚠️ UPI Direct — Important</h3>
+      <p>UPI payments happen outside the platform. Kindred Guild can't mediate disputes for UPI tasks. Reputation damage and suspension apply if payment is withheld.</p>
       <div class="modal-buttons">
         <button class="cancel" onclick="closeUpiModal()">Cancel</button>
-        <button class="confirm" onclick="confirmUpiPost()">Confirm Post</button>
+        <button class="confirm" onclick="confirmUpiPost()">I Understand, Post</button>
       </div>
     </div>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="quest-post.js"></script>
   <script src="site-nav.js"></script>
 </body>

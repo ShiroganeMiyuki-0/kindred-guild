@@ -1,27 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kindred Guild — Enter the Guild</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Sign In</title>
+  <meta name="description" content="Join Kindred Guild. Sign in with your email to start posting or accepting tasks.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <style>
-    :root {
-      --bg: #0f0f13;
-      --surface: #1a1a22;
-      --surface-2: #252530;
-      --text: #e8e8f0;
-      --text-dim: #9090a0;
-      --accent: #c9a84c;
-      --accent-glow: rgba(201, 168, 76, 0.2);
-      --error: #e74c3c;
-      --success: #2ecc71;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -29,131 +16,99 @@
     }
     .auth-card {
       background: var(--surface);
-      border: 1px solid var(--surface-2);
+      border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 48px 40px;
+      padding: 40px 32px;
       width: 100%;
       max-width: 420px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
     .logo {
       text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
     .logo h1 {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       color: var(--accent);
       letter-spacing: 1px;
     }
     .logo p {
       color: var(--text-dim);
       font-size: 0.9rem;
-      margin-top: 6px;
+      margin-top: 4px;
     }
-    .form-group {
-      margin-bottom: 20px;
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 0.8rem;
     }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    input {
-      width: 100%;
-      padding: 14px 16px;
-      background: var(--bg);
-      border: 1px solid var(--surface-2);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-    button {
-      width: 100%;
-      padding: 16px;
-      background: var(--accent);
-      color: #0f0f13;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.15s, opacity 0.15s;
-      margin-top: 8px;
-    }
-    button:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.9; }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .message {
-      margin-top: 16px;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      display: none;
-    }
-    .message.error { background: rgba(231, 76, 60, 0.15); color: var(--error); display: block; }
-    .message.success { background: rgba(46, 204, 113, 0.15); color: var(--success); display: block; }
-    .message.info { background: rgba(201, 168, 76, 0.15); color: var(--accent); display: block; }
-    .hidden { display: none !important; }
-    .email-display {
-      text-align: center;
-      color: var(--text-dim);
-      margin-bottom: 16px;
-      font-size: 0.9rem;
-      word-break: break-all;
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
     }
     .check-email {
       text-align: center;
       color: var(--text-dim);
-      margin: 20px 0;
+      margin: 16px 0;
       line-height: 1.6;
     }
-    .check-email strong {
-      color: var(--text);
+    .check-email strong { color: var(--text); }
+    .email-display {
+      text-align: center;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      word-break: break-all;
     }
+    .trust-note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .trust-note a { color: var(--accent); }
   </style>
 </head>
 <body>
+
   <div class="auth-card">
     <div class="logo">
       <h1>⚔️ Kindred Guild</h1>
-      <p>What goes comes back</p>
+      <p>Help your community, earn trust</p>
     </div>
 
     <!-- Step 1: Email -->
     <div id="emailStep">
       <div class="form-group">
         <label for="email">Email Address</label>
-        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')sendMagicLink()" />
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')sendMagicLink()">
       </div>
-      <button id="sendBtn" onclick="sendMagicLink()">Send Magic Link</button>
+      <button id="sendBtn" class="btn btn-primary" style="width:100%;padding:14px" onclick="sendMagicLink()">Send Magic Link</button>
+      <p class="trust-note">We'll send a login link to your email. No password needed.<br><a href="terms-of-service.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></p>
     </div>
 
     <!-- Step 2: Check email -->
     <div id="checkStep" class="hidden">
       <div class="email-display" id="emailDisplay"></div>
       <div class="check-email">
-        We sent a magic link to your email.<br>
-        <strong>Click the link</strong> in your email to enter the guild.<br><br>
-        <span style="font-size: 0.85rem;">Didn't receive it? Check your spam folder.</span>
+        Check your email for a login link.<br>
+        <strong>Click the link</strong> to enter the guild.<br><br>
+        <span style="font-size:0.85rem;color:var(--text-muted)">Didn't get it? Check spam, or try again.</span>
       </div>
-      <button onclick="backToEmail()">Use a different email</button>
+      <button class="btn btn-ghost" style="width:100%" onclick="backToEmail()">Use a different email</button>
     </div>
 
     <div id="message" class="message"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="auth.js"></script>
   <script src="site-nav.js"></script>
 </body>

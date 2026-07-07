@@ -3,106 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — Quest & Skill Board</title>
+  <title>Kindred Guild — Quest Board</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <link rel="stylesheet" href="modals_stylesheet.css">
   <style>
-    :root {
-      --bg: #0c0c0f;
-      --surface: #14141e;
-      --surface-2: #20202d;
-      --text: #f0f0f5;
-      --text-dim: #9494a8;
-      --accent: #d4af37;
-      --accent-glow: rgba(212, 175, 55, 0.15);
-      --border: #262636;
-      --error: #ef4444;
-      --success: #10b981;
-      --free: #10b981;
-      --coins: #eab308;
-      --upi: #f97316;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .header {
+    .page-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       padding-bottom: 16px;
       border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
       gap: 12px;
     }
-    .header h1 {
-      font-size: 1.6rem;
+    .page-header h1 {
+      font-size: 1.5rem;
       color: var(--accent);
       letter-spacing: 1px;
     }
-    .header .actions {
+    .page-header .actions {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       align-items: center;
       flex-wrap: wrap;
     }
-    .btn {
-      padding: 10px 20px;
-      background: var(--accent);
-      color: #0c0c0f;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      transition: opacity 0.2s;
-    }
-    .btn:hover { opacity: 0.9; }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-    }
+
     .user-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
+      margin-bottom: 20px;
       background: var(--surface);
       border: 1px solid var(--border);
-      padding: 14px 20px;
-      border-radius: 12px;
-      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      flex-wrap: wrap;
+      gap: 10px;
     }
     .user-bar .user-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .user-bar .name-link {
       font-weight: 600;
       color: var(--text);
       text-decoration: none;
     }
-    .user-bar .name-link:hover {
-      color: var(--accent);
-    }
+    .user-bar .name-link:hover { color: var(--accent); }
     .user-bar .coins {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-dim);
       background: var(--surface-2);
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 20px;
       border: 1px solid var(--border);
     }
@@ -111,33 +66,22 @@
     .filters-section {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       padding: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
     .search-row {
       display: flex;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
-    .search-row input {
-      flex: 1;
-      padding: 12px 16px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 0.95rem;
-    }
-    .search-row input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
+    .search-row input { flex: 1; }
+
     .tag-cloud {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       padding-bottom: 12px;
       border-bottom: 1px dashed var(--border);
     }
@@ -156,24 +100,26 @@
       color: var(--accent);
       border-color: var(--accent);
     }
+
     .view-selector {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       border-bottom: 1px solid var(--border);
       padding-bottom: 12px;
       flex-wrap: wrap;
     }
     .view-tab {
-      padding: 8px 16px;
+      padding: 8px 14px;
       background: transparent;
       border: 1px solid transparent;
       border-radius: 6px;
       color: var(--text-dim);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .view-tab.active {
       color: var(--accent);
@@ -183,43 +129,33 @@
 
     .filters {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
-    .filters select, .filters button {
-      padding: 10px 16px;
+    .filters select {
+      padding: 10px 14px;
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       color: var(--text);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       cursor: pointer;
     }
     .filters select:focus {
       border-color: var(--accent);
       outline: none;
     }
-    .filters button {
-      background: var(--accent);
-      color: #0c0c0f;
-      border: none;
-      font-weight: 600;
-      transition: opacity 0.2s;
-    }
-    .filters button:hover {
-      opacity: 0.9;
-    }
 
     .quest-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
     }
     .quest-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: var(--radius);
+      padding: 20px;
       transition: border-color 0.2s, transform 0.15s;
       display: flex;
       flex-direction: column;
@@ -229,89 +165,38 @@
       border-color: var(--accent);
       transform: translateY(-2px);
     }
-    .quest-body {
-      margin-bottom: 16px;
-    }
-    .quest-card .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .badge-coins { background: rgba(234, 179, 8, 0.15); color: var(--coins); }
-    .badge-upi { background: rgba(249, 115, 22, 0.15); color: var(--upi); }
-    .badge-free { background: rgba(16, 185, 129, 0.15); color: var(--free); }
-    
-    .status-badge {
-      float: right;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      font-weight: bold;
-      color: var(--accent);
-    }
-
-    .quest-card h3 {
-      font-size: 1.15rem;
-      margin-bottom: 8px;
-      line-height: 1.3;
-    }
-    .quest-card .poster {
+    .quest-body { margin-bottom: 14px; }
+    .quest-card .badge { margin-bottom: 10px; }
+    .status-badge { float: right; }
+    .quest-card h3 { font-size: 1.05rem; margin-bottom: 6px; line-height: 1.3; }
+    .quest-card .poster { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px; }
+    .quest-card .poster a { color: var(--accent); }
+    .quest-card .description {
       font-size: 0.85rem;
       color: var(--text-dim);
-      margin-bottom: 12px;
-    }
-    .quest-card .poster a { color: var(--accent); text-decoration: none; }
-    .quest-card .poster a:hover { text-decoration: underline; }
-    
-    .quest-card .description {
-      font-size: 0.9rem;
-      color: var(--text-dim);
       line-height: 1.5;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 16px;
-    }
-    .card-tag {
-      font-size: 0.75rem;
-      color: var(--accent);
-      background: var(--accent-glow);
-      padding: 2px 6px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
     .quest-card .meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       font-size: 0.85rem;
     }
-    .quest-card .reward {
-      font-weight: 700;
-      color: var(--accent);
-    }
-    .quest-card .deadline {
-      color: var(--text-dim);
-    }
+    .quest-card .reward { font-weight: 700; color: var(--accent); }
     .quest-card .action-btn {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       background: var(--accent);
-      color: #0c0c0f;
+      color: #000;
       border: none;
-      border-radius: 8px;
-      font-size: 0.95rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
       font-weight: 700;
       cursor: pointer;
       text-align: center;
@@ -319,93 +204,47 @@
       display: block;
       transition: opacity 0.2s;
     }
-    .quest-card .action-btn:hover { opacity: 0.9; }
-    .quest-card .action-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
+    .quest-card .action-btn:hover { opacity: 0.9; text-decoration: none; }
+    .quest-card .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .quest-card .action-btn.own {
       background: transparent;
       color: var(--accent);
       border: 1px solid var(--accent);
     }
-    .quest-card .action-btn.own:hover {
-      background: var(--accent-glow, rgba(201,168,76,0.15));
-      opacity: 1;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-dim);
-      grid-column: 1 / -1;
-    }
-    .empty-state h2 { color: var(--accent); margin-bottom: 12px; }
-    .logout { color: var(--text-dim); cursor: pointer; font-size: 0.9rem; }
-    .logout:hover { color: var(--accent); }
+    .quest-card .action-btn.own:hover { background: var(--accent-glow); opacity: 1; }
 
     .modern-date {
       display: flex;
       flex-direction: column;
       line-height: 1.2;
     }
-    .date-main {
-      font-weight: 600;
-      color: var(--text);
-      font-size: 0.9rem;
-    }
-    .date-sub {
-      font-size: 0.75rem;
+    .date-main { font-weight: 600; color: var(--text); font-size: 0.85rem; }
+    .date-sub { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+    .date-relative { color: var(--accent); font-weight: 600; }
+    .date-expired { color: var(--error); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
       color: var(--text-dim);
-      margin-top: 2px;
+      grid-column: 1 / -1;
     }
-    .date-relative {
-      color: var(--accent);
-      font-weight: 600;
-    }
-    .date-expired {
-      color: var(--error);
-      font-weight: 700;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-    }
-    .scroll-cue {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 90;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-      background: var(--accent);
-      color: #000;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      animation: bounce 2s infinite;
-    }
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-6px); }
-      60% { transform: translateY(-3px); }
-    }
+    .empty-state h2 { color: var(--accent); margin-bottom: 8px; font-size: 1.2rem; }
+    .logout { color: var(--text-dim); cursor: pointer; font-size: 0.85rem; }
+    .logout:hover { color: var(--accent); }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>⚔️ Kindred Guild Board</h1>
+    <div class="page-header">
+      <h1>⚔️ Quest Board</h1>
       <div class="actions">
-        <a href="index.html" class="btn btn-outline">🏠 Home</a>
-        <button type="button" class="btn btn-outline" onclick="window.location.href='index.html'">← Back</button>
-        <button type="button" class="btn btn-outline" onclick="window.showOnboarding && window.showOnboarding(true)">🎮 Guide</button>
-        <a href="fairy-wishes.html" class="btn btn-outline">✨ Wishes</a>
-        <a href="worker-post.html" class="btn btn-outline">🛡️ Adventurers</a>
-        <a href="undo-history.html" class="btn btn-outline">📜 History</a>
-        <a href="quest-post.html" class="btn">⚔️ Post Quest</a>
+        <a href="index.html" class="btn btn-ghost btn-sm">🏠 Home</a>
+        <button class="btn btn-ghost btn-sm" onclick="window.showOnboarding && window.showOnboarding(true)">🎮 Guide</a>
+        <a href="fairy-wishes.html" class="btn btn-ghost btn-sm">✨ Wishes</a>
+        <a href="worker-post.html" class="btn btn-ghost btn-sm">🛡️ Workers</a>
+        <a href="undo-history.html" class="btn btn-ghost btn-sm">📜 History</a>
+        <a href="quest-post.html" class="btn btn-primary btn-sm">⚔️ Post Task</a>
         <span class="logout" onclick="logout()">Logout</span>
       </div>
     </div>
@@ -419,47 +258,39 @@
 
     <div class="filters-section">
       <div class="search-row">
-        <input type="text" id="searchInput" placeholder="🔍 Search quests, showcase projects, fundraisers, or tags..." oninput="handleSearch()">
+        <input type="text" id="searchInput" placeholder="🔍 Search tasks, tags..." oninput="handleSearch()">
       </div>
-
-      <div class="tag-cloud" id="tagCloud">
-        <!-- Tags will load dynamically -->
-      </div>
-
+      <div class="tag-cloud" id="tagCloud"></div>
       <div class="view-selector">
-        <button class="view-tab active" id="view-open" onclick="switchView('open')">Available Quests & Showcases</button>
-        <button class="view-tab" id="view-active" onclick="switchView('my_active')">My Active Quests</button>
-        <button class="view-tab" id="view-posted" onclick="switchView('my_posted')">My Posted Projects</button>
-        <button class="view-tab" id="view-completed" onclick="switchView('my_completed')">My Completed</button>
+        <button class="view-tab active" id="view-open" onclick="switchView('open')">Available</button>
+        <button class="view-tab" id="view-active" onclick="switchView('my_active')">My Active</button>
+        <button class="view-tab" id="view-posted" onclick="switchView('my_posted')">My Posted</button>
+        <button class="view-tab" id="view-completed" onclick="switchView('my_completed')">Completed</button>
       </div>
-
       <div class="filters">
         <select id="filterType" onchange="loadQuests()">
-          <option value="all">All Modes</option>
+          <option value="all">All Types</option>
           <option value="coins">🪙 Fairy Coins</option>
           <option value="upi">₹ UPI Direct</option>
-          <option value="free">🎁 Free Goodwill</option>
+          <option value="free">🎁 Free</option>
         </select>
         <select id="sortBy" onchange="loadQuests()">
-          <option value="newest">Newest First</option>
+          <option value="newest">Newest</option>
           <option value="deadline">Deadline Soonest</option>
           <option value="pay">Highest Pay</option>
         </select>
-        <button onclick="resetFilters()" style="background: var(--surface-2); color: var(--text);">Clear Filters</button>
-        <button onclick="loadQuests()">Refresh</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetFilters()">Clear</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadQuests()">Refresh</button>
       </div>
     </div>
 
     <div class="quest-grid" id="questGrid">
-      <div class="empty-state">
-        <h2>Loading board updates...</h2>
-      </div>
+      <div class="empty-state"><h2>Loading...</h2></div>
     </div>
   </div>
 
-  <button type="button" class="scroll-cue" onclick="window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' })" title="Explore more quests below">↓</button>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="modals_controller.js"></script>
   <script src="quest-board.js"></script>
   <script src="onboarding.js"></script>

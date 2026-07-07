@@ -3,316 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — Profile Dashboard</title>
+  <title>Kindred Guild — Profile</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <style>
-    :root {
-      --bg: #0c0c0f;
-      --surface: #14141e;
-      --surface-2: #20202d;
-      --text: #f0f0f5;
-      --text-dim: #9494a8;
-      --accent: #d4af37;
-      --accent-glow: rgba(212, 175, 55, 0.15);
-      --border: #262636;
-      --error: #ef4444;
-      --success: #10b981;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .header-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .header-bar a {
-      color: var(--text-dim);
-      text-decoration: none;
-    }
-    .header-bar a:hover { color: var(--accent); }
-
-    .profile-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 30px;
-      margin-bottom: 24px;
-    }
-
-    .avatar-area {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-    .avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: var(--surface-2);
-      border: 2px solid var(--accent);
-      object-fit: cover;
-    }
-
-    .meta-details h2 {
-      font-size: 1.6rem;
-      color: var(--accent);
-      margin-bottom: 4px;
-    }
-    .meta-details .username {
-      color: var(--text-dim);
-      font-size: 0.95rem;
-      margin-bottom: 8px;
-    }
-    .meta-details .rep-score {
-      font-size: 1rem;
-      font-weight: bold;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 12px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
-    .tab {
-      padding: 12px 20px;
-      cursor: pointer;
-      color: var(--text-dim);
-      font-weight: bold;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    .tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-    label {
-      display: block;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 6px;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-    }
-    input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .btn {
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      background: var(--accent);
-      color: #0c0c0f;
-    }
-
-    .suspension-banner {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid var(--error);
-      color: var(--error);
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .quest-item {
-      padding: 15px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .quest-item:last-child { border-bottom: none; }
-    .quest-item a {
-      color: var(--text);
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .quest-item a:hover { color: var(--accent); }
-
-    /* Custom Confirmation Modal System */
-    .custom-modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      padding: 20px;
-    }
-    .custom-modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 440px;
-      width: 100%;
-      text-align: center;
-    }
-    .custom-modal h4 {
-      color: var(--accent);
-      font-size: 1.25rem;
-      margin-bottom: 12px;
-    }
-    .custom-modal p {
-      color: var(--text-dim);
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-    .custom-modal-actions {
-      display: flex;
-      gap: 12px;
-    }
-    .custom-modal-actions button {
-      flex: 1;
-    }
+    .header-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+    .header-bar a { color:var(--text-dim); }
+    .header-bar a:hover { color:var(--accent); }
+    .profile-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:20px; }
+    .avatar-area { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+    .avatar { width:72px; height:72px; border-radius:50%; background:var(--surface-2); border:2px solid var(--accent); object-fit:cover; }
+    .meta-details h2 { font-size:1.4rem; color:var(--accent); margin-bottom:2px; }
+    .meta-details .username { color:var(--text-dim); font-size:0.9rem; margin-bottom:6px; }
+    .tabs { display:flex; gap:10px; border-bottom:1px solid var(--border); margin-bottom:16px; overflow-x:auto; }
+    .tab { padding:10px 16px; cursor:pointer; color:var(--text-dim); font-weight:bold; border-bottom:2px solid transparent; transition:all 0.2s; white-space:nowrap; }
+    .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    .quest-item { padding:12px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+    .quest-item:last-child { border-bottom:none; }
+    .quest-item a { color:var(--text); font-weight:600; }
+    .quest-item a:hover { color:var(--accent); }
+    .suspension-banner { background:rgba(239,68,68,0.12); border:1px solid var(--error); color:var(--error); padding:14px; border-radius:var(--radius-sm); margin-bottom:20px; font-weight:bold; text-align:center; }
+    .custom-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:10000; padding:20px; }
+    .custom-modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:420px; width:100%; text-align:center; }
+    .custom-modal h4 { color:var(--accent); margin-bottom:8px; }
+    .custom-modal p { color:var(--text-dim); font-size:0.9rem; line-height:1.5; margin-bottom:16px; }
+    .custom-modal-actions { display:flex; gap:10px; }
+    .custom-modal-actions button { flex:1; }
   </style>
 </head>
 <body>
-
-  <!-- Custom Alert overlays replacing standard alert() and confirm() -->
   <div id="customModalOverlay" class="custom-modal-overlay">
     <div class="custom-modal">
-      <h4 id="customModalTitle">Confirmation Required</h4>
-      <p id="customModalText">Are you sure you want to proceed?</p>
+      <h4 id="customModalTitle">Confirm</h4>
+      <p id="customModalText">Are you sure?</p>
       <div class="custom-modal-actions">
-        <button id="customModalCancel" class="btn" style="background: var(--surface-2); color: var(--text);">Cancel</button>
-        <button id="customModalConfirm" class="btn">Confirm</button>
+        <button id="customModalCancel" class="btn btn-error" style="background:var(--surface-2);color:var(--text)">Cancel</button>
+        <button id="customModalConfirm" class="btn btn-primary">Confirm</button>
       </div>
     </div>
   </div>
 
   <div class="container">
     <div class="header-bar">
-      <h2>Guild Member Hub</h2>
-      <a href="quest-board.html">← Go to Board</a>
+      <h2>👤 Guild Member</h2>
+      <a href="quest-board.html" class="btn btn-ghost btn-sm">← Board</a>
     </div>
 
-    <div id="suspensionNotice" class="suspension-banner" style="display: none;">
-      ⚠️ Account suspended due to unresolved disputes or security breaches.
-    </div>
+    <div id="suspensionNotice" class="suspension-banner" style="display:none">⚠️ Account suspended due to unresolved disputes.</div>
 
     <div class="profile-card">
       <div class="avatar-area">
-        <img id="profileAvatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2314141e'/><text x='50%' y='55%' font-size='40' dominant-baseline='middle' text-anchor='middle'>👤</text></svg>" alt="Avatar" class="avatar">
+        <img id="profileAvatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2314141e'/><text x='50%' y='55%' font-size='40' dominant-baseline='middle' text-anchor='middle'>👤</text></svg>" alt="Avatar" class="avatar">
         <div class="meta-details">
           <h2 id="profileDisplayName">--</h2>
           <div class="username" id="profileUsername">@--</div>
-          <div class="rep-score">Reputation Rating: <span id="profileRepScore" style="color: var(--accent);">--</span></div>
-          <div style="font-size: 0.85rem; color: var(--text-dim); margin-top: 6px;">
-            Fairy Coins Balance: <strong id="privateBalanceDisplay" style="color: var(--accent);">--</strong> FC <span style="font-size: 0.75rem;">(Owner Only)</span>
-          </div>
+          <div style="font-size:0.9rem">Reputation: <span id="profileRepScore" style="color:var(--accent);font-weight:bold">--</span></div>
+          <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">Balance: <strong id="privateBalanceDisplay" style="color:var(--accent)">--</strong> FC <span style="font-size:0.7rem">(private)</span></div>
         </div>
       </div>
     </div>
 
     <div class="tabs">
-      <div class="tab active" data-tab="tab-posted" onclick="switchProfileTab('tab-posted')">Posted Quests</div>
-      <div class="tab" data-tab="tab-completed" onclick="switchProfileTab('tab-completed')">Completed Tasks</div>
-      <div class="tab" id="editProfileTabBtn" data-tab="tab-edit" onclick="switchProfileTab('tab-edit')" style="display: none;">Edit Settings</div>
+      <div class="tab active" data-tab="tab-posted" onclick="switchProfileTab('tab-posted')">Posted Tasks</div>
+      <div class="tab" data-tab="tab-completed" onclick="switchProfileTab('tab-completed')">Completed</div>
+      <div class="tab" id="editProfileTabBtn" data-tab="tab-edit" onclick="switchProfileTab('tab-edit')" style="display:none">Settings</div>
     </div>
 
     <div id="tab-posted" class="tab-content active">
-      <div class="card">
-        <div id="postedQuestsList">
-          <div style="color: var(--text-dim); padding: 10px;">Loading historical records...</div>
-        </div>
-      </div>
+      <div class="card"><div id="postedQuestsList"><div style="color:var(--text-dim);padding:10px">Loading...</div></div></div>
     </div>
-
     <div id="tab-completed" class="tab-content">
-      <div class="card">
-        <div id="completedQuestsList">
-          <div style="color: var(--text-dim); padding: 10px;">Loading tasks list...</div>
-        </div>
-      </div>
+      <div class="card"><div id="completedQuestsList"><div style="color:var(--text-dim);padding:10px">Loading...</div></div></div>
     </div>
-
-    <!-- Upgraded Settings Tab (with UPI and QR uploads) -->
     <div id="tab-edit" class="tab-content">
       <div class="card">
-        <div class="form-group">
-          <label>Display Name</label>
-          <input type="text" id="editDisplayName" placeholder="e.g. Aria Moonweaver">
+        <div class="form-group"><label>Display Name</label><input type="text" id="editDisplayName"></div>
+        <div class="form-group"><label>Avatar URL</label><input type="text" id="editAvatarUrl" placeholder="https://..."></div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:16px">
+          <h3 style="color:var(--accent);font-size:1rem;margin-bottom:10px">UPI Payment Settings</h3>
+          <div class="form-group"><label>UPI ID</label><input type="text" id="editUpiId" placeholder="username@bank"></div>
+          <div class="form-group"><label>UPI QR Code Image</label><input type="file" id="editUpiQrFile" onchange="handleQrFileUpload(this)"><input type="hidden" id="editUpiQrUrl"><div id="upiQrStatus" style="font-size:0.75rem;color:var(--success);margin-top:4px;display:none"></div></div>
         </div>
-        <div class="form-group">
-          <label>Avatar URL Link</label>
-          <input type="text" id="editAvatarUrl" placeholder="https://image-links-here.com">
-        </div>
-        
-        <!-- UPI Configurations Section -->
-        <div style="border-top: 1px solid var(--border); margin: 20px 0; padding-top: 20px;">
-          <h3 style="color: var(--accent); font-size: 1.1rem; margin-bottom: 12px;">Payment Settings (UPI Direct Quests)</h3>
-          
-          <div class="form-group">
-            <label>UPI Payment Address (ID)</label>
-            <input type="text" id="editUpiId" placeholder="username@okhdfcbank">
-          </div>
-
-          <div class="form-group">
-            <label>Upload UPI QR Code (Image Attachment)</label>
-            <input type="file" id="editUpiQrFile" onchange="handleQrFileUpload(this)">
-            <input type="hidden" id="editUpiQrUrl">
-            <div id="upiQrStatus" style="font-size: 0.8rem; color: var(--success); margin-top: 6px; display: none;"></div>
-          </div>
-        </div>
-
-        <button class="btn" id="saveProfileBtn" onclick="saveProfileChanges()">Save Profile Details</button>
+        <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfileChanges()">Save Profile</button>
       </div>
     </div>
-
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="profile.js"></script>
   <script src="site-nav.js"></script>
 </body>

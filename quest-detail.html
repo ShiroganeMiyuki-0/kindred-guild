@@ -4,538 +4,141 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kindred Guild — Quest Workspace</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <style>
-    :root {
-      --bg: #0c0c0f;
-      --surface: #14141e;
-      --surface-2: #20202d;
-      --text: #f0f0f5;
-      --text-dim: #9494a8;
-      --accent: #d4af37;
-      --accent-glow: rgba(212, 175, 55, 0.15);
-      --border: #262636;
-      --success: #10b981;
-      --error: #ef4444;
-      --warning: #f59e0b;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .nav-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
-    }
-    .nav-bar a {
-      color: var(--text-dim);
-      text-decoration: none;
-      font-size: 0.95rem;
-    }
-    .nav-bar a:hover { color: var(--accent); }
-
-    .quest-header {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 30px;
-      border-radius: 12px;
-      margin-bottom: 24px;
-      position: relative;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .badge-coins { background: rgba(234, 179, 8, 0.15); color: #eab308; }
-    .badge-upi { background: rgba(249, 115, 22, 0.15); color: #f97316; }
-    .badge-free { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-
-    .status-badge {
-      float: right;
-      padding: 6px 14px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    .status-open { background: rgba(52, 152, 219, 0.15); color: #3498db; }
-    .status-accepted { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
-    .status-submitted { background: rgba(234, 179, 8, 0.15); color: #eab308; }
-    .status-approved { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-    .status-disputed { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-    .status-cancelled { background: rgba(94, 94, 108, 0.15); color: var(--text-dim); }
-
-    .quest-title {
-      font-size: 1.8rem;
-      color: var(--accent);
-      margin-bottom: 12px;
-      clear: both;
-    }
-
-    .quest-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 24px;
-      color: var(--text-dim);
-      font-size: 0.9rem;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .quest-meta strong { color: var(--text); }
-    .quest-meta a { color: var(--accent); text-decoration: none; }
-
-    .quest-desc {
-      line-height: 1.7;
-      margin-bottom: 24px;
-      font-size: 1rem;
-      white-space: pre-wrap;
-    }
-
-    /* Message Channels */
-    .comments-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .comments-section h3 {
-      color: var(--accent);
-      margin-bottom: 16px;
-      font-size: 1.2rem;
-    }
-    .comments-list {
-      max-height: 380px;
-      overflow-y: auto;
-      margin-bottom: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding-right: 8px;
-    }
-    .comment-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 12px 16px;
-      border-radius: 8px;
-    }
-    .comment-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      margin-bottom: 6px;
-    }
-    .comment-meta strong { color: var(--accent); }
-    .comment-content {
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-    
-    /* Embed styling for rich comments */
-    .comment-embed {
-      margin-top: 10px;
-      border-radius: 6px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      max-width: 260px;
-    }
-    .comment-embed img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    .comment-embed a {
-      display: block;
-      padding: 8px;
-      background: var(--surface-2);
-      color: var(--accent);
-      font-size: 0.8rem;
-      text-decoration: none;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    .comment-form {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .comment-form input {
-      flex: 1;
-      padding: 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-    }
-    .comment-form input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-    .comment-form button {
-      padding: 12px 20px;
-      background: var(--accent);
-      color: #0c0c0f;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .attach-btn {
-      background: var(--surface-2) !important;
-      color: var(--text) !important;
-      padding: 12px 14px !important;
-      font-size: 1.1rem;
-    }
-
-    .action-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .action-panel h3 {
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-    .action-panel p {
-      color: var(--text-dim);
-      font-size: 0.95rem;
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-
-    .file-drop-area {
-      border: 2px dashed var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      text-align: center;
-      background: var(--bg);
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    .file-drop-area:hover { border-color: var(--accent); }
-    .file-drop-area input { display: none; }
-
-    .staged-files-list {
-      margin: 16px 0;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .staged-file-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .staged-file-item:last-child { border-bottom: none; }
-    .staged-file-name {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .staged-file-size {
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      margin-left: 8px;
-    }
-    .remove-file-btn {
-      color: var(--error);
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 0.85rem;
-    }
-
-    .btn {
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      font-size: 0.95rem;
-      transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.9; }
-    .btn-success { background: var(--success); color: #fff; }
-    .btn-error { background: var(--error); color: #fff; }
-    .btn-warning { background: var(--warning); color: #fff; }
-    .btn-accent { background: var(--accent); color: #0c0c0f; }
-
-    .actions-group {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .rating-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-    .rating-widget {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin: 16px 0;
-    }
-    .star {
-      font-size: 2.2rem;
-      cursor: pointer;
-      color: var(--surface-2);
-      transition: color 0.1s;
-    }
-    .star.selected {
-      color: var(--accent);
-    }
-
-    .countdown {
-      font-family: monospace;
-      font-size: 1.1rem;
-      color: var(--accent);
-      font-weight: bold;
-    }
-
-    .message {
-      padding: 12px;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      font-size: 0.9rem;
-      display: none;
-    }
-    .message.error { background: rgba(239, 68, 68, 0.15); color: var(--error); display: block; }
-    .message.success { background: rgba(16, 185, 129, 0.15); color: var(--success); display: block; }
-
-    /* Rich multi-file proof grid viewer */
-    .proof-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 12px;
-      margin-top: 15px;
-      margin-bottom: 15px;
-    }
-    .proof-tile {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .proof-tile img, .proof-tile video {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      background: #000;
-    }
-    .proof-tile-doc {
-      height: 120px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-      color: var(--accent);
-      background: var(--surface-2);
-    }
-    .proof-tile-info {
-      padding: 8px;
-      font-size: 0.75rem;
-      text-align: center;
-      border-top: 1px solid var(--border);
-    }
-    .proof-tile-info a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    /* UPI Details Showcase */
-    .upi-payout-box {
-      margin-top: 20px;
-      padding: 16px;
-      background: var(--accent-glow);
-      border: 1px solid var(--accent);
-      border-radius: 8px;
-    }
-    .upi-qr-image {
-      max-width: 160px;
-      height: auto;
-      border-radius: 6px;
-      margin-top: 10px;
-      border: 2px solid var(--border);
-    }
-
-    /* Custom Confirmation Modal System */
-    .custom-modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      padding: 20px;
-    }
-    .custom-modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 440px;
-      width: 100%;
-      text-align: center;
-    }
-    .custom-modal h4 {
-      color: var(--accent);
-      font-size: 1.25rem;
-      margin-bottom: 12px;
-    }
-    .custom-modal p {
-      color: var(--text-dim);
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-    .custom-modal-actions {
-      display: flex;
-      gap: 12px;
-    }
-    .custom-modal-actions button {
-      flex: 1;
-    }
+    .nav-bar { display:flex; justify-content:space-between; align-items:center; padding-bottom:16px; border-bottom:1px solid var(--border); margin-bottom:20px; }
+    .nav-bar a { color:var(--text-dim); font-size:0.9rem; }
+    .nav-bar a:hover { color:var(--accent); }
+    .quest-header { background:var(--surface); border:1px solid var(--border); padding:24px; border-radius:var(--radius); margin-bottom:20px; position:relative; }
+    .quest-title { font-size:1.5rem; color:var(--accent); margin-bottom:10px; clear:both; }
+    .quest-meta { display:flex; flex-wrap:wrap; gap:16px; color:var(--text-dim); font-size:0.85rem; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .quest-meta strong { color:var(--text); }
+    .quest-meta a { color:var(--accent); }
+    .quest-desc { line-height:1.7; margin-bottom:20px; font-size:0.95rem; white-space:pre-wrap; }
+    .comments-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
+    .comments-section h3 { color:var(--accent); margin-bottom:12px; font-size:1.1rem; }
+    .comments-list { max-height:350px; overflow-y:auto; margin-bottom:12px; display:flex; flex-direction:column; gap:10px; padding-right:6px; }
+    .comment-card { background:var(--bg); border:1px solid var(--border); padding:10px 14px; border-radius:var(--radius-sm); }
+    .comment-meta { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-dim); margin-bottom:4px; }
+    .comment-meta strong { color:var(--accent); }
+    .comment-content { font-size:0.85rem; line-height:1.5; }
+    .comment-embed { margin-top:8px; border-radius:6px; overflow:hidden; border:1px solid var(--border); max-width:240px; }
+    .comment-embed img { width:100%; height:auto; display:block; }
+    .comment-embed a { display:block; padding:6px; background:var(--surface-2); color:var(--accent); font-size:0.75rem; text-decoration:none; }
+    .comment-form { display:flex; gap:10px; align-items:center; }
+    .comment-form input { flex:1; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); }
+    .comment-form input:focus { outline:none; border-color:var(--accent); }
+    .comment-form button { padding:10px 16px; background:var(--accent); color:#000; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; }
+    .attach-btn { background:var(--surface-2) !important; color:var(--text) !important; font-size:1rem; }
+    .action-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
+    .action-panel h3 { color:var(--accent); margin-bottom:10px; }
+    .action-panel p { color:var(--text-dim); font-size:0.9rem; margin-bottom:12px; line-height:1.5; }
+    .file-drop-area { border:2px dashed var(--border); border-radius:var(--radius-sm); padding:20px; text-align:center; background:var(--bg); cursor:pointer; transition:border-color 0.2s; }
+    .file-drop-area:hover { border-color:var(--accent); }
+    .file-drop-area input { display:none; }
+    .staged-files-list { margin:12px 0; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+    .staged-file-item { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-bottom:1px solid var(--border); }
+    .staged-file-item:last-child { border-bottom:none; }
+    .staged-file-name { font-size:0.85rem; font-weight:600; }
+    .staged-file-size { font-size:0.7rem; color:var(--text-dim); margin-left:6px; }
+    .remove-file-btn { color:var(--error); background:transparent; border:none; cursor:pointer; font-weight:bold; font-size:0.8rem; }
+    .actions-group { display:flex; gap:10px; flex-wrap:wrap; }
+    .rating-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px; text-align:center; }
+    .rating-widget { display:flex; justify-content:center; gap:10px; margin:12px 0; }
+    .star { font-size:2rem; cursor:pointer; color:var(--surface-2); transition:color 0.1s; }
+    .star.selected { color:var(--accent); }
+    .countdown { font-family:monospace; font-size:1rem; color:var(--accent); font-weight:bold; }
+    .proof-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin:12px 0; }
+    .proof-tile { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; }
+    .proof-tile img, .proof-tile video { width:100%; height:100px; object-fit:cover; background:#000; }
+    .proof-tile-doc { height:100px; display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--accent); background:var(--surface-2); }
+    .proof-tile-info { padding:6px; font-size:0.7rem; text-align:center; border-top:1px solid var(--border); }
+    .proof-tile-info a { color:var(--accent); font-weight:bold; }
+    .upi-payout-box { margin-top:16px; padding:14px; background:var(--accent-glow); border:1px solid var(--accent); border-radius:var(--radius-sm); }
+    .upi-qr-image { max-width:140px; height:auto; border-radius:6px; margin-top:8px; border:2px solid var(--border); }
+    .custom-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:10000; padding:20px; }
+    .custom-modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:420px; width:100%; text-align:center; }
+    .custom-modal h4 { color:var(--accent); font-size:1.2rem; margin-bottom:10px; }
+    .custom-modal p { color:var(--text-dim); font-size:0.9rem; line-height:1.5; margin-bottom:16px; }
+    .custom-modal-actions { display:flex; gap:10px; }
+    .custom-modal-actions button { flex:1; }
   </style>
 </head>
 <body>
-
-  <!-- Custom Modal Dialogs (Required to replace alert / confirm) -->
   <div id="customModalOverlay" class="custom-modal-overlay">
     <div class="custom-modal">
-      <h4 id="customModalTitle">Confirm Action</h4>
-      <p id="customModalText">Are you sure you want to proceed?</p>
+      <h4 id="customModalTitle">Confirm</h4>
+      <p id="customModalText">Are you sure?</p>
       <div class="custom-modal-actions">
-        <button id="customModalCancel" class="btn btn-error" style="background: var(--surface-2); color: var(--text);">Cancel</button>
-        <button id="customModalConfirm" class="btn btn-accent">Confirm</button>
+        <button id="customModalCancel" class="btn btn-error" style="background:var(--surface-2);color:var(--text)">Cancel</button>
+        <button id="customModalConfirm" class="btn btn-primary">Confirm</button>
       </div>
     </div>
   </div>
 
   <div class="container">
     <div class="nav-bar">
-      <a href="quest-board.html">← Return to Board</a>
-      <span id="userProfileBadge" style="color: var(--text-dim); font-size: 0.9rem;"></span>
+      <a href="quest-board.html">← Back to Board</a>
+      <span id="userProfileBadge" style="color:var(--text-dim);font-size:0.85rem"></span>
     </div>
-
     <div id="alertBox" class="message"></div>
 
-    <!-- QUEST IDENTITY CARD -->
     <div class="quest-header">
       <div id="statusBadge" class="status-badge status-open">Loading...</div>
       <span id="paymentTypeBadge" class="badge">--</span>
-      <div style="float: right; margin-right: 10px;" id="posterActions">
-        <a href="#" id="editQuestLink" class="btn btn-accent" style="font-size: 0.8rem; padding: 4px 10px; text-decoration: none; border-radius: 4px;">Edit Quest</a>
+      <div style="float:right;margin-right:8px" id="posterActions">
+        <a href="#" id="editQuestLink" class="btn btn-primary btn-xs" style="text-decoration:none">Edit Quest</a>
       </div>
       <h2 id="questTitle" class="quest-title">Loading...</h2>
-      
       <div class="quest-meta">
         <div>Poster: <strong id="posterName">--</strong> <span id="posterRep"></span></div>
         <div>Worker: <strong id="workerName">No one yet</strong> <span id="workerRep"></span></div>
         <div>Deadline: <strong id="deadlineStr">--</strong></div>
-        <div id="rewardContainer">Reward: <strong id="rewardVal" style="color: var(--accent);">--</strong></div>
+        <div id="rewardContainer">Reward: <strong id="rewardVal" style="color:var(--accent)">--</strong></div>
       </div>
-
       <div id="questDesc" class="quest-desc">Loading...</div>
-      
-      <!-- Reversibility feature: Worker abandon option -->
-      <div id="abandonContainer" style="display: none; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-        <span style="color: var(--text-dim); font-size: 0.85rem; display: block; margin-bottom: 8px;">Changed your mind? You can release this task back to the board.</span>
-        <button class="btn btn-error" onclick="triggerAbandonQuest()" style="padding: 8px 16px; font-size: 0.85rem;">⚠️ Forfeit & Abandon Quest</button>
+      <div id="abandonContainer" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+        <span style="color:var(--text-dim);font-size:0.8rem;display:block;margin-bottom:6px">Changed your mind? Release this task back to the board.</span>
+        <button class="btn btn-error btn-sm" onclick="triggerAbandonQuest()">⚠️ Abandon Quest</button>
       </div>
     </div>
 
-    <!-- WORKER PROOF SECTION (WITH REVERSIBLE DRAFT STAGING) -->
-    <div id="workerProofPanel" class="action-panel" style="display: none;">
+    <div id="workerProofPanel" class="action-panel" style="display:none">
       <h3>Submit Proof of Completion</h3>
-      <p>Select your confirmation screenshots, videos, or documents. Review your queue details below before hitting submit.</p>
-      
-      <div class="file-drop-area" id="dropArea" onclick="document.getElementById('proofFileInput').click()">
-        <span>📁 Click to browse or queue complete assets</span>
+      <p>Upload screenshots, documents, or videos showing the completed work.</p>
+      <div class="file-drop-area" onclick="document.getElementById('proofFileInput').click()">
+        <span>📁 Click to select files</span>
         <input type="file" id="proofFileInput" multiple onchange="handleQueueFiles(this)">
       </div>
-
-      <!-- File Queue Staging area -->
-      <div id="stagedFilesContainer" style="display: none; margin-top: 16px;">
-        <div style="font-size: 0.85rem; color: var(--accent); font-weight: bold; margin-bottom: 6px;">Queued Files (Pending Submission):</div>
+      <div id="stagedFilesContainer" style="display:none;margin-top:12px">
+        <div style="font-size:0.8rem;color:var(--accent);font-weight:bold;margin-bottom:4px">Queued Files:</div>
         <div class="staged-files-list" id="stagedFilesList"></div>
-        <div style="text-align: right; margin-top: 12px;">
-          <button class="btn btn-success" id="submitProofBtn" onclick="uploadProofFiles()">Submit Staged Deliverables</button>
-        </div>
+        <div style="text-align:right;margin-top:10px"><button class="btn btn-success btn-sm" id="submitProofBtn" onclick="uploadProofFiles()">Submit Proof</button></div>
       </div>
     </div>
 
-    <!-- POSTER APPRAISAL BOARD (REJECT / REVISE PARADIGM) -->
-    <div id="posterAppraisalPanel" class="action-panel" style="display: none;">
-      <h3>Review Task Deliverables</h3>
-      <p>Analyze submitted assets. If you request a revision, the workspace status reverts back to let the worker update their files.</p>
-      
-      <!-- Multi-file deliverable viewer -->
-      <div id="proofViewerTitle" style="font-weight: bold; margin-bottom: 10px;">Submitted Asset proofs:</div>
+    <div id="posterAppraisalPanel" class="action-panel" style="display:none">
+      <h3>Review Deliverables</h3>
+      <p>Review the submitted work. Approve to release payment, or request changes.</p>
+      <div id="proofViewerTitle" style="font-weight:bold;margin-bottom:8px">Submitted files:</div>
       <div class="proof-grid" id="multiProofViewer"></div>
-
-      <!-- Worker payment details if UPI is chosen -->
-      <div id="workerUpiShowcase" class="upi-payout-box" style="display: none;">
-        <strong>💳 Worker UPI payment Info:</strong>
-        <div id="workerUpiText" style="margin-top: 6px; font-size: 0.95rem;"></div>
+      <div id="workerUpiShowcase" class="upi-payout-box" style="display:none">
+        <strong>💳 Worker UPI:</strong>
+        <div id="workerUpiText" style="margin-top:4px;font-size:0.9rem"></div>
         <div id="workerUpiQrContainer"></div>
       </div>
-
-      <div style="margin: 20px 0;">
-        Auto-approves in: <span id="countdownTimer" class="countdown">--:--:--</span>
-      </div>
-
+      <div style="margin:16px 0">Auto-approves in: <span id="countdownTimer" class="countdown">--:--:--</span></div>
       <div class="actions-group">
-        <button class="btn btn-success" onclick="triggerApproval()">Approve & Payout</button>
+        <button class="btn btn-success" onclick="triggerApproval()">Approve & Pay</button>
         <button class="btn btn-warning" onclick="triggerRevisionRequest()">Request Revision</button>
         <button class="btn btn-error" id="disputeLauncher" onclick="triggerDisputeLaunch()">File Dispute</button>
       </div>
     </div>
 
-    <!-- DOUBLE BLIND RATING EXCHANGE -->
-    <div id="ratingPanel" class="rating-panel" style="display: none;">
-      <h3>Swap Reviews</h3>
-      <p>Provide anonymous star feedback to calculate and build community reputation.</p>
-      
+    <div id="ratingPanel" class="rating-panel" style="display:none">
+      <h3>Rate Your Experience</h3>
+      <p>Both sides rate each other. Ratings are revealed after both submit.</p>
       <div id="activeRatingForm">
         <div class="rating-widget" id="starContainer">
           <span class="star" data-score="1" onclick="setRatingValue(1)">★</span>
@@ -544,67 +147,54 @@
           <span class="star" data-score="4" onclick="setRatingValue(4)">★</span>
           <span class="star" data-score="5" onclick="setRatingValue(5)">★</span>
         </div>
-        <button class="btn btn-accent" onclick="submitUserRating()">Submit Review</button>
+        <button class="btn btn-primary" onclick="submitUserRating()">Submit Rating</button>
       </div>
-
-      <div id="waitingRatingMessage" style="display: none; color: var(--text-dim); padding: 15px 0;">
-        ⏳ Feedback registered. Waiting for the other party to complete their review...
-      </div>
-
-      <div id="ratingResultDisplay" style="display: none; text-align: left; padding: 15px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); margin-top: 15px;">
-        <h4 style="color: var(--accent); margin-bottom: 8px;">Revealed Rating Details:</h4>
-        <div id="ratingScoreList" style="font-size: 0.95rem; line-height: 1.6;"></div>
+      <div id="waitingRatingMessage" style="display:none;color:var(--text-dim);padding:12px 0">⏳ Rating saved. Waiting for the other party...</div>
+      <div id="ratingResultDisplay" style="display:none;text-align:left;padding:12px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);margin-top:12px">
+        <h4 style="color:var(--accent);margin-bottom:6px">Revealed Ratings:</h4>
+        <div id="ratingScoreList" style="font-size:0.9rem;line-height:1.6"></div>
       </div>
     </div>
 
-    <!-- DISPUTE SETTLEMENT EXPLANATION PANEL (WITH JOINT LIFTING CONTROLS) -->
-    <div id="disputePanel" class="action-panel" style="display: none; border-color: var(--error);">
-      <h3 style="color: var(--error);">⚠️ Active Arbitration Dispute</h3>
-      <p>This quest's details have been contested. You can discuss details directly below. At any time, you can agree to settle this mutually using the options below.</p>
-      
-      <div class="actions-group" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-        <button id="disputeReleaseBtn" class="btn btn-success" style="display: none;" onclick="triggerDisputeResolution('release')">Resolve: Release Payout to Worker</button>
-        <button id="disputeRefundBtn" class="btn btn-error" style="display: none;" onclick="triggerDisputeResolution('refund')">Resolve: Cancel & Refund Poster</button>
+    <div id="disputePanel" class="action-panel" style="display:none;border-color:var(--error)">
+      <h3 style="color:var(--error)">⚠️ Active Dispute</h3>
+      <p>This quest is under arbitration. Discuss below and resolve when ready.</p>
+      <div class="actions-group" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+        <button id="disputeReleaseBtn" class="btn btn-success btn-sm" style="display:none" onclick="triggerDisputeResolution('release')">Release to Worker</button>
+        <button id="disputeRefundBtn" class="btn btn-error btn-sm" style="display:none" onclick="triggerDisputeResolution('refund')">Refund Poster</button>
       </div>
     </div>
 
-    <!-- PRIVATE COORDINATION COMMENTS (WITH IMAGE EMBEDS) -->
     <div class="comments-section">
-      <h3>Quest Coordination Board</h3>
+      <h3>💬 Coordination Board</h3>
       <div class="comments-list" id="commentsBox">
-        <div style="color: var(--text-dim); text-align: center; padding: 20px;">Secure coordination board loading...</div>
+        <div style="color:var(--text-dim);text-align:center;padding:16px">Loading...</div>
       </div>
-      
       <div class="comment-form">
-        <button class="btn attach-btn" onclick="document.getElementById('commentAttachmentInput').click()" title="Attach documents/images">📎</button>
-        <input type="file" id="commentAttachmentInput" style="display: none;" onchange="handleCommentAttachment(this)" multiple>
-        
-        <input type="text" id="commentText" placeholder="Type coordination details message..." onkeydown="if(event.key === 'Enter') postCommentText()">
-        <button class="btn btn-accent" id="sendCommentBtn" onclick="postCommentText()">Send</button>
+        <button class="btn attach-btn" onclick="document.getElementById('commentAttachmentInput').click()" title="Attach files">📎</button>
+        <input type="file" id="commentAttachmentInput" style="display:none" onchange="handleCommentAttachment(this)" multiple>
+        <input type="text" id="commentText" placeholder="Type a message..." onkeydown="if(event.key==='Enter')postCommentText()">
+        <button class="btn btn-primary" id="sendCommentBtn" onclick="postCommentText()">Send</button>
       </div>
-      <div id="commentAttachmentName" style="font-size: 0.8rem; color: var(--accent); margin-top: 6px; display: none;"></div>
+      <div id="commentAttachmentName" style="font-size:0.75rem;color:var(--accent);margin-top:4px;display:none"></div>
     </div>
-
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="quest_detail_controller.js"></script>
   <script>
-    // Logic to show/hide edit button based on ownership
     window.addEventListener('load', () => {
-      const checkPoster = setInterval(() => {
+      const check = setInterval(() => {
         if (window.currentQuest && window.currentUser) {
-          clearInterval(checkPoster);
+          clearInterval(check);
           const isPoster = window.currentQuest.poster_id === window.currentUser.id;
-          const posterActions = document.getElementById('posterActions');
-          const editLink = document.getElementById('editQuestLink');
-          
+          const actions = document.getElementById('posterActions');
+          const link = document.getElementById('editQuestLink');
           if (isPoster && ['open', 'accepted'].includes(window.currentQuest.status)) {
-            posterActions.style.display = 'block';
-            editLink.href = 'quest-edit.html?id=' + window.currentQuest.id;
-          } else {
-            posterActions.style.display = 'none';
-          }
+            actions.style.display = 'block';
+            link.href = 'quest-edit.html?id=' + window.currentQuest.id;
+          } else { actions.style.display = 'none'; }
         }
       }, 500);
     });

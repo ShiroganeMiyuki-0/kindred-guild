@@ -1,138 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kindred Guild — Choose Your Name</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <style>
-    :root {
-      --bg: #0f0f13;
-      --surface: #1a1a22;
-      --surface-2: #252530;
-      --text: #e8e8f0;
-      --text-dim: #9090a0;
-      --accent: #c9a84c;
-      --accent-glow: rgba(201, 168, 76, 0.2);
-      --error: #e74c3c;
-      --success: #2ecc71;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .setup-card {
-      background: var(--surface);
-      border: 1px solid var(--surface-2);
-      border-radius: 16px;
-      padding: 48px 40px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-    .logo {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .logo h1 {
-      font-size: 1.5rem;
-      color: var(--accent);
-    }
-    .logo p {
-      color: var(--text-dim);
-      font-size: 0.9rem;
-      margin-top: 6px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    input {
-      width: 100%;
-      padding: 14px 16px;
-      background: var(--bg);
-      border: 1px solid var(--surface-2);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-    .hint {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      margin-top: 6px;
-    }
-    button {
-      width: 100%;
-      padding: 16px;
-      background: var(--accent);
-      color: #0f0f13;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.15s, opacity 0.15s;
-      margin-top: 8px;
-    }
-    button:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.9; }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .message {
-      margin-top: 16px;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      display: none;
-    }
-    .message.error { background: rgba(231, 76, 60, 0.15); color: var(--error); display: block; }
-    .message.success { background: rgba(46, 204, 113, 0.15); color: var(--success); display: block; }
+    body { display:flex; align-items:center; justify-content:center; padding:20px; }
+    .setup-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:36px 28px; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+    .logo { text-align:center; margin-bottom:24px; }
+    .logo h1 { font-size:1.5rem; color:var(--accent); }
+    .logo p { color:var(--text-dim); font-size:0.9rem; margin-top:4px; }
   </style>
 </head>
 <body>
   <div class="setup-card">
     <div class="logo">
-      <h1>⚔️ Kindred Guild</h1>
-      <p>Choose your guild name</p>
+      <h1>⚔️ Welcome to the Guild</h1>
+      <p>Pick a username to get started</p>
     </div>
-
     <div class="form-group">
       <label for="username">Username</label>
-      <input type="text" id="username" placeholder="e.g. shadowwalker" maxlength="20" onkeydown="if(event.key==='Enter')createProfile()" />
-      <p class="hint">Letters, numbers, underscores only. This is your public guild name.</p>
+      <input type="text" id="username" placeholder="e.g. moonweaver" autocomplete="off">
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Letters, numbers, underscores. At least 3 characters.</p>
     </div>
-
     <div class="form-group">
       <label for="displayName">Display Name (optional)</label>
-      <input type="text" id="displayName" placeholder="e.g. Aria Moonweaver" maxlength="30" onkeydown="if(event.key==='Enter')createProfile()" />
-      <p class="hint">How others see you. Leave blank to use your username.</p>
+      <input type="text" id="displayName" placeholder="e.g. Aria Moonweaver">
     </div>
-
-    <button id="createBtn" onclick="createProfile()">Join the Guild</button>
+    <button id="createBtn" class="btn btn-primary" style="width:100%;padding:14px" onclick="createProfile()">Join the Guild</button>
     <div id="message" class="message"></div>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="username-setup.js"></script>
   <script src="site-nav.js"></script>
 </body>

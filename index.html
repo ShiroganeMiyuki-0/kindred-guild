@@ -3,76 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kindred Guild — What goes comes back</title>
+  <title>Kindred Guild — Help your community, earn trust</title>
+  <meta name="description" content="A community board where people post tasks and get help. Free or paid. Protected by escrow and reputation.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+  <link rel="stylesheet" href="css/globals.css">
   <style>
-    :root {
-      --bg: #09090c;
-      --surface: #12121a;
-      --surface-2: #1e1e2c;
-      --text: #e1e1e9;
-      --text-dim: #8b8b9c;
-      --accent: #c9a84c;
-      --accent-glow: rgba(201, 168, 76, 0.15);
-      --border: #222230;
-      --max-width: 1100px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Cinzel', 'Georgia', serif;
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-    /* Header styling */
-    header {
-      border-bottom: 1px solid var(--border);
-      background: rgba(9, 9, 12, 0.95);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(8px);
-    }
-    .header-container {
-      max-width: var(--max-width);
-      margin: 0 auto;
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .brand {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--accent);
-      text-decoration: none;
-      letter-spacing: 2px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .nav-links {
-      display: flex;
-      gap: 30px;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 0.9rem;
-      list-style: none;
-    }
-    .nav-links a {
-      color: var(--text-dim);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover {
-      color: var(--accent);
-    }
-
-    /* Hero section */
+    /* ---- Landing-specific styles ---- */
     .hero {
-      padding: 120px 20px 80px;
+      padding: 100px 20px 80px;
       text-align: center;
       position: relative;
     }
@@ -82,139 +20,77 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 400px;
-      height: 400px;
+      width: 500px;
+      height: 500px;
       background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
       pointer-events: none;
-      z-index: 1;
     }
     .hero-content {
       position: relative;
       z-index: 2;
-      max-width: 800px;
+      max-width: 700px;
       margin: 0 auto;
     }
-    .hero h2 {
-      font-size: 3.5rem;
+    .hero h1 {
+      font-size: 3rem;
       color: var(--accent);
-      letter-spacing: 4px;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
       text-transform: uppercase;
-      margin-bottom: 20px;
-      text-shadow: 0 4px 20px rgba(0,0,0,0.6);
     }
-    .hero p.tagline {
-      font-size: 1.4rem;
-      font-style: italic;
+    .hero .tagline {
+      font-size: 1.25rem;
       color: var(--text-dim);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    .hero .sub-tagline {
+      font-size: 1rem;
+      color: var(--text-muted);
       margin-bottom: 40px;
-      font-family: 'Segoe UI', sans-serif;
-      font-weight: 300;
     }
     .cta-group {
       display: flex;
       justify-content: center;
-      gap: 20px;
+      gap: 16px;
       flex-wrap: wrap;
     }
-    .btn {
-      padding: 16px 36px;
-      border-radius: 4px;
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-decoration: none;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.25s;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .btn-primary {
-      background: var(--accent);
-      color: #000;
-      border: 1px solid var(--accent);
-      box-shadow: 0 4px 15px var(--accent-glow);
-    }
-    .btn-primary:hover {
-      background: transparent;
-      color: var(--accent);
-      box-shadow: 0 4px 25px rgba(201, 168, 76, 0.4);
-    }
-    .btn-secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-secondary:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
 
-    /* Three Hooks Section */
-    .hooks {
+    /* How it works */
+    .how-it-works {
       padding: 80px 20px;
-      max-width: var(--max-width);
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 40px;
-    }
-    .hook-card {
       background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 40px 30px;
-      border-radius: 8px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .how-it-works h2 {
       text-align: center;
-      transition: transform 0.2s, border-color 0.2s;
-    }
-    .hook-card:hover {
-      transform: translateY(-5px);
-      border-color: var(--accent);
-    }
-    .hook-card .icon {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-    }
-    .hook-card h3 {
-      font-size: 1.4rem;
+      font-size: 1.8rem;
       color: var(--accent);
       margin-bottom: 16px;
       letter-spacing: 1px;
     }
-    .hook-card p {
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 0.95rem;
-      color: var(--text-dim);
-      line-height: 1.6;
-    }
-
-    /* How it works */
-    .steps-section {
-      background: #0d0d14;
-      padding: 100px 20px;
+    .how-it-works .section-sub {
       text-align: center;
-    }
-    .steps-section h2 {
-      font-size: 2.2rem;
-      color: var(--accent);
-      margin-bottom: 60px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 48px;
+      font-size: 1rem;
     }
     .steps {
       max-width: var(--max-width);
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 40px;
-      position: relative;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 32px;
     }
     .step {
-      position: relative;
+      text-align: center;
+      padding: 24px;
     }
     .step-num {
-      width: 50px;
-      height: 50px;
-      background: var(--surface);
+      width: 48px;
+      height: 48px;
+      background: var(--bg);
       border: 2px solid var(--accent);
       border-radius: 50%;
       display: flex;
@@ -223,69 +99,153 @@
       font-size: 1.2rem;
       color: var(--accent);
       font-weight: bold;
-      margin: 0 auto 24px;
+      margin: 0 auto 16px;
+    }
+    .step-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
     }
     .step h3 {
-      font-size: 1.25rem;
-      margin-bottom: 12px;
-      letter-spacing: 1px;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: var(--text);
     }
     .step p {
-      font-family: 'Segoe UI', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* Features grid */
+    .features {
+      padding: 80px 20px;
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+    .features h2 {
+      text-align: center;
+      font-size: 1.8rem;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .features .section-sub {
+      text-align: center;
+      color: var(--text-dim);
+      margin-bottom: 48px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+    .feature-card .icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+    .feature-card h3 {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* Trust section */
+    .trust-section {
+      padding: 80px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .trust-grid {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 32px;
+    }
+    .trust-item {
+      text-align: center;
+      padding: 20px;
+    }
+    .trust-item .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+    .trust-item h3 {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .trust-item p {
       font-size: 0.9rem;
       color: var(--text-dim);
     }
 
-    /* Manifesto section */
-    .manifesto {
-      padding: 120px 20px;
-      max-width: 800px;
+    /* FAQ */
+    .faq {
+      padding: 80px 20px;
+      max-width: 700px;
       margin: 0 auto;
+    }
+    .faq h2 {
       text-align: center;
-    }
-    .manifesto h2 {
-      font-size: 2rem;
+      font-size: 1.8rem;
       color: var(--accent);
-      margin-bottom: 30px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
+      margin-bottom: 40px;
     }
-    .manifesto p {
-      font-size: 1.15rem;
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+    .faq-item h3 {
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .faq-item h3::before {
+      content: 'Q: ';
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .faq-item p {
+      font-size: 0.9rem;
       color: var(--text-dim);
-      margin-bottom: 24px;
-      line-height: 1.8;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .manifesto blockquote {
-      font-size: 1.5rem;
-      color: var(--accent);
-      font-style: italic;
-      margin-top: 40px;
       line-height: 1.6;
+      padding-left: 20px;
     }
 
-    /* Support block */
-    .support {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+    /* Community */
+    .community {
       padding: 80px 20px;
       text-align: center;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
     }
-    .support h3 {
-      font-size: 1.6rem;
+    .community h2 {
+      font-size: 1.8rem;
       color: var(--accent);
       margin-bottom: 16px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
     }
-    .support p {
-      max-width: 600px;
-      margin: 0 auto 30px;
-      font-family: 'Segoe UI', sans-serif;
-      font-size: 0.95rem;
+    .community p {
       color: var(--text-dim);
+      max-width: 500px;
+      margin: 0 auto 32px;
     }
 
     /* Footer */
@@ -293,7 +253,6 @@
       padding: 40px 20px;
       border-top: 1px solid var(--border);
       text-align: center;
-      font-family: 'Segoe UI', sans-serif;
       font-size: 0.85rem;
       color: var(--text-dim);
     }
@@ -302,141 +261,193 @@
       justify-content: center;
       gap: 24px;
       margin-bottom: 16px;
+      flex-wrap: wrap;
     }
     .footer-links a {
       color: var(--text-dim);
-      text-decoration: none;
       transition: color 0.2s;
     }
-    .footer-links a:hover {
-      color: var(--accent);
+    .footer-links a:hover { color: var(--accent); }
+    .footer-team {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
 
-    /* Scroll Cue */
-    .scroll-down-btn {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 1.2rem;
-      box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
-      z-index: 999;
-      animation: bounce 2s infinite;
-      transition: all 0.2s ease;
+    /* Mobile overrides */
+    @media (max-width: 768px) {
+      .hero { padding: 80px 16px 60px; }
+      .hero h1 { font-size: 2rem; }
+      .hero .tagline { font-size: 1.1rem; }
+      .how-it-works, .features, .trust-section, .faq, .community { padding: 60px 16px; }
     }
-    .scroll-down-btn:hover {
-      transform: scale(1.1);
-    }
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-8px); }
-      60% { transform: translateY(-4px); }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 1.6rem; }
+      .cta-group { flex-direction: column; }
+      .cta-group .btn { width: 100%; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="header-container">
-      <a href="index.html" class="brand">⚔️ KINDRED GUILD</a>
-      <ul class="nav-links">
-        <li><a href="quest-board.html">Quest Board</a></li>
-        <li><a href="trust-and-safety.html">Guild Charter</a></li>
-        <li><a href="auth.html">Join Fellowship</a></li>
-      </ul>
-    </div>
-  </header>
-
+  <!-- HERO -->
   <section class="hero">
     <div class="hero-content">
-      <h2>What goes comes back</h2>
-      <p class="tagline">Offer assistance today. Summons support tomorrow. Guided by community honor.</p>
+      <h1>⚔️ Kindred Guild</h1>
+      <p class="tagline">Need help with something? Post it. Someone in your community will step up.</p>
+      <p class="sub-tagline">Free tasks. Paid tasks. Protected by escrow. Built on trust.</p>
       <div class="cta-group">
-        <a href="quest-board.html" class="btn btn-primary">Browse Quests</a>
-        <a href="auth.html" class="btn btn-secondary">Enter the Guild</a>
+        <a href="quest-board.html" class="btn btn-primary">Browse Tasks</a>
+        <a href="auth.html" class="btn btn-outline">Sign Up Free</a>
       </div>
     </div>
   </section>
 
-  <section class="hooks">
-    <div class="hook-card">
-      <div class="icon">🎁</div>
-      <h3>Sovereign Cooperation</h3>
-      <p>Initiate community aid natively. Participate in a digital fellowship designed around collaborative honor, zero platform exploitation, and open aid frameworks.</p>
-    </div>
-    <div class="hook-card">
-      <div class="icon">🪙</div>
-      <h3>Value Verification</h3>
-      <p>Execute verified tasks. Earn utility-settled credits in Fairy Coins, keeping economic power locked purely in local hands.</p>
-    </div>
-    <div class="hook-card">
-      <div class="icon">🤝</div>
-      <h3>Protected Agreements</h3>
-      <p>Coordinate premium builds. Benefit from secure programmatic escrows or direct peer-to-peer exchanges secured by uncompromised reputation metrics.</p>
-    </div>
-  </section>
-
-  <section class="steps-section" id="how-it-works">
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works">
     <h2>How It Works</h2>
+    <p class="section-sub">Three steps. That's it.</p>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <h3>Post requirements</h3>
-        <p>Post parameters, tags, and terms. Rewards and commissions lock safely inside peer-escrow deposits upfront.</p>
+        <div class="step-icon">📝</div>
+        <h3>Post a Task</h3>
+        <p>Describe what you need. Set a reward (or make it free). Your coins stay locked in escrow until the job is done.</p>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <h3>Fellows Align</h3>
-        <p>Competent guild workers accept missions, coordinate milestones in private channels, and upload completed credentials.</p>
+        <div class="step-icon">🤝</div>
+        <h3>Someone Accepts</h3>
+        <p>A community member picks up your task. They message you, share updates, and submit proof when done.</p>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <h3>Verify & Complete</h3>
-        <p>Validate proofs, approve escrow payout instantly, and swap double-blind reviews to build long-term reputation scores.</p>
+        <div class="step-icon">✅</div>
+        <h3>Approve & Pay</h3>
+        <p>Review the work. Approve it and the payment releases. Both sides rate each other. Done.</p>
       </div>
     </div>
   </section>
 
-  <section class="manifesto">
-    <h2>The Manifesto</h2>
-    <p>Kindred Guild is a rejection of modern platform-capitalist extraction. It is an exploration of programmatic trust and real-world mutualist defense.</p>
-    <p>To experience reliable collaboration, one must initiate it. We build mutual infrastructure so that citizens can build local abundance together.</p>
-    <blockquote>"One day, every city has a guild hall. This is how it starts."</blockquote>
+  <!-- FEATURES -->
+  <section class="features">
+    <h2>What You Can Do</h2>
+    <p class="section-sub">It's not just coding tasks. It's anything your community needs.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">🎨</div>
+        <h3>Hire for a Project</h3>
+        <p>Need a logo, a website, or help moving furniture? Post it as a paid task with coins or UPI.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎁</div>
+        <h3>Ask for Free Help</h3>
+        <p>Not everything needs money. Post a free goodwill task — community members help because they want to.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🛡️</div>
+        <h3>Protected Payments</h3>
+        <p>Coins are locked in escrow when you post. The worker gets paid only when you approve. No scams.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">⭐</div>
+        <h3>Build Reputation</h3>
+        <p>Every completed task builds your reputation score. Good workers get more work. Good posters get more responses.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔄</div>
+        <h3>Undo Mistakes</h3>
+        <p>Posted wrong info? Changed your mind? You can edit or cancel tasks within a grace window. No pressure.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🛡️</div>
+        <h3>Offer Your Skills</h3>
+        <p>Post your availability as a worker. Show what you can do, set your preferred payment type, and get hired.</p>
+      </div>
+    </div>
   </section>
 
-  <section class="support">
-    <h3>Open Infrastructure & Peer Escrow</h3>
-    <p>Kindred Guild is independently coordinated with zero corporate backing or venture manipulation. Every feature is structured around user protection, secure escrow guarantees, and auditable mutual ratings.</p>
-    <a href="trust-and-safety.html" class="btn btn-primary">🛡️ Read the Guild Charter</a>
-    <a href="donation.html" class="btn btn-secondary">💝 Support the Guild</a>
+  <!-- TRUST SIGNALS -->
+  <section class="trust-section">
+    <div class="trust-grid">
+      <div class="trust-item">
+        <div class="icon">🔒</div>
+        <h3>Escrow Protection</h3>
+        <p>Your money is held safely until work is approved. Neither side can run with the funds.</p>
+      </div>
+      <div class="trust-item">
+        <div class="icon">👁️</div>
+        <h3>Double-Blind Ratings</h3>
+        <p>Both sides rate each other after completion. Ratings are hidden until both submit — no retaliation.</p>
+      </div>
+      <div class="trust-item">
+        <div class="icon">⏰</div>
+        <h3>Auto-Approval</h3>
+        <p>If a poster doesn't respond within 48 hours, the task auto-approves. Workers aren't left hanging.</p>
+      </div>
+      <div class="trust-item">
+        <div class="icon">📜</div>
+        <h3>Clear Rules</h3>
+        <p>Read our <a href="terms-of-service.html">Terms of Service</a> and <a href="privacy-policy.html">Privacy Policy</a>. No hidden clauses.</p>
+      </div>
+    </div>
   </section>
 
-  <!-- Interactive Scroll Cue -->
-  <button class="scroll-down-btn" onclick="window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' })" title="Explore Below">↓</button>
+  <!-- FAQ -->
+  <section class="faq">
+    <h2>Common Questions</h2>
 
+    <div class="faq-item">
+      <h3>Is this free to use?</h3>
+      <p>Yes. You can post and accept free tasks with no cost. Paid tasks use Fairy Coins (our internal currency) or direct UPI payments. There's a 10% fee on paid tasks to keep the platform running.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What are Fairy Coins?</h3>
+      <p>They're our internal currency. You earn them by completing tasks, and spend them to post paid tasks. You can also buy coins via UPI. They're not cryptocurrency — they stay inside the platform.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What if someone doesn't do the work?</h3>
+      <p>Coins are held in escrow. If the worker doesn't deliver, you can request revisions or file a dispute. The poster can also cancel and get refunded if no work has started.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Can I edit my task after posting?</h3>
+      <p>Yes. You can change the title, description, tags, payment type, and reward amount as long as the task is still open or accepted. You can also cancel and get a refund.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Who runs this?</h3>
+      <p>Kindred Guild is an independent project. We're a small team building tools for community cooperation. No venture capital, no corporate agenda. Check the <a href="trust-and-safety.html">Guild Charter</a> for details.</p>
+    </div>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section class="community">
+    <h2>Join the Community</h2>
+    <p>Questions? Ideas? Just want to hang out? We're building this together.</p>
+    <div class="cta-group" style="justify-content: center;">
+      <a href="auth.html" class="btn btn-primary">Create Your Account</a>
+      <a href="quest-board.html" class="btn btn-outline">Browse Tasks First</a>
+      <a href="trust-and-safety.html" class="btn btn-ghost">Read the Charter</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
   <footer>
     <div class="footer-links">
-      <a href="index.html">Charter</a>
+      <a href="index.html">Home</a>
       <a href="quest-board.html">Quest Board</a>
-      <a href="trust-and-safety.html">Trust & Safety</a>
-      <a href="auth.html">Join Us</a>
-      <a href="donation.html">Donate</a>
-      <a href="coin_purchase_ui.html">Purchase Coins</a>
+      <a href="trust-and-safety.html">Guild Charter</a>
       <a href="terms-of-service.html">Terms of Service</a>
       <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="donation.html">Support Us</a>
     </div>
-    <p>© 2026 Kindred Guild. Built for mutual aid. Help is universal.</p>
+    <p>© 2026 Kindred Guild. Built for community cooperation.</p>
+    <p class="footer-team">Made with care by real people who believe communities can help each other.</p>
   </footer>
 
-  <script src="site-nav.js"></script>
+  <!-- Scroll down nudge -->
+  <button onclick="window.scrollBy({top: window.innerHeight * 0.7, behavior: 'smooth'})"
+    style="position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#000;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 15px rgba(212,175,55,0.3);z-index:90;"
+    aria-label="Scroll down" title="Explore more">↓</button>
+
 </body>
 </html>

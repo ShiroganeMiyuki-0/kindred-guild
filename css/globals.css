@@ -1,0 +1,318 @@
+/* ============================================
+   KINDRED GUILD — GLOBAL STYLES & MOBILE RESPONSIVE
+   Include on EVERY page: <link rel="stylesheet" href="css/globals.css">
+   ============================================ */
+
+:root {
+  --bg: #0c0c0f;
+  --surface: #14141e;
+  --surface-2: #20202d;
+  --surface-3: #2a2a38;
+  --text: #f0f0f5;
+  --text-dim: #9494a8;
+  --text-muted: #6a6a7a;
+  --accent: #d4af37;
+  --accent-glow: rgba(212, 175, 55, 0.15);
+  --accent-glow-strong: rgba(212, 175, 55, 0.3);
+  --border: #262636;
+  --error: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --free: #10b981;
+  --coins: #eab308;
+  --upi: #f97316;
+  --max-width: 1100px;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- Shared button styles ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); text-decoration: none; }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover { box-shadow: 0 4px 15px var(--accent-glow-strong); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+.btn-outline:hover { background: var(--accent-glow); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--accent); border-color: var(--accent); }
+
+.btn-success { background: var(--success); color: #fff; }
+.btn-error { background: var(--error); color: #fff; }
+.btn-warning { background: var(--warning); color: #000; }
+.btn-sm { padding: 8px 16px; font-size: 0.8rem; }
+.btn-xs { padding: 4px 10px; font-size: 0.75rem; }
+
+/* ---- Badge styles ---- */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-coins { background: rgba(234, 179, 8, 0.15); color: var(--coins); }
+.badge-upi { background: rgba(249, 115, 22, 0.15); color: var(--upi); }
+.badge-free { background: rgba(16, 185, 129, 0.15); color: var(--free); }
+
+/* ---- Card styles ---- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.card:hover { border-color: var(--accent); }
+
+/* ---- Form styles ---- */
+input, textarea, select {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+textarea { min-height: 100px; resize: vertical; }
+
+.form-group { margin-bottom: 20px; }
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* ---- Message/alert styles ---- */
+.message {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  display: none;
+  margin-bottom: 16px;
+}
+.message.error { display: block; background: rgba(239, 68, 68, 0.12); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); }
+.message.success { display: block; background: rgba(16, 185, 129, 0.12); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+.message.info { display: block; background: rgba(212, 175, 55, 0.1); color: var(--accent); border: 1px solid rgba(212, 175, 55, 0.2); }
+
+/* ---- Status badges ---- */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.status-open { background: rgba(52, 152, 219, 0.15); color: #3498db; }
+.status-accepted { background: rgba(155, 89, 182, 0.15); color: #9b59b6; }
+.status-submitted { background: rgba(234, 179, 8, 0.15); color: #eab308; }
+.status-approved { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.status-disputed { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.status-cancelled { background: rgba(94, 94, 108, 0.15); color: var(--text-dim); }
+
+/* ---- Tag styles ---- */
+.card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.card-tag {
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: var(--accent-glow);
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.card-tag:hover { background: var(--accent-glow-strong); }
+
+/* ---- Container ---- */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ---- Hidden utility ---- */
+.hidden { display: none !important; }
+
+/* ============================================
+   MOBILE RESPONSIVE
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .container { padding: 0 16px; }
+
+  /* Quest grid: 1 column on mobile */
+  .quest-grid,
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Header actions: wrap and shrink */
+  .header .actions,
+  .header-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Smaller buttons on mobile */
+  .btn { padding: 10px 16px; font-size: 0.85rem; }
+
+  /* Cards: less padding */
+  .card, .quest-card, .worker-card, .quest-header,
+  .comments-section, .action-panel, .rating-panel,
+  .profile-card, .post-form {
+    padding: 16px;
+  }
+
+  /* Hero section: smaller text */
+  .hero h2 { font-size: 2rem; }
+  .hero p.tagline { font-size: 1.1rem; }
+
+  /* Steps: smaller */
+  .step h3 { font-size: 1.1rem; }
+  .step p { font-size: 0.85rem; }
+
+  /* Auth card: less padding */
+  .auth-card { padding: 24px 20px; }
+
+  /* Payment types: stack on mobile */
+  .payment-types { flex-direction: column; }
+  .payment-type { min-width: auto; }
+
+  /* Filters: stack */
+  .filters { flex-direction: column; }
+  .filters select, .filters button { width: 100%; }
+
+  /* View selector: scroll horizontally */
+  .view-selector {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .view-selector::-webkit-scrollbar { display: none; }
+  .view-tab { flex-shrink: 0; }
+
+  /* Quest meta: stack */
+  .quest-meta { flex-direction: column; gap: 8px; }
+
+  /* Nav bar: smaller */
+  .nav-bar { flex-direction: column; gap: 8px; text-align: center; }
+
+  /* Floating nav: smaller on mobile */
+  #kg-floating-nav { top: 10px; left: 10px; }
+  #kg-floating-nav button { width: 36px; height: 36px; }
+
+  /* Hooks section: 1 column */
+  .hooks { grid-template-columns: 1fr; gap: 24px; }
+
+  /* Manifesto: less padding */
+  .manifesto { padding: 60px 16px; }
+
+  /* Steps section: less padding */
+  .steps-section { padding: 60px 16px; }
+
+  /* Support section: less padding */
+  .support { padding: 40px 16px; }
+
+  /* Footer links: wrap */
+  .footer-links { flex-wrap: wrap; gap: 16px; }
+
+  /* Tabs: scroll horizontally */
+  .tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .tab { flex-shrink: 0; }
+
+  /* Modal: less padding */
+  .custom-modal, .modal-box { padding: 20px; }
+  .custom-modal-actions { flex-direction: column; }
+
+  /* Comment form: stack */
+  .comment-form { flex-direction: column; }
+  .comment-form input { width: 100%; }
+
+  /* Search row: stack */
+  .search-row { flex-direction: column; }
+
+  /* Header h1: smaller */
+  .header h1, .header-bar h2 { font-size: 1.2rem; }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  body { font-size: 14px; }
+  .container { padding: 0 12px; }
+  .hero { padding: 80px 12px 60px; }
+  .hero h2 { font-size: 1.6rem; letter-spacing: 2px; }
+  .hero p.tagline { font-size: 1rem; }
+  .cta-group { flex-direction: column; }
+  .cta-group .btn { width: 100%; }
+  .hook-card { padding: 24px 16px; }
+}
+
+/* ---- Scrollbar styling ---- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--surface-3); }

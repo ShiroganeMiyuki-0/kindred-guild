@@ -1,10 +1,7 @@
 // ============================================
 // KINDRED GUILD — QUEST POSTING CONTROLLER
+// Uses shared window.sb from supabase-client.js
 // ============================================
-const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
-
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let coinBalance = 0;
@@ -35,23 +32,15 @@ function clearMessage() {
 }
 
 (async function init() {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) {
-    window.location.href = 'auth.html';
-    return;
-  }
+  const user = await window.requireAuth();
+  if (!user) return;
   currentUser = user;
 
-  const { data: profile } = await sb
-    .from('user_profiles')
-    .select('username, display_name')
-    .eq('user_id', user.id)
-    .single();
-
+  const profile = await window.getUserProfile(user.id);
   const name = profile?.display_name || profile?.username || 'Guild Member';
   document.getElementById('userName').textContent = name;
 
-  const { data: balanceData } = await sb.rpc('get_coin_balance', { p_user_id: user.id });
+  const { data: balanceData } = await window.sb.rpc('get_coin_balance', { p_user_id: user.id });
   coinBalance = balanceData || 0;
   document.getElementById('coinBalance').textContent = coinBalance;
   document.getElementById('coinBalance2').textContent = coinBalance;
@@ -64,29 +53,22 @@ function clearMessage() {
   deadlineTimeInput.value = now.toTimeString().slice(0, 5);
 })();
 
-window.selectPayment = function(type) {
+window.selectPayment = function (type) {
   selectedType = type;
   document.querySelectorAll('.payment-type').forEach(el => el.classList.remove('selected'));
   document.querySelector('[data-type="' + type + '"]').classList.add('selected');
-
   document.getElementById('coinsInput').classList.toggle('active', type === 'coins');
   document.getElementById('upiInput').classList.toggle('active', type === 'upi');
-
   coinAmountInput.required = (type === 'coins');
   upiAmountInput.required = (type === 'upi');
-
   updateCommission();
 };
 
 function updateCommission() {
   if (selectedType === 'coins') {
-    const amount = parseInt(coinAmountInput.value) || 0;
-    const commission = Math.ceil(amount * 0.1);
-    commissionCoinsEl.textContent = commission;
+    commissionCoinsEl.textContent = Math.ceil((parseInt(coinAmountInput.value) || 0) * 0.1);
   } else if (selectedType === 'upi') {
-    const amount = parseInt(upiAmountInput.value) || 0;
-    const commission = Math.ceil(amount * 0.1);
-    commissionUpiEl.textContent = commission;
+    commissionUpiEl.textContent = Math.ceil((parseInt(upiAmountInput.value) || 0) * 0.1);
   }
 }
 
@@ -95,24 +77,13 @@ upiAmountInput.addEventListener('input', updateCommission);
 
 function parseAndFormatTags(rawText) {
   if (!rawText) return [];
-  // Split by comma or space
-  const elements = rawText.split(/[,\s]+/);
-  return elements
-    .map(el => {
-      let cleaned = el.trim();
-      if (!cleaned) return null;
-      if (!cleaned.startsWith('#')) {
-        cleaned = '#' + cleaned;
-      }
-      // Ensure capitalized tag formatting
-      return cleaned.charAt(0) + cleaned.slice(1);
-    })
-    .filter(el => el !== null);
+  return rawText.split(/[,\s]+/)
+    .map(el => { let c = el.trim(); if (!c) return null; if (!c.startsWith('#')) c = '#' + c; return c; })
+    .filter(Boolean);
 }
 
-window.handleSubmit = async function() {
+window.handleSubmit = async function () {
   clearMessage();
-
   const title = titleInput.value.trim();
   const description = descInput.value.trim();
   const rawTags = tagsInput.value.trim();
@@ -120,42 +91,33 @@ window.handleSubmit = async function() {
   const timePart = deadlineTimeInput.value;
 
   if (!title || !description || !datePart || !timePart) {
-    showMessage('Please complete required fields.', 'error');
+    showMessage('Please fill in all required fields.', 'error');
     return;
   }
 
   const deadlineDate = new Date(`${datePart}T${timePart}`);
   if (deadlineDate <= new Date()) {
-    showMessage('Target expiration must reside in the future.', 'error');
+    showMessage('Deadline must be in the future.', 'error');
     return;
   }
 
   const formattedTags = parseAndFormatTags(rawTags);
-
-  let coinAmount = 0;
-  let upiAmount = 0;
-  let commissionCoins = 0;
+  let coinAmount = 0, upiAmount = 0, commissionCoins = 0;
 
   if (selectedType === 'coins') {
     coinAmount = parseInt(coinAmountInput.value) || 0;
-    if (coinAmount <= 0) {
-      showMessage('Enter valid coin reward amount.', 'error');
-      return;
-    }
+    if (coinAmount <= 0) { showMessage('Enter a valid coin amount.', 'error'); return; }
     commissionCoins = Math.ceil(coinAmount * 0.1);
     if (coinBalance < coinAmount + commissionCoins) {
-      showMessage('Insufficient balance. You need ' + (coinAmount + commissionCoins) + ' FC.', 'error');
+      showMessage('Insufficient balance. Need ' + (coinAmount + commissionCoins) + ' FC.', 'error');
       return;
     }
   } else if (selectedType === 'upi') {
     upiAmount = parseInt(upiAmountInput.value) || 0;
-    if (upiAmount <= 0) {
-      showMessage('Enter valid UPI amount.', 'error');
-      return;
-    }
+    if (upiAmount <= 0) { showMessage('Enter a valid UPI amount.', 'error'); return; }
     commissionCoins = Math.ceil(upiAmount * 0.1);
     if (coinBalance < commissionCoins) {
-      showMessage('Insufficient balance. You need ' + commissionCoins + ' FC safety commission.', 'error');
+      showMessage('Insufficient balance. Need ' + commissionCoins + ' FC commission.', 'error');
       return;
     }
     pendingFormData = { title, description, deadlineDate, coinAmount, upiAmount, commissionCoins, tags: formattedTags };
@@ -166,58 +128,46 @@ window.handleSubmit = async function() {
   await postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins, tags: formattedTags });
 };
 
-window.confirmUpiPost = async function() {
-  if (!pendingFormData) {
-    upiModal.classList.remove('active');
-    return;
-  }
+window.confirmUpiPost = async function () {
+  if (!pendingFormData) { upiModal.classList.remove('active'); return; }
   const data = pendingFormData;
   pendingFormData = null;
   upiModal.classList.remove('active');
   await postQuest(data);
 };
 
-window.closeUpiModal = function() {
+window.closeUpiModal = function () {
   pendingFormData = null;
   upiModal.classList.remove('active');
 };
 
 async function postQuest({ title, description, deadlineDate, coinAmount, upiAmount, commissionCoins, tags }) {
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Deploying...';
+  submitBtn.textContent = 'Posting...';
 
   try {
-    const { data: questId, error } = await sb.rpc('post_quest_with_commission', {
-      p_title: title,
-      p_description: description,
-      p_payment_type: selectedType,
-      p_coin_amount: coinAmount,
-      p_upi_amount: upiAmount,
-      p_commission_coins: commissionCoins,
-      p_deadline: deadlineDate.toISOString()
+    const { data: questId, error } = await window.sb.rpc('post_quest_with_commission', {
+      p_title: title, p_description: description, p_payment_type: selectedType,
+      p_coin_amount: coinAmount, p_upi_amount: upiAmount,
+      p_commission_coins: commissionCoins, p_deadline: deadlineDate.toISOString()
     });
 
     if (error) {
       showMessage(error.message, 'error');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Deploy to Guild Board';
+      submitBtn.textContent = 'Post Task';
       return;
     }
 
-    // Save custom tags directly after successfully initiating the transaction
-    if (tags && tags.length > 0) {
-      await sb
-        .from('quests')
-        .update({ tags: tags })
-        .eq('id', questId);
+    if (tags?.length) {
+      await window.sb.from('quests').update({ tags }).eq('id', questId);
     }
 
-    showMessage('Project deployed successfully! Redirecting...', 'success');
-    setTimeout(() => window.location.href = 'quest-board.html', 1500);
-
+    showMessage('Task posted! Redirecting...', 'success');
+    setTimeout(() => window.location.href = 'quest-board.html', 1200);
   } catch (err) {
-    showMessage('Unexpected server mapping error occurred.', 'error');
+    showMessage('Something went wrong. Please try again.', 'error');
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Deploy to Guild Board';
+    submitBtn.textContent = 'Post Task';
   }
 }

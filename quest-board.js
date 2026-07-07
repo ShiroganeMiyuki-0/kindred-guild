@@ -1,14 +1,11 @@
 // ============================================
 // KINDRED GUILD — QUEST BOARD CONTROLLER
+// Uses shared window.sb from supabase-client.js
 // ============================================
-const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
-
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let quests = [];
-let currentView = 'open'; 
+let currentView = 'open';
 let activeTagFilter = null;
 let searchTimeout = null;
 
@@ -18,32 +15,23 @@ const sortBy = document.getElementById('sortBy');
 const searchInput = document.getElementById('searchInput');
 
 (async function init() {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) {
-    window.location.href = 'auth.html';
-    return;
-  }
+  const user = await window.requireAuth();
+  if (!user) return;
   currentUser = user;
 
-  const { data: profile } = await sb
-    .from('user_profiles')
-    .select('username, display_name, is_admin')
-    .eq('user_id', user.id)
-    .single();
-
+  const profile = await window.getUserProfile(user.id);
   const name = profile?.display_name || profile?.username || 'Guild Member';
-  document.getElementById('userName').textContent = 'Welcome, ' + name + ' 👤';
+  document.getElementById('userName').textContent = 'Welcome, ' + name;
 
   if (profile?.is_admin) {
     const adminLink = document.createElement('a');
     adminLink.href = 'admin_dashboard_ui.html';
-    adminLink.className = 'btn btn-outline';
-    adminLink.style.marginLeft = '12px';
-    adminLink.textContent = '🛡️ Admin Panel';
-    document.querySelector('.header .actions').prepend(adminLink);
+    adminLink.className = 'btn btn-ghost btn-sm';
+    adminLink.textContent = '🛡️ Admin';
+    document.querySelector('.page-header .actions').prepend(adminLink);
   }
 
-  const { data: balance } = await sb.rpc('get_coin_balance', { p_user_id: user.id });
+  const { data: balance } = await window.sb.rpc('get_coin_balance', { p_user_id: user.id });
   document.getElementById('coinBalance').textContent = balance || 0;
 
   loadQuests();
@@ -53,23 +41,18 @@ const searchInput = document.getElementById('searchInput');
 function renderPresetTags() {
   const cloud = document.getElementById('tagCloud');
   const presets = ['#Showcase', '#Fundraiser', '#Art', '#Coding', '#SkillShare', '#Goodwill', '#Design'];
-  
   cloud.innerHTML = presets.map(tag => `
     <span class="tag-badge ${activeTagFilter === tag ? 'active' : ''}" onclick="toggleTagFilter('${tag}')">${tag}</span>
   `).join('');
 }
 
-window.toggleTagFilter = function(tag) {
-  if (activeTagFilter === tag) {
-    activeTagFilter = null;
-  } else {
-    activeTagFilter = tag;
-  }
+window.toggleTagFilter = function (tag) {
+  activeTagFilter = activeTagFilter === tag ? null : tag;
   renderPresetTags();
   loadQuests();
 };
 
-window.resetFilters = function() {
+window.resetFilters = function () {
   activeTagFilter = null;
   searchInput.value = '';
   filterType.value = 'all';
@@ -78,26 +61,23 @@ window.resetFilters = function() {
   loadQuests();
 };
 
-window.handleSearch = function() {
+window.handleSearch = function () {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    loadQuests();
-  }, 300);
+  searchTimeout = setTimeout(() => loadQuests(), 300);
 };
 
-window.switchView = function(viewName) {
+window.switchView = function (viewName) {
   currentView = viewName;
-  document.querySelectorAll('.view-tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  document.getElementById('view-' + viewName.replace('my_', '')).classList.add('active');
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  const tabId = 'view-' + viewName.replace('my_', '');
+  document.getElementById(tabId)?.classList.add('active');
   loadQuests();
 };
 
 async function loadQuests() {
-  questGrid.innerHTML = '<div class="empty-state"><h2>Loading board updates...</h2></div>';
+  questGrid.innerHTML = '<div class="empty-state"><h2>Loading...</h2></div>';
 
-  let query = sb
+  let query = window.sb
     .from('quests')
     .select(`
       id, title, description, payment_type, coin_amount, upi_amount,
@@ -116,24 +96,17 @@ async function loadQuests() {
   }
 
   const typeFilter = filterType.value;
-  if (typeFilter !== 'all') {
-    query = query.eq('payment_type', typeFilter);
-  }
+  if (typeFilter !== 'all') query = query.eq('payment_type', typeFilter);
 
   const sort = sortBy.value;
-  if (sort === 'newest') {
-    query = query.order('created_at', { ascending: false });
-  } else if (sort === 'deadline') {
-    query = query.order('deadline', { ascending: true });
-  } else if (sort === 'pay') {
-    query = query.order('coin_amount', { ascending: false });
-  }
+  if (sort === 'newest') query = query.order('created_at', { ascending: false });
+  else if (sort === 'deadline') query = query.order('deadline', { ascending: true });
+  else if (sort === 'pay') query = query.order('coin_amount', { ascending: false });
 
   const { data, error } = await query;
 
   if (error) {
-    console.error('Fetch error:', error);
-    questGrid.innerHTML = '<div class="empty-state"><h2>Error updating board</h2><p>' + error.message + '</p></div>';
+    questGrid.innerHTML = `<div class="empty-state"><h2>Error loading board</h2><p>${error.message}</p></div>`;
     return;
   }
 
@@ -146,23 +119,13 @@ async function loadQuests() {
   const term = searchInput.value.toLowerCase().trim();
   if (term || activeTagFilter) {
     quests = quests.filter(q => {
-      const matchSearch = !term || 
-        q.title.toLowerCase().includes(term) || 
+      const matchSearch = !term ||
+        q.title.toLowerCase().includes(term) ||
         q.description.toLowerCase().includes(term) ||
         (q.tags && q.tags.some(t => t.toLowerCase().includes(term)));
-        
       const matchTag = !activeTagFilter ||
         (q.tags && q.tags.some(t => t.toLowerCase() === activeTagFilter.toLowerCase()));
-
       return matchSearch && matchTag;
-    });
-  }
-
-  if (sort === 'pay') {
-    quests.sort((a, b) => {
-      const aVal = a.payment_type === 'coins' ? (a.coin_amount || 0) : (a.upi_amount || 0);
-      const bVal = b.payment_type === 'coins' ? (b.coin_amount || 0) : (b.upi_amount || 0);
-      return bVal - aVal;
     });
   }
 
@@ -174,25 +137,22 @@ function formatDate(dateStr) {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = date - now;
-  
   if (diffMs < 0) return '<span class="date-expired">Expired</span>';
-  
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffHrs / 24);
-  
+
   let timeStr = '';
   if (diffMins < 60) timeStr = `${diffMins}m left`;
   else if (diffHrs < 24) timeStr = `${diffHrs}h left`;
-  else if (diffDays === 1) timeStr = `1d left`;
   else if (diffDays < 7) timeStr = `${diffDays}d left`;
-  else if (diffDays < 30) timeStr = `${Math.floor(diffDays / 7)}w left`;
   else timeStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return `
     <div class="modern-date">
-      <span class="date-main">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-      <span class="date-sub">${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} • <span class="date-relative">${timeStr}</span></span>
+      <span class="date-main">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+      <span class="date-sub">${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · <span class="date-relative">${timeStr}</span></span>
     </div>
   `;
 }
@@ -201,124 +161,87 @@ function renderQuests() {
   if (quests.length === 0) {
     questGrid.innerHTML = `
       <div class="empty-state">
-        <h2>No Quests Found</h2>
-        <p>Refine your search parameters, try custom hashtag keywords, or post a new creative showcase project.</p>
-        <a href="quest-post.html" class="btn" style="margin-top: 16px;">Post Project/Quest</a>
-      </div>
-    `;
+        <h2>No Tasks Found</h2>
+        <p>Try different filters, or post a new task.</p>
+        <a href="quest-post.html" class="btn btn-primary" style="margin-top:12px">Post a Task</a>
+      </div>`;
     return;
   }
 
   questGrid.innerHTML = quests.map(quest => {
     const isOwn = quest.poster_id === currentUser?.id;
-    const badgeClass = quest.payment_type === 'coins' ? 'badge-coins' :
-                       quest.payment_type === 'upi' ? 'badge-upi' : 'badge-free';
-    const badgeText = quest.payment_type === 'coins' ? '🪙 Fairy Coins' :
-                      quest.payment_type === 'upi' ? '₹ UPI Direct' : '🎁 Free';
-    const rewardText = quest.payment_type === 'coins' ? quest.coin_amount + ' FC' :
-                       quest.payment_type === 'upi' ? '₹' + quest.upi_amount : 'Free';
+    const badgeClass = quest.payment_type === 'coins' ? 'badge-coins' : quest.payment_type === 'upi' ? 'badge-upi' : 'badge-free';
+    const badgeText = quest.payment_type === 'coins' ? '🪙 Coins' : quest.payment_type === 'upi' ? '₹ UPI' : '🎁 Free';
+    const rewardText = quest.payment_type === 'coins' ? quest.coin_amount + ' FC' : quest.payment_type === 'upi' ? '₹' + quest.upi_amount : 'Free';
     const posterName = quest.poster?.display_name || quest.poster?.username || 'Unknown';
-    const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '0.0';
-    const deadlineStr = formatDate(quest.deadline);
+    const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '—';
 
-    // Tags list renderer
-    const tagsHtml = quest.tags && quest.tags.length > 0 ? `
-      <div class="card-tags">
-        ${quest.tags.map(t => `<span class="card-tag" onclick="event.stopPropagation(); toggleTagFilter('${t}')">${t}</span>`).join('')}
-      </div>
-    ` : '';
+    const tagsHtml = quest.tags?.length ? `<div class="card-tags">${quest.tags.map(t => `<span class="card-tag" onclick="event.stopPropagation();toggleTagFilter('${t}')">${t}</span>`).join('')}</div>` : '';
 
-    let actionButtonHtml = '';
+    let actionBtn = '';
     if (quest.status === 'open') {
-      actionButtonHtml = isOwn ? `
-        <a href="quest-edit.html?id=${quest.id}" class="action-btn own">
-          ✏️ Edit / Cancel
-        </a>
-      ` : `
-        <button class="action-btn" onclick="openAcceptPrompt('${quest.id}')">
-          Accept Quest
-        </button>
-      `;
+      actionBtn = isOwn
+        ? `<a href="quest-edit.html?id=${quest.id}" class="action-btn own">✏️ Edit / Cancel</a>`
+        : `<button class="action-btn" onclick="acceptQuest('${quest.id}')">Accept This Task</button>`;
     } else {
-      actionButtonHtml = `
-        <a href="quest-detail.html?id=${quest.id}" class="action-btn">
-          View Coordination Board (${quest.status})
-        </a>
-      `;
+      actionBtn = `<a href="quest-detail.html?id=${quest.id}" class="action-btn">View Details (${quest.status})</a>`;
     }
 
     return `
       <div class="quest-card">
         <div class="quest-body">
           <span class="badge ${badgeClass}">${badgeText}</span>
-          <span class="status-badge">${quest.status}</span>
+          <span class="status-badge status-${quest.status}">${quest.status}</span>
           <h3>${escapeHtml(quest.title)}</h3>
-          <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a> ⭐ ${rep}/5</div>
+          <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a> ⭐ ${rep}</div>
           <div class="description">${escapeHtml(quest.description)}</div>
           ${tagsHtml}
         </div>
-        <div class="card-footer">
+        <div>
           <div class="meta">
             <span class="reward">${rewardText}</span>
-            <span class="deadline">${deadlineStr}</span>
+            <span>${formatDate(quest.deadline)}</span>
           </div>
-          ${actionButtonHtml}
+          ${actionBtn}
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-window.openAcceptPrompt = function(questId) {
+window.acceptQuest = async function (questId) {
   const quest = quests.find(q => q.id === questId);
   if (!quest) return;
 
-  const handleConfirm = async () => {
-    const { data: profile, error: profileError } = await sb
-      .from('user_profiles')
-      .select('user_id')
-      .eq('user_id', currentUser.id)
-      .single();
-
-    if (profileError || !profile) {
-      alert('Profile setup required. Redirecting to complete your membership...');
+  const doAccept = async () => {
+    const profile = await window.getUserProfile(currentUser.id);
+    if (!profile) {
       window.location.href = 'username-setup.html';
       return;
     }
 
-    const { error } = await sb
+    const { error } = await window.sb
       .from('quests')
       .update({ worker_id: currentUser.id, status: 'accepted' })
       .eq('id', questId)
       .eq('status', 'open');
 
     if (error) {
-      alert('Failed to accept quest: ' + error.message);
+      alert('Failed: ' + error.message);
       return;
     }
-
-    alert('Accepted! Opening workspace...');
-    window.location.href = 'quest-detail.html?id=' + encodeURIComponent(questId);
+    window.location.href = 'quest-detail.html?id=' + questId;
   };
 
   if (quest.payment_type === 'free') {
-    showGuildModal('free-quest', handleConfirm, () => {});
+    showGuildModal('free-quest', doAccept, () => {});
   } else if (quest.payment_type === 'upi') {
-    showGuildModal('upi-warning', handleConfirm, () => {});
+    showGuildModal('upi-warning', doAccept, () => {});
   } else {
-    if (confirm('Accept this quest and lock commitments?')) {
-      handleConfirm();
-    }
+    if (confirm('Accept this task? The reward will be locked for you.')) doAccept();
   }
 };
 
-window.logout = async function() {
-  await sb.auth.signOut();
+window.logout = async function () {
+  await window.sb.auth.signOut();
   window.location.href = 'auth.html';
 };

@@ -1,10 +1,16 @@
 {
   "name": "Kindred Guild",
   "short_name": "Kindred Guild",
-  "description": "A guild quest board for free and paid community missions.",
-  "start_url": "./",
+  "description": "A community board where people post tasks and get help. Free or paid. Protected by escrow and reputation.",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0814",
-  "theme_color": "#ff6b35",
-  "icons": []
+  "background_color": "#0c0c0f",
+  "theme_color": "#d4af37",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }
