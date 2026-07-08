@@ -7,11 +7,43 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
   <link rel="stylesheet" href="css/globals.css">
   <style>
-    body { display:flex; align-items:center; justify-content:center; padding:20px; }
-    .setup-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:36px 28px; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
-    .logo { text-align:center; margin-bottom:24px; }
-    .logo h1 { font-size:1.5rem; color:var(--accent); }
-    .logo p { color:var(--text-dim); font-size:0.9rem; margin-top:4px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;    /* Stacks navbar cleanly on top */
+      align-items: center;        /* Centers card horizontally */
+      justify-content: center;    /* Centers card vertically */
+      padding: 20px;
+    }
+    
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      margin: 40px auto;          /* Provides breathing room from nav bar */
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .logo h1 {
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+    .logo p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
