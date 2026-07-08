@@ -1,163 +1,393 @@
-// ============================================
-// KINDRED GUILD — GLOBAL NAVIGATION
-// Include on EVERY page: <script src="site-nav.js"></script>
-// Add right before </body>, after other scripts.
-// ============================================
+/**
+ * Kindred Guild - Dynamic Site Navigation & Auth Sync System
+ * Highly responsive, resilient, and automatically synchronized with Supabase authentication.
+ */
+
 (function () {
-  const HOME = 'index.html';
-  const path = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    // 1. DYNAMIC PATH CALCULATION
+    // This solves relative path broken issues on deep-nested pages (e.g., docs/ or subdirectories)
+    const pathParts = window.location.pathname.split('/').filter(part => part !== '');
+    const isFileAtEnd = pathParts.length > 0 && pathParts[pathParts.length - 1].includes('.');
+    const folderCount = pathParts.length - (isFileAtEnd ? 1 : 0);
+    const rootPrefix = '../'.repeat(folderCount) || './';
 
-  // ---- 1. Floating back + home buttons + quick links ----
-  const nav = document.createElement('div');
-  nav.id = 'kg-floating-nav';
-  nav.innerHTML = `
-    <button id="kg-back-btn" title="Go back" aria-label="Go back">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <button id="kg-home-btn" title="Homepage" aria-label="Go to homepage">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M3 10.5L12 3l9 7.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M5 9.5V21h14V9.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <button id="kg-guide-btn" title="Show me around" aria-label="Show guide">
-      <span>🎮</span>
-    </button>
-    <button id="kg-coins-btn" title="Buy Fairy Coins" aria-label="Buy Fairy Coins">
-      <span>💰</span>
-    </button>
-    <button id="kg-support-btn" title="Support & Donate" aria-label="Support & Donate">
-      <span>❤️</span>
-    </button>
-  `;
-  document.body.appendChild(nav);
+    // Helper to format absolute paths cleanly
+    function getPath(filename) {
+        return `${rootPrefix}${filename}`;
+    }
 
-  // ---- Guide button: works from any page ----
-  document.getElementById('kg-guide-btn').addEventListener('click', () => {
-    if (typeof window.showOnboarding === 'function') {
-      // onboarding.js is loaded on this page (quest-board.html or quest-post.html)
-      window.showOnboarding(true);
+    // 2. STYLESHEET INJECTION (Tailwind and FontAwesome dependencies)
+    // Ensures that icons and styling work automatically on every single page
+    if (!document.querySelector('link[href*="font-awesome"]')) {
+        const faLink = document.createElement('link');
+        faLink.rel = 'stylesheet';
+        faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+        document.head.appendChild(faLink);
+    }
+
+    // Add CSS transition/glassmorphism overrides
+    const navStyles = document.createElement('style');
+    navStyles.innerHTML = `
+        .glass-nav {
+            background: rgba(17, 12, 28, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+        }
+        .nav-item-active {
+            color: #fbbf24 !important;
+            border-bottom: 2px solid #fbbf24;
+        }
+        .nav-mobile-active {
+            color: #fbbf24 !important;
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 4px solid #fbbf24;
+        }
+    `;
+    document.head.appendChild(navStyles);
+
+
+    // 3. DEFINE MENU SCHEMES
+    // This allows us to conditionally render nav items depending on auth status
+    const publicMenuItems = [
+        { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html' },
+        { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
+        { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
+    ];
+
+    const privateMenuItems = [
+        { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html' },
+        { name: 'Post Quest', icon: 'fa-circle-plus', file: 'quest-post.html' },
+        { name: 'Be a Worker', icon: 'fa-hammer', file: 'worker-post.html' },
+        { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
+        { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
+        { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
+    ];
+
+    // Helper to check if a specific nav item is currently active
+    function isItemActive(file) {
+        const currentPath = window.location.pathname.toLowerCase();
+        const baseFile = file.toLowerCase();
+        
+        // Match exact filename, matched clean URL paths, or handle homepage default
+        if (currentPath === '/' || currentPath.endsWith('index.html')) {
+            return baseFile === 'index.html';
+        }
+        return currentPath.includes(baseFile) || currentPath.includes(baseFile.replace('.html', ''));
+    }
+
+
+    // 4. GENERATING THE NAV BAR STRUCTURE
+    function buildNavbarHTML(user, isAdmin = false) {
+        const menuItems = user ? privateMenuItems : publicMenuItems;
+        
+        // Generate main list items for desktop navbar
+        const desktopLinks = menuItems.map(item => {
+            const activeClass = isItemActive(item.file) ? 'nav-item-active text-amber-400' : 'text-gray-300 hover:text-amber-300 hover:border-amber-300';
+            return `
+                <a href="${getPath(item.file)}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition duration-150 ease-in-out gap-2 h-16 ${activeClass}">
+                    <i class="fa-solid ${item.icon} text-xs"></i>
+                    <span>${item.name}</span>
+                </a>
+            `;
+        }).join('');
+
+        // Generate special links (Admin Dashboard)
+        let adminLinkHtml = '';
+        if (isAdmin) {
+            const adminActive = isItemActive('admin_dashboard_ui.html');
+            adminLinkHtml = `
+                <a href="${getPath('admin_dashboard_ui.html')}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition duration-150 ease-in-out gap-2 h-16 ${adminActive ? 'nav-item-active text-rose-400' : 'text-rose-300 hover:text-rose-100'}">
+                    <i class="fa-solid fa-lock-open text-xs text-rose-400"></i>
+                    <span>Admin Panel</span>
+                </a>
+            `;
+        }
+
+        // Generate dynamic Action Panel (Logout / Profile vs Login Buttons)
+        let actionPanelHtml = '';
+        if (user) {
+            const userEmail = user.email || 'Adventurer';
+            const initials = userEmail.substring(0, 2).toUpperCase();
+            const profileActive = isItemActive('profile.html');
+            
+            actionPanelHtml = `
+                <div class="flex items-center gap-4">
+                    <!-- Profile Link -->
+                    <a href="${getPath('profile.html')}" class="flex items-center gap-2 group ${profileActive ? 'text-amber-400' : 'text-gray-300 hover:text-amber-400'} transition duration-150 ease-in-out">
+                        <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 shadow-md group-hover:scale-105 transition-transform duration-150">
+                            ${initials}
+                        </div>
+                        <span class="hidden md:inline-block text-xs font-semibold max-w-[120px] truncate">${userEmail.split('@')[0]}</span>
+                    </a>
+                    
+                    <!-- Logout button -->
+                    <button id="btn-logout" class="bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 hover:border-red-500/50 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition duration-150 shadow-sm inline-flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
+            `;
+        } else {
+            actionPanelHtml = `
+                <a href="${getPath('auth.html')}" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition duration-150 shadow-lg hover:shadow-amber-500/20 shadow-amber-500/10 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-xs"></i>
+                    <span>Join Guild / Login</span>
+                </a>
+            `;
+        }
+
+        // Mobile Links generator
+        const mobileLinks = menuItems.map(item => {
+            const activeClass = isItemActive(item.file) ? 'nav-mobile-active text-amber-400 bg-amber-500/10 font-bold' : 'text-gray-300 hover:bg-slate-800 hover:text-amber-300';
+            return `
+                <a href="${getPath(item.file)}" class="block pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out flex items-center gap-3 ${activeClass}">
+                    <i class="fa-solid ${item.icon} w-5 text-center text-sm"></i>
+                    <span>${item.name}</span>
+                </a>
+            `;
+        }).join('');
+
+        const mobileAdminLink = isAdmin ? `
+            <a href="${getPath('admin_dashboard_ui.html')}" class="block pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out flex items-center gap-3 text-rose-300 hover:bg-rose-950/20 hover:text-rose-200">
+                <i class="fa-solid fa-lock-open w-5 text-center text-sm text-rose-400"></i>
+                <span>Admin Panel</span>
+            </a>
+        ` : '';
+
+        const mobileActionPanel = user ? `
+            <div class="pt-4 pb-3 border-t border-slate-800">
+                <div class="flex items-center px-4 gap-3">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-amber-400">
+                        ${(user.email || 'AD').substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-white truncate max-w-[200px]">${user.email || 'Adventurer'}</div>
+                        <a href="${getPath('profile.html')}" class="text-xs text-amber-400 hover:underline">View Guild Profile</a>
+                    </div>
+                </div>
+                <div class="mt-3 px-2">
+                    <button id="btn-logout-mobile" class="w-full text-left block px-3 py-2.5 rounded-md text-base font-medium text-red-400 hover:bg-red-950/20 hover:text-red-300 cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        ` : `
+            <div class="pt-4 pb-3 border-t border-slate-800 px-4">
+                <a href="${getPath('auth.html')}" class="w-full text-center block bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-sm transition duration-150">
+                    <i class="fa-solid fa-user-shield mr-2"></i> Join Guild / Login
+                </a>
+            </div>
+        `;
+
+
+        return `
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <!-- Left Section: Branding and Desktop Nav -->
+                    <div class="flex items-center flex-1">
+                        <!-- Brand Identity -->
+                        <div class="flex-shrink-0 flex items-center mr-8">
+                            <a href="${getPath('index.html')}" class="flex items-center gap-2 group">
+                                <div class="bg-amber-500/10 text-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 p-2 rounded-xl transition-all duration-300 border border-amber-500/20 shadow-lg shadow-amber-500/5 group-hover:scale-105">
+                                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-lg font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none">KINDRED GUILD</span>
+                                    <span class="text-[10px] text-amber-500/60 font-medium tracking-widest uppercase mt-0.5">Adventure awaits</span>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <!-- Desktop Navigation Menu -->
+                        <nav class="hidden lg:flex lg:space-x-6">
+                            ${desktopLinks}
+                            ${adminLinkHtml}
+                        </nav>
+                    </div>
+
+                    <!-- Right Section: Desktop Profile & Logout OR Join Button -->
+                    <div class="hidden lg:flex lg:items-center lg:gap-4">
+                        ${actionPanelHtml}
+                    </div>
+
+                    <!-- Mobile Hamburger Menu Button -->
+                    <div class="flex items-center lg:hidden">
+                        <button type="button" id="mobile-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-800 transition duration-150" aria-controls="mobile-menu" aria-expanded="false">
+                            <span class="sr-only">Open main menu</span>
+                            <i id="hamburger-icon" class="fa-solid fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Mobile Navigation Dropdown -->
+            <div class="hidden lg:hidden" id="mobile-menu">
+                <div class="pt-2 pb-3 space-y-1 bg-slate-950/95 border-b border-slate-800 backdrop-blur-md">
+                    ${mobileLinks}
+                    ${mobileAdminLink}
+                </div>
+                ${mobileActionPanel}
+            </div>
+        `;
+    }
+
+
+    // 5. ATTACH TO BODY & IMPLEMENT EVENT HANDLERS
+    function renderNavContainer(user, isAdmin = false) {
+        let navElement = document.getElementById('site-nav');
+        
+        // Auto-healing fallback: If page doesn't have <nav id="site-nav">, create and prepend it!
+        if (!navElement) {
+            navElement = document.createElement('nav');
+            navElement.id = 'site-nav';
+            document.body.prepend(navElement);
+        }
+
+        // Apply clean glass styling container
+        navElement.className = 'glass-nav sticky top-0 z-50 w-full transition-all duration-300';
+        navElement.innerHTML = buildNavbarHTML(user, isAdmin);
+
+        // Bind interactive event listeners for responsiveness
+        setupEventHandlers(user);
+    }
+
+    function setupEventHandlers(user) {
+        // Toggle mobile hamburger menu smoothly
+        const toggleBtn = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const icon = document.getElementById('hamburger-icon');
+
+        if (toggleBtn && mobileMenu) {
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = mobileMenu.classList.contains('hidden');
+                if (isHidden) {
+                    mobileMenu.classList.remove('hidden');
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-xmark');
+                    toggleBtn.setAttribute('aria-expanded', 'true');
+                } else {
+                    mobileMenu.classList.add('hidden');
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        // Handle Logout Button actions (both desktop and mobile formats)
+        const logoutHandler = async (e) => {
+            e.preventDefault();
+            if (window.supabase) {
+                try {
+                    const { error } = await window.supabase.auth.signOut();
+                    if (error) throw error;
+                    // Force refresh back to main portal upon logging out
+                    window.location.href = getPath('index.html');
+                } catch (err) {
+                    console.error('Logout failed:', err.message);
+                }
+            } else {
+                console.warn('Supabase is not initialized. Mocking logout redirection.');
+                window.location.href = getPath('index.html');
+            }
+        };
+
+        const logoutBtn = document.getElementById('btn-logout');
+        const logoutMobileBtn = document.getElementById('btn-logout-mobile');
+        if (logoutBtn) logoutBtn.addEventListener('click', logoutHandler);
+        if (logoutMobileBtn) logoutMobileBtn.addEventListener('click', logoutHandler);
+    }
+
+
+    // 6. DISCOVER SUPABASE & RETRIEVE ACTIVE USER
+    async function initNavigationState() {
+        let supabaseClient = window.supabase;
+
+        // If not loaded on window immediately, attempt to wait for 2 seconds
+        if (!supabaseClient) {
+            let retries = 0;
+            supabaseClient = await new Promise((resolve) => {
+                const interval = setInterval(() => {
+                    if (window.supabase) {
+                        clearInterval(interval);
+                        resolve(window.supabase);
+                    }
+                    retries++;
+                    if (retries > 40) { // Limit retry to 2 seconds
+                        clearInterval(interval);
+                        resolve(null);
+                    }
+                }, 50);
+            });
+        }
+
+        if (supabaseClient) {
+            // Retrieve session details
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const user = session ? session.user : null;
+            let isAdmin = false;
+
+            if (user) {
+                // Check local app metadata roles
+                const isMetaAdmin = user.app_metadata?.role === 'admin' || user.user_metadata?.role === 'admin';
+                if (isMetaAdmin) {
+                    isAdmin = true;
+                } else {
+                    // Try to query profile role as fallback if DB table profile exists
+                    try {
+                        const cachedRole = sessionStorage.getItem(`user_role_${user.id}`);
+                        if (cachedRole) {
+                            isAdmin = cachedRole === 'admin';
+                        } else {
+                            const { data, error } = await supabaseClient
+                                .from('profiles')
+                                .select('role')
+                                .eq('id', user.id)
+                                .maybeSingle();
+                            if (data && data.role === 'admin') {
+                                isAdmin = true;
+                                sessionStorage.setItem(`user_role_${user.id}`, 'admin');
+                            } else if (data) {
+                                sessionStorage.setItem(`user_role_${user.id}`, data.role || 'user');
+                            }
+                        }
+                    } catch (e) {
+                        // Suppress profiles table error in case it's not present yet
+                        console.log('Skipping profile database authorization check: Use app metadata default.');
+                    }
+                }
+            }
+
+            // Perform initial draw
+            renderNavContainer(user, isAdmin);
+
+            // Establish real-time authentication listener so the nav-bar updates fluidly on state transition
+            supabaseClient.auth.onAuthStateChange(async (event, currentSession) => {
+                const currentUser = currentSession ? currentSession.user : null;
+                let currentIsAdmin = false;
+                
+                if (currentUser) {
+                    currentIsAdmin = currentUser.app_metadata?.role === 'admin' || currentUser.user_metadata?.role === 'admin';
+                    if (!currentIsAdmin) {
+                        const cachedRole = sessionStorage.getItem(`user_role_${currentUser.id}`);
+                        currentIsAdmin = cachedRole === 'admin';
+                    }
+                }
+                renderNavContainer(currentUser, currentIsAdmin);
+            });
+
+        } else {
+            console.warn('Supabase client was not detected. Initializing Navigation in demo/static mode.');
+            // Fallback rendering in case database configuration is pending or local preview
+            renderNavContainer(null, false);
+        }
+    }
+
+    // Initialize nav loading sequence
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNavigationState);
     } else {
-      // Guide lives on the Quest Board — jump there and auto-start it
-      window.location.href = 'quest-board.html?startGuide=1';
+        initNavigationState();
     }
-  });
-
-  document.getElementById('kg-coins-btn').addEventListener('click', () => {
-    window.location.href = 'coin_purchase_ui.html';
-  });
-
-  document.getElementById('kg-support-btn').addEventListener('click', () => {
-    window.location.href = 'donation.html';
-  });
-
-  if (path === HOME) {
-    document.getElementById('kg-back-btn').style.display = 'none';
-  }
-
-  document.getElementById('kg-back-btn').addEventListener('click', () => {
-    if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
-      window.history.back();
-    } else {
-      window.location.href = HOME;
-    }
-  });
-  document.getElementById('kg-home-btn').addEventListener('click', () => {
-    window.location.href = HOME;
-  });
-
-  // ---- 2. Scroll guide (bottom center nudge) ----
-  const scrollBtn = document.createElement('button');
-  scrollBtn.id = 'kg-scroll-guide';
-  scrollBtn.setAttribute('aria-label', 'Scroll for more');
-  scrollBtn.innerHTML = `
-    <span>More below</span>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  `;
-  document.body.appendChild(scrollBtn);
-
-  function updateScrollGuide() {
-    const scrollable = document.body.scrollHeight - window.innerHeight > 100;
-    const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 30;
-    scrollBtn.style.display = scrollable && !atBottom ? 'flex' : 'none';
-  }
-  scrollBtn.addEventListener('click', () => {
-    window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' });
-  });
-  window.addEventListener('scroll', updateScrollGuide, { passive: true });
-  window.addEventListener('resize', updateScrollGuide);
-  setTimeout(updateScrollGuide, 300);
-
-  // ---- 3. Inject styles ----
-  const style = document.createElement('style');
-  style.textContent = `
-    #kg-floating-nav {
-      position: fixed;
-      top: 14px;
-      left: 14px;
-      z-index: 9999;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      max-width: 200px;
-    }
-    #kg-floating-nav button {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: 1px solid var(--border, #262636);
-      background: var(--surface, #14141e);
-      color: var(--accent, #d4af37);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-      transition: transform 0.15s, background 0.15s;
-    }
-    #kg-floating-nav button:hover {
-      background: var(--surface-2, #20202d);
-      transform: translateY(-1px);
-    }
-    #kg-guide-btn { font-size: 15px; }
-    #kg-scroll-guide {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: none;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 1px solid var(--border, #262636);
-      background: var(--surface, #14141e);
-      color: var(--accent, #d4af37);
-      font-size: 12px;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      cursor: pointer;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.5);
-      animation: kg-bounce 1.8s ease-in-out infinite;
-    }
-    @keyframes kg-bounce {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50% { transform: translateX(-50%) translateY(4px); }
-    }
-    @media (max-width: 768px) {
-      #kg-floating-nav { top: 10px; left: 10px; }
-      #kg-floating-nav button { width: 34px; height: 34px; }
-      #kg-scroll-guide { font-size: 11px; padding: 6px 12px; }
-    }
-    @media (max-width: 480px) {
-      #kg-floating-nav { gap: 5px; }
-      #kg-floating-nav button { width: 30px; height: 30px; }
-      #kg-guide-btn { font-size: 13px; }
-    }
-  `;
-  document.head.appendChild(style);
 })();
