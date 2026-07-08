@@ -1,262 +1,437 @@
 /**
- * Kindred Guild - Global Site Navigation Bar
- * File: site-nav.js
+ * Kindred Guild - Dynamic Site Navigation & Auth Sync System
+ * Highly responsive, resilient, and automatically synchronized with Supabase authentication.
+ * Includes auto-healing viewport structures to prevent layout squishing on flex centered cards.
  */
+
 (function () {
-    // 1. Inject styling directly to guarantee visibility across all pages
-    const styleId = 'site-nav-injected-styles';
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.innerHTML = `
-            :root {
-                --nav-bg: rgba(20, 16, 35, 0.95);
-                --nav-border: rgba(147, 51, 234, 0.4);
-                --nav-text: #f3f4f6;
-                --nav-accent: #fbbf24; /* Guild Gold */
-                --nav-hover: rgba(147, 51, 234, 0.25);
-            }
-            #site-nav-container {
-                position: sticky;
-                top: 0;
-                z-index: 99999;
-                background: var(--nav-bg);
-                backdrop-filter: blur(12px);
-                -webkit-backdrop-filter: blur(12px);
-                border-bottom: 1px solid var(--nav-border);
-                font-family: 'Segoe UI', Roboto, sans-serif;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-                width: 100%;
-                box-sizing: border-box;
-            }
-            .nav-wrapper {
-                max-width: 1200px;
-                margin: 0 auto;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.85rem 1.5rem;
-                box-sizing: border-box;
-            }
-            .nav-brand {
-                font-size: 1.35rem;
-                font-weight: 800;
-                color: var(--nav-text);
-                text-decoration: none;
-                background: linear-gradient(45deg, var(--nav-accent), #c084fc);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                letter-spacing: 0.5px;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-            .nav-menu {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                list-style: none;
-                margin: 0;
-                padding: 0;
-            }
-            .nav-item a, .nav-btn-logout {
-                color: var(--nav-text);
-                text-decoration: none;
-                padding: 0.5rem 0.95rem;
-                border-radius: 6px;
-                font-size: 0.95rem;
-                font-weight: 500;
-                transition: all 0.2s ease-in-out;
-                cursor: pointer;
-                background: transparent;
-                border: none;
-                display: inline-block;
-            }
-            .nav-item a:hover {
-                background: var(--nav-hover);
-                color: #ffffff;
-            }
-            .nav-item a.active {
-                background: rgba(147, 51, 234, 0.4);
-                border: 1px solid rgba(147, 51, 234, 0.7);
-                color: #ffffff;
-            }
-            .nav-item.accent-btn a {
-                background: linear-gradient(135deg, #a855f7, #6366f1);
-                color: #ffffff !important;
-                font-weight: 600;
-                box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
-            }
-            .nav-item.accent-btn a:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(168, 85, 247, 0.5);
-            }
-            .nav-btn-logout {
-                border: 1px solid rgba(239, 68, 68, 0.4);
-                color: #ef4444;
-                font-family: inherit;
-            }
-            .nav-btn-logout:hover {
-                background: rgba(239, 68, 68, 0.15);
-                border-color: #ef4444;
-            }
-            .nav-toggle {
-                display: none;
-                background: transparent;
-                border: none;
-                color: var(--nav-text);
-                font-size: 1.6rem;
-                cursor: pointer;
-                padding: 0;
-                line-height: 1;
-            }
-            @media (max-width: 768px) {
-                .nav-toggle {
-                    display: block;
-                }
-                .nav-menu {
-                    display: none;
-                    flex-direction: column;
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    width: 100%;
-                    background: rgba(15, 12, 28, 0.98);
-                    border-bottom: 1px solid var(--nav-border);
-                    padding: 1rem 0;
-                    gap: 0.5rem;
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-                }
-                .nav-menu.open {
-                    display: flex;
-                }
-                .nav-item {
-                    width: 100%;
-                    text-align: center;
-                }
-                .nav-item a, .nav-btn-logout {
-                    width: 85%;
-                    box-sizing: border-box;
-                }
-            }
-        `;
-        document.head.appendChild(style);
+    // 1. DYNAMIC PATH CALCULATION
+    // This solves relative path broken issues on deep-nested pages (e.g., docs/ or subdirectories)
+    const pathParts = window.location.pathname.split('/').filter(part => part !== '');
+    const isFileAtEnd = pathParts.length > 0 && pathParts[pathParts.length - 1].includes('.');
+    const folderCount = pathParts.length - (isFileAtEnd ? 1 : 0);
+    const rootPrefix = '../'.repeat(folderCount) || './';
+
+    // Helper to format absolute paths cleanly
+    function getPath(filename) {
+        return `${rootPrefix}${filename}`;
     }
 
-    // 2. Main Render UI Execution
-    function renderNavbar(user = null) {
-        let navContainer = document.getElementById('site-nav-container');
+    // 2. SELF-HEALING TAILWIND & FONTAWESOME INJECTION
+    // Ensures that icons and styling work automatically on every single page
+    if (!document.querySelector('link[href*="font-awesome"]')) {
+        const faLink = document.createElement('link');
+        faLink.rel = 'stylesheet';
+        faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+        document.head.appendChild(faLink);
+    }
+
+    // Check if Tailwind is missing, and if so, load it with CSS Preflight DISABLED.
+    // This allows our Tailwind navbar to style beautifully without stripping borders/margins from custom inputs!
+    if (!window.tailwind && !document.querySelector('script[src*="tailwindcss"]') && !document.querySelector('link[href*="tailwind"]')) {
+        const configScript = document.createElement('script');
+        configScript.innerHTML = `
+            window.tailwind = window.tailwind || {};
+            tailwind.config = {
+                corePlugins: {
+                    preflight: false
+                }
+            };
+        `;
+        document.head.appendChild(configScript);
+
+        const twScript = document.createElement('script');
+        twScript.src = 'https://cdn.tailwindcss.com';
+        document.head.appendChild(twScript);
+    }
+
+    // Add CSS transitions, glassmorphism, and self-healing body flex correction rules
+    const navStyles = document.createElement('style');
+    navStyles.innerHTML = `
+        .glass-nav {
+            background: rgba(17, 12, 28, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+        }
+        .nav-item-active {
+            color: #fbbf24 !important;
+            border-bottom: 2px solid #fbbf24;
+        }
+        .nav-mobile-active {
+            color: #fbbf24 !important;
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 4px solid #fbbf24;
+        }
         
-        // Self-healing fallback: if no navbar container is present in HTML, prepend one straight to body
-        if (!navContainer) {
-            navContainer = document.createElement('div');
-            navContainer.id = 'site-nav-container';
-            document.body.insertBefore(navContainer, document.body.firstChild);
+        /* Dynamic self-healing rules for centering flex pages (e.g., auth, coin purchase, username setup) */
+        body.site-nav-flex-adjusted {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            min-height: 100vh !important;
+            box-sizing: border-box !important;
+        }
+        body.site-nav-flex-adjusted > *:not(#site-nav):not(script):not(style) {
+            margin-top: auto !important;
+            margin-bottom: auto !important;
+        }
+    `;
+    document.head.appendChild(navStyles);
+
+
+    // 3. DEFINE MENU SCHEMES
+    // This allows us to conditionally render nav items depending on auth status
+    const publicMenuItems = [
+        { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html' },
+        { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
+        { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
+    ];
+
+    const privateMenuItems = [
+        { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html' },
+        { name: 'Post Quest', icon: 'fa-circle-plus', file: 'quest-post.html' },
+        { name: 'Be a Worker', icon: 'fa-hammer', file: 'worker-post.html' },
+        { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
+        { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
+        { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
+    ];
+
+    // Helper to check if a specific nav item is currently active
+    function isItemActive(file) {
+        const currentPath = window.location.pathname.toLowerCase();
+        const baseFile = file.toLowerCase();
+        
+        // Match exact filename, matched clean URL paths, or handle homepage default
+        if (currentPath === '/' || currentPath.endsWith('index.html')) {
+            return baseFile === 'index.html';
+        }
+        return currentPath.includes(baseFile) || currentPath.includes(baseFile.replace('.html', ''));
+    }
+
+
+    // 4. GENERATING THE NAV BAR STRUCTURE
+    function buildNavbarHTML(user, isAdmin = false) {
+        const menuItems = user ? privateMenuItems : publicMenuItems;
+        
+        // Generate main list items for desktop navbar
+        const desktopLinks = menuItems.map(item => {
+            const activeClass = isItemActive(item.file) ? 'nav-item-active text-amber-400' : 'text-gray-300 hover:text-amber-300 hover:border-amber-300';
+            return `
+                <a href="${getPath(item.file)}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition duration-150 ease-in-out gap-2 h-16 ${activeClass}">
+                    <i class="fa-solid ${item.icon} text-xs"></i>
+                    <span>${item.name}</span>
+                </a>
+            `;
+        }).join('');
+
+        // Generate special links (Admin Dashboard)
+        let adminLinkHtml = '';
+        if (isAdmin) {
+            const adminActive = isItemActive('admin_dashboard_ui.html');
+            adminLinkHtml = `
+                <a href="${getPath('admin_dashboard_ui.html')}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition duration-150 ease-in-out gap-2 h-16 ${adminActive ? 'nav-item-active text-rose-400' : 'text-rose-300 hover:text-rose-100'}">
+                    <i class="fa-solid fa-lock-open text-xs text-rose-400"></i>
+                    <span>Admin Panel</span>
+                </a>
+            `;
         }
 
-        const currentPath = window.location.pathname;
-        const getActiveClass = (pageName) => {
-            return currentPath.endsWith(pageName) || (pageName === 'index.html' && (currentPath === '/' || currentPath.endsWith('/'))) ? 'active' : '';
-        };
-
-        // Shared baseline public routes
-        let menuItemsHTML = `
-            <li class="nav-item"><a href="quest-board.html" class="${getActiveClass('quest-board.html')}">Quest Board</a></li>
-            <li class="nav-item"><a href="fairy-wishes.html" class="${getActiveClass('fairy-wishes.html')}">Fairy Wishes</a></li>
-            <li class="nav-item"><a href="coin_purchase_ui.html" class="${getActiveClass('coin_purchase_ui.html')}">Coin Shop</a></li>
-        `;
-
-        // Dynamic links based on User Auth Session
+        // Generate dynamic Action Panel (Logout / Profile vs Login Buttons)
+        let actionPanelHtml = '';
         if (user) {
-            // Safe fallback check for administrator rights via user metadata or custom flag
-            const isAdmin = user.user_metadata?.role === 'admin' || user.email?.includes('admin');
-            if (isAdmin) {
-                menuItemsHTML += `<li class="nav-item"><a href="admin_dashboard_ui.html" class="${getActiveClass('admin_dashboard_ui.html')}">Admin</a></li>`;
-            }
-
-            menuItemsHTML += `
-                <li class="nav-item accent-btn"><a href="quest-post.html">Post Quest</a></li>
-                <li class="nav-item"><a href="profile.html" class="${getActiveClass('profile.html')}">Profile</a></li>
-                <li class="nav-item"><button id="nav-logout-btn" class="nav-btn-logout">Sign Out</button></li>
+            const userEmail = user.email || 'Adventurer';
+            const initials = userEmail.substring(0, 2).toUpperCase();
+            const profileActive = isItemActive('profile.html');
+            
+            actionPanelHtml = `
+                <div class="flex items-center gap-4">
+                    <!-- Profile Link -->
+                    <a href="${getPath('profile.html')}" class="flex items-center gap-2 group ${profileActive ? 'text-amber-400' : 'text-gray-300 hover:text-amber-400'} transition duration-150 ease-in-out">
+                        <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 shadow-md group-hover:scale-105 transition-transform duration-150">
+                            ${initials}
+                        </div>
+                        <span class="hidden md:inline-block text-xs font-semibold max-w-[120px] truncate">${userEmail.split('@')[0]}</span>
+                    </a>
+                    
+                    <!-- Logout button -->
+                    <button id="btn-logout" class="bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 hover:border-red-500/50 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition duration-150 shadow-sm inline-flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
             `;
         } else {
-            menuItemsHTML += `
-                <li class="nav-item accent-btn"><a href="auth.html" class="${getActiveClass('auth.html')}">Enter Guild</a></li>
+            actionPanelHtml = `
+                <a href="${getPath('auth.html')}" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition duration-150 shadow-lg hover:shadow-amber-500/20 shadow-amber-500/10 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-xs"></i>
+                    <span>Join Guild / Login</span>
+                </a>
             `;
         }
 
-        navContainer.innerHTML = `
-            <nav class="nav-wrapper">
-                <a href="index.html" class="nav-brand">🏰 Kindred Guild</a>
-                <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle Menu">☰</button>
-                <ul class="nav-menu" id="nav-menu-list">
-                    ${menuItemsHTML}
-                </ul>
-            </nav>
+        // Mobile Links generator
+        const mobileLinks = menuItems.map(item => {
+            const activeClass = isItemActive(item.file) ? 'nav-mobile-active text-amber-400 bg-amber-500/10 font-bold' : 'text-gray-300 hover:bg-slate-800 hover:text-amber-300';
+            return `
+                <a href="${getPath(item.file)}" class="block pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out flex items-center gap-3 ${activeClass}">
+                    <i class="fa-solid ${item.icon} w-5 text-center text-sm"></i>
+                    <span>${item.name}</span>
+                </a>
+            `;
+        }).join('');
+
+        const mobileAdminLink = isAdmin ? `
+            <a href="${getPath('admin_dashboard_ui.html')}" class="block pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out flex items-center gap-3 text-rose-300 hover:bg-rose-950/20 hover:text-rose-200">
+                <i class="fa-solid fa-lock-open w-5 text-center text-sm text-rose-400"></i>
+                <span>Admin Panel</span>
+            </a>
+        ` : '';
+
+        const mobileActionPanel = user ? `
+            <div class="pt-4 pb-3 border-t border-slate-800">
+                <div class="flex items-center px-4 gap-3">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-amber-400">
+                        ${(user.email || 'AD').substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-white truncate max-w-[200px]">${user.email || 'Adventurer'}</div>
+                        <a href="${getPath('profile.html')}" class="text-xs text-amber-400 hover:underline">View Guild Profile</a>
+                    </div>
+                </div>
+                <div class="mt-3 px-2">
+                    <button id="btn-logout-mobile" class="w-full text-left block px-3 py-2.5 rounded-md text-base font-medium text-red-400 hover:bg-red-950/20 hover:text-red-300 cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        ` : `
+            <div class="pt-4 pb-3 border-t border-slate-800 px-4">
+                <a href="${getPath('auth.html')}" class="w-full text-center block bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-sm transition duration-150">
+                    <i class="fa-solid fa-user-shield mr-2"></i> Join Guild / Login
+                </a>
+            </div>
         `;
 
-        // Mobile responsive event listener binding
-        const toggleBtn = document.getElementById('nav-toggle-btn');
-        const menuList = document.getElementById('nav-menu-list');
-        if (toggleBtn && menuList) {
-            toggleBtn.addEventListener('click', () => {
-                menuList.classList.toggle('open');
-                toggleBtn.textContent = menuList.classList.contains('open') ? '✕' : '☰';
-            });
+
+        return `
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <!-- Left Section: Branding and Desktop Nav -->
+                    <div class="flex items-center flex-1">
+                        <!-- Brand Identity -->
+                        <div class="flex-shrink-0 flex items-center mr-8">
+                            <a href="${getPath('index.html')}" class="flex items-center gap-2 group">
+                                <div class="bg-amber-500/10 text-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 p-2 rounded-xl transition-all duration-300 border border-amber-500/20 shadow-lg shadow-amber-500/5 group-hover:scale-105">
+                                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-lg font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none">KINDRED GUILD</span>
+                                    <span class="text-[10px] text-amber-500/60 font-medium tracking-widest uppercase mt-0.5">Adventure awaits</span>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <!-- Desktop Navigation Menu -->
+                        <nav class="hidden lg:flex lg:space-x-6">
+                            ${desktopLinks}
+                            ${adminLinkHtml}
+                        </nav>
+                    </div>
+
+                    <!-- Right Section: Desktop Profile & Logout OR Join Button -->
+                    <div class="hidden lg:flex lg:items-center lg:gap-4">
+                        ${actionPanelHtml}
+                    </div>
+
+                    <!-- Mobile Hamburger Menu Button -->
+                    <div class="flex items-center lg:hidden">
+                        <button type="button" id="mobile-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-800 transition duration-150" aria-controls="mobile-menu" aria-expanded="false">
+                            <span class="sr-only">Open main menu</span>
+                            <i id="hamburger-icon" class="fa-solid fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Mobile Navigation Dropdown -->
+            <div class="hidden lg:hidden" id="mobile-menu">
+                <div class="pt-2 pb-3 space-y-1 bg-slate-950/95 border-b border-slate-800 backdrop-blur-md">
+                    ${mobileLinks}
+                    ${mobileAdminLink}
+                </div>
+                ${mobileActionPanel}
+            </div>
+        `;
+    }
+
+
+    // 5. ATTACH TO BODY & IMPLEMENT EVENT HANDLERS
+    function renderNavContainer(user, isAdmin = false) {
+        let navElement = document.getElementById('site-nav');
+        
+        // Auto-healing fallback: If page doesn't have <nav id="site-nav">, create and prepend it!
+        if (!navElement) {
+            navElement = document.createElement('nav');
+            navElement.id = 'site-nav';
+            document.body.prepend(navElement);
         }
 
-        // Supabase sign-out controller binding
-        const logoutBtn = document.getElementById('nav-logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async () => {
-                if (window.supabase) {
-                    const { error } = await window.supabase.auth.signOut();
-                    if (error) console.error('Sign out error:', error.message);
-                    window.location.href = 'index.html';
+        // Apply clean glass styling container
+        navElement.className = 'glass-nav sticky top-0 z-50 w-full transition-all duration-300';
+        navElement.innerHTML = buildNavbarHTML(user, isAdmin);
+
+        // Bind interactive event listeners for responsiveness
+        setupEventHandlers(user);
+
+        // Run self-healing layout checking routines
+        adjustFlexBody();
+    }
+
+    // Centering flex pages layout healing engine
+    function adjustFlexBody() {
+        const bodyStyle = window.getComputedStyle(document.body);
+        if (bodyStyle.display === 'flex' && bodyStyle.flexDirection !== 'column') {
+            document.body.classList.add('site-nav-flex-adjusted');
+        }
+    }
+
+    function setupEventHandlers(user) {
+        // Toggle mobile hamburger menu smoothly
+        const toggleBtn = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const icon = document.getElementById('hamburger-icon');
+
+        if (toggleBtn && mobileMenu) {
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = mobileMenu.classList.contains('hidden');
+                if (isHidden) {
+                    mobileMenu.classList.remove('hidden');
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-xmark');
+                    toggleBtn.setAttribute('aria-expanded', 'true');
                 } else {
-                    console.warn('Supabase global instance missing. Forcing redirect to home.');
-                    window.location.href = 'index.html';
+                    mobileMenu.classList.add('hidden');
+                    icon.classList.remove('fa-xmark');
+                    icon.classList.add('fa-bars');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
                 }
             });
         }
-    }
 
-    // 3. Setup Observers to capture Supabase status cleanly
-    function initNavbarLifecycle() {
-        // Render initial unauthenticated state first so navigation is instantly usable
-        renderNavbar(null);
-
-        const checkAuth = () => {
+        // Handle Logout Button actions (both desktop and mobile formats)
+        const logoutHandler = async (e) => {
+            e.preventDefault();
             if (window.supabase) {
-                // Fetch existing persistent session
-                window.supabase.auth.getSession().then(({ data: { session } }) => {
-                    if (session) renderNavbar(session.user);
-                });
-
-                // Listen continuously for auth state events (sign-ins, rollbacks, logouts)
-                window.supabase.auth.onAuthStateChange((event, session) => {
-                    renderNavbar(session ? session.user : null);
-                });
-                return true;
+                try {
+                    const { error } = await window.supabase.auth.signOut();
+                    if (error) throw error;
+                    // Force refresh back to main portal upon logging out
+                    window.location.href = getPath('index.html');
+                } catch (err) {
+                    console.error('Logout failed:', err.message);
+                }
+            } else {
+                console.warn('Supabase is not initialized. Mocking logout redirection.');
+                window.location.href = getPath('index.html');
             }
-            return false;
         };
 
-        // If Supabase hasn't loaded immediately due to client script ordering delays, poll cleanly
-        if (!checkAuth()) {
-            const authPoller = setInterval(() => {
-                if (checkAuth()) clearInterval(authPoller);
-            }, 250);
-            
-            // Clear polling execution after 4 seconds safety boundary limit
-            setTimeout(() => clearInterval(authPoller), 4000);
+        const logoutBtn = document.getElementById('btn-logout');
+        const logoutMobileBtn = document.getElementById('btn-logout-mobile');
+        if (logoutBtn) logoutBtn.addEventListener('click', logoutHandler);
+        if (logoutMobileBtn) logoutMobileBtn.addEventListener('click', logoutHandler);
+    }
+
+
+    // 6. DISCOVER SUPABASE & RETRIEVE ACTIVE USER
+    async function initNavigationState() {
+        let supabaseClient = window.supabase;
+
+        // If not loaded on window immediately, attempt to wait for 2 seconds
+        if (!supabaseClient) {
+            let retries = 0;
+            supabaseClient = await new Promise((resolve) => {
+                const interval = setInterval(() => {
+                    if (window.supabase) {
+                        clearInterval(interval);
+                        resolve(window.supabase);
+                    }
+                    retries++;
+                    if (retries > 40) { // Limit retry to 2 seconds
+                        clearInterval(interval);
+                        resolve(null);
+                    }
+                }, 50);
+            });
+        }
+
+        if (supabaseClient) {
+            // Retrieve session details
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const user = session ? session.user : null;
+            let isAdmin = false;
+
+            if (user) {
+                // Check local app metadata roles
+                const isMetaAdmin = user.app_metadata?.role === 'admin' || user.user_metadata?.role === 'admin';
+                if (isMetaAdmin) {
+                    isAdmin = true;
+                } else {
+                    // Try to query profile role as fallback if DB table profile exists
+                    try {
+                        const cachedRole = sessionStorage.getItem(`user_role_${user.id}`);
+                        if (cachedRole) {
+                            isAdmin = cachedRole === 'admin';
+                        } else {
+                            const { data, error } = await supabaseClient
+                                .from('profiles')
+                                .select('role')
+                                .eq('id', user.id)
+                                .maybeSingle();
+                            if (data && data.role === 'admin') {
+                                isAdmin = true;
+                                sessionStorage.setItem(`user_role_${user.id}`, 'admin');
+                            } else if (data) {
+                                sessionStorage.setItem(`user_role_${user.id}`, data.role || 'user');
+                            }
+                        }
+                    } catch (e) {
+                        // Suppress profiles table error in case it's not present yet
+                        console.log('Skipping profile database authorization check: Use app metadata default.');
+                    }
+                }
+            }
+
+            // Perform initial draw
+            renderNavContainer(user, isAdmin);
+
+            // Establish real-time authentication listener so the nav-bar updates fluidly on state transition
+            supabaseClient.auth.onAuthStateChange(async (event, currentSession) => {
+                const currentUser = currentSession ? currentSession.user : null;
+                let currentIsAdmin = false;
+                
+                if (currentUser) {
+                    currentIsAdmin = currentUser.app_metadata?.role === 'admin' || currentUser.user_metadata?.role === 'admin';
+                    if (!currentIsAdmin) {
+                        const cachedRole = sessionStorage.getItem(`user_role_${currentUser.id}`);
+                        currentIsAdmin = cachedRole === 'admin';
+                    }
+                }
+                renderNavContainer(currentUser, currentIsAdmin);
+            });
+
+        } else {
+            console.warn('Supabase client was not detected. Initializing Navigation in demo/static mode.');
+            // Fallback rendering in case database configuration is pending or local preview
+            renderNavContainer(null, false);
         }
     }
 
-    // Deploy onto DOM lifecycle loop
+    // Initialize nav loading sequence
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initNavbarLifecycle);
+        document.addEventListener('DOMContentLoaded', initNavigationState);
     } else {
-        initNavbarLifecycle();
+        initNavigationState();
     }
 })();
