@@ -1,46 +1,38 @@
-```gitignore
-# Compiled and binary files
+# Examples 1:
+# Project with only source/config files - no artifacts present
+
+# Example 2:
+# Project with artifacts
 *.pyc
-*.class
+__pycache__/
 *.o
 *.obj
+dist/
+build/
+.venv/
+venv/
+node_modules/
+*.log
+*.tmp
+*.swp
+.env
+.env.local
+.env.*
+.vscode/
+.idea/
+*.class
 *.exe
 *.dll
 *.so
 *.a
 *.out
-
-# Dependencies
-node_modules/
-venv/
-.venv/
-__pycache__/
-dist/
-build/
 target/
 .gradle/
-
-# Editor/IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# System files
-.DS_Store
-Thumbs.db
-.env
-.env.local
-*.env.*
-
-# Logs and coverage
-*.log
+.mypy_cache/
+.pytest_cache/
 coverage/
 htmlcov/
 .coverage
-
-# Compressed files
 *.zip
 *.gz
 *.tar
@@ -59,4 +51,9 @@ htmlcov/
 *.Z
 *.lz
 *.lzo
-```
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+.DS_Store
+Thumbs.db

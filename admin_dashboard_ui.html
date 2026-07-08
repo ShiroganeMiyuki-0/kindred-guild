@@ -226,6 +226,7 @@
     <div class="section-tabs">
       <button class="tab-btn active" onclick="switchTab('pending')">⏳ Pending Verification</button>
       <button class="tab-btn" onclick="switchTab('history')">📜 Verified History</button>
+      <button class="tab-btn" onclick="switchTab('feedback')">💬 User Feedback</button>
     </div>
 
     <div id="pendingTab" class="tab-content active">
@@ -282,6 +283,29 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div id="feedbackTab" class="tab-content">
+      <div class="card">
+        <h3>User Feedback Portal</h3>
+        <p class="hint">Review feedback, bug reports, and feature requests from guild members.</p>
+        <div style="margin-bottom: 16px;">
+          <select id="feedbackFilter" onchange="filterFeedback()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 0.9rem;">
+            <option value="ALL">All Categories</option>
+            <option value="Bug">🪲 Bugs</option>
+            <option value="Feature Request">💡 Features</option>
+            <option value="Appreciation">💖 Appreciation</option>
+            <option value="Inquiry">❓ Inquiries</option>
+          </select>
+          <button class="btn btn-refresh" onclick="fetchFeedbackPortal()" style="margin-left: 8px;">🔄 Refresh</button>
+        </div>
+        <div id="feedbackListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-state-icon">💬</div>
+            Loading feedback...
+          </div>
+        </div>
       </div>
     </div>
   </div>

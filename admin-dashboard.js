@@ -11,23 +11,22 @@ function switchTab(tabId) {
     activeTab = tabId;
     
     // Toggle Active Styles on tabs
-    document.querySelectorAll('[id^="tab-"]').forEach(el => {
-        el.classList.remove('active-tab');
+    document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('active');
     });
-    const currentTab = document.getElementById(`tab-${tabId}`);
-    if (currentTab) currentTab.classList.add('active-tab');
+    const currentBtn = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
+    if (currentBtn) currentBtn.classList.add('active');
 
     // Toggle Panel Visibility
-    document.querySelectorAll('.panel-view').forEach(panel => {
-        panel.classList.add('hidden');
+    document.querySelectorAll('.tab-content').forEach(panel => {
+        panel.classList.remove('active');
     });
-    const currentPanel = document.getElementById(`panel-${tabId}`);
-    if (currentPanel) currentPanel.classList.remove('hidden');
+    const currentPanel = document.getElementById(`${tabId}Tab`);
+    if (currentPanel) currentPanel.classList.add('active');
 
     // Load corresponding data
-    if (tabId === 'quests') fetchPendingQuests();
-    if (tabId === 'coins') fetchPendingCoins();
-    if (tabId === 'workers') fetchWorkersPool();
+    if (tabId === 'pending') loadPendingPurchases();
+    if (tabId === 'history') loadVerifiedPurchases();
     if (tabId === 'feedback') fetchFeedbackPortal();
 }
 
