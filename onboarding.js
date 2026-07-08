@@ -1,194 +1,267 @@
-// ============================================
-// KINDRED GUILD — ONBOARDING WALKTHROUGH
-// Loads on quest-board.html for first-time users.
-// ============================================
+/**
+ * Kindred Guild - Onboarding Walkthrough Script
+ * Location: shiroganemiyuki-0/kindred-guild/onboarding.js
+ * Purpose: A purely informational guide that explains features without forcing interactions or triggering modals.
+ */
+
 (function () {
-  if (!window.sb) return; // supabase-client.js must be loaded first
-
-  let currentUser = null;
-  let step = 0;
-  let active = false;
-
-  const steps = [
+  // 1. Define the step configurations using element fallbacks
+  const onboardingSteps = [
     {
-      icon: '⚔️',
-      title: 'Welcome to Kindred Guild',
-      text: "This is a community board where people post tasks and others help them out. Think of it like a local bulletin board — but with protections built in.",
-      emotion: "You're joining a community that values trust and mutual help.",
-      target: null
+      element: '#quest-board-container, .quest-board, #quest-board',
+      title: "⚔️ The Quest Board",
+      intro: "Welcome to the Guild! This is where all active tasks and adventures are listed. You can browse through available quests posted by other guild members."
     },
     {
-      icon: '📜',
-      title: 'The Quest Board',
-      text: "Every card here is a real task posted by a community member. Browse them, filter by type, and click one to see details. If you see something you can help with — accept it.",
-      emotion: 'Behind every task is someone who needs help. Behind every completion is a promise kept.',
-      target: '#questGrid'
+      element: '#btn-post-task, .btn-post-task, [onclick*="post"], #post-task-btn',
+      title: "📜 Posting a New Quest",
+      intro: "When you have tasks, chores, or goals you need help with, this section allows you to post them as new quests to the board. (Don't worry, we won't open it right now!)"
     },
     {
-      icon: '🪙',
-      title: 'Fairy Coins',
-      text: "Our internal currency. You earn coins by completing paid tasks, and spend them to post your own. Coins are locked in escrow when a task is posted — so workers know the money is real.",
-      emotion: "Think of it as community trust made tangible.",
-      target: '#coinBalance'
+      element: '#coin-balance, .coin-display, #fairy-coins',
+      title: "🪙 Fairy Coins Balance",
+      intro: "Track your rewards here! Complete quests to earn coins, or spend them to post your own requests for other adventurers to tackle."
     },
     {
-      icon: '🛡️',
-      title: 'Your Protection',
-      text: "Payments are locked upfront. Workers can't be scammed — the coins are already there. Posters can request revisions or cancel if work isn't done. Both sides rate each other after completion.",
-      emotion: "We built this so neither side gets burned.",
-      target: '.filters-section'
-    },
-    {
-      icon: '🔄',
-      title: 'You Can Change Your Mind',
-      text: "Made a mistake? You can edit your tasks, change the reward, switch between free and paid, or cancel entirely. Actions aren't permanent here.",
-      emotion: "We all make mistakes. The system accounts for that.",
-      target: null
-    },
-    {
-      icon: '✨',
-      title: "You're Ready",
-      text: "Post a task, accept one, or just browse. You can also offer your skills as an adventurer — post what you can do and get hired.",
-      emotion: "Welcome aboard. The guild is better with you here.",
-      target: null
+      element: '.nav-links, #site-nav, .sidebar',
+      title: "🗺️ Guild Navigation",
+      intro: "Use these links to easily hop between your Profile, the Hall of Fame, and your personal Quest History tracker."
     }
   ];
 
-  async function init() {
-    try {
-      const { data: { user } } = await window.sb.auth.getUser();
-      if (!user) return;
-      currentUser = user;
+  let currentStep = 0;
+  let backdrop = null;
+  let tooltip = null;
 
-      const { data: profile } = await window.sb
-        .from('user_profiles')
-        .select('onboarding_completed')
-        .eq('user_id', user.id)
-        .single();
+  // 2. Inject Required Styling into the Document Head
+  function injectStyles() {
+    if (document.getElementById('kg-onboard-styles')) return;
 
-      if (!profile?.onboarding_completed) {
-        setTimeout(() => show(), 1000);
-      }
-    } catch (e) {
-      // Silent fail — don't break the page
-    }
-  }
-
-  function createOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'kg-onboarding-overlay';
-    overlay.style.cssText = `
-      position: fixed; inset: 0; background: rgba(4,4,6,0.92);
-      z-index: 9998; display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(4px);
-    `;
-    const modal = document.createElement('div');
-    modal.id = 'kg-onboarding-modal';
-    modal.style.cssText = `
-      background: linear-gradient(135deg, #14141e, #1e1e2d);
-      border: 2px solid #d4af37; border-radius: 16px;
-      padding: 32px; max-width: 480px; width: 90%;
-      box-shadow: 0 25px 50px rgba(212,175,55,0.2);
-      font-family: 'Segoe UI', system-ui, sans-serif; color: #f0f0f5;
-      z-index: 9999; position: relative;
-    `;
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-    return { overlay, modal };
-  }
-
-  function show(forceRestart) {
-    if (active && !forceRestart) return;
-    document.getElementById('kg-onboarding-overlay')?.remove();
-    document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
-    active = true;
-    step = 0;
-
-    const { overlay, modal } = createOverlay();
-
-    function render() {
-      const s = steps[step];
-      document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
-
-      if (s.target) {
-        const el = document.querySelector(s.target);
-        if (el) {
-          el.classList.add('kg-onboard-highlight');
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const style = document.createElement('style');
+    style.id = 'kg-onboard-styles';
+    style.textContent = `
+      /* Dark Backdrop Mask */
+      .kg-onboard-backdrop {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(10, 10, 16, 0.75);
+        z-index: 9998;
+        pointer-events: auto;
+        transition: opacity 0.3s ease;
       }
 
-      modal.innerHTML = `
-        <div style="text-align:center">
-          <div style="font-size:2.2rem;margin-bottom:8px">${s.icon}</div>
-          <h2 style="font-family:'Cinzel',serif;font-size:1.4rem;color:#d4af37;margin-bottom:12px;letter-spacing:1px">${s.title}</h2>
-          <p style="font-size:0.95rem;color:#b0b0c0;line-height:1.6;text-align:left;margin-bottom:16px">${s.text}</p>
-          <blockquote style="font-style:italic;color:#d4af37;border-left:3px solid #d4af37;padding:10px 14px;margin:16px 0;font-size:0.85rem;text-align:left;background:rgba(212,175,55,0.04);border-radius:0 8px 8px 0">
-            "${s.emotion}"
-          </blockquote>
-          <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
-            ${step > 0 ? `<button id="kg-ob-prev" style="padding:10px 20px;background:transparent;color:#d4af37;border:1px solid #d4af37;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.85rem">← Back</button>` : ''}
-            ${step < steps.length - 1
-              ? `<button id="kg-ob-next" style="padding:10px 20px;background:#d4af37;color:#000;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.85rem;box-shadow:0 4px 12px rgba(212,175,55,0.3)">Continue →</button>`
-              : `<button id="kg-ob-done" style="padding:10px 20px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.85rem;box-shadow:0 4px 12px rgba(16,185,129,0.3)">Enter the Guild ✨</button>`
-            }
-            <button id="kg-ob-skip" style="padding:10px 20px;background:rgba(148,148,168,0.1);color:#9494a8;border:1px solid rgba(148,148,168,0.2);border-radius:8px;cursor:pointer;font-size:0.85rem">Skip</button>
-          </div>
-          <div style="margin-top:16px;font-size:0.7rem;color:#5a5a6a;letter-spacing:1px;text-transform:uppercase">
-            Step ${step + 1} of ${steps.length}
-          </div>
-        </div>
-      `;
+      /* Highlight styling for the current element */
+      .kg-onboard-highlight {
+        position: relative !important;
+        z-index: 9999 !important;
+        outline: 3px solid #d4af37 !important; /* Guild Gold border */
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.4) !important;
+        border-radius: 8px;
+        background: #14141e !important;
+        
+        /* FIX: Prevents underlying buttons or modal open scripts from firing when clicked */
+        pointer-events: none !important; 
+      }
 
-      // Bind events
-      const prevBtn = document.getElementById('kg-ob-prev');
-      const nextBtn = document.getElementById('kg-ob-next');
-      const doneBtn = document.getElementById('kg-ob-done');
-      const skipBtn = document.getElementById('kg-ob-skip');
+      /* Beautiful Guild-Themed Tooltip Card */
+      .kg-onboard-tooltip {
+        position: fixed;
+        z-index: 10000;
+        background: #1c1c27;
+        border: 1px solid #d4af37;
+        border-radius: 12px;
+        padding: 20px;
+        width: 320px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        color: #f0f0f5;
+        font-family: system-ui, -apple-system, sans-serif;
+        transition: all 0.25s ease;
+      }
 
-      if (prevBtn) prevBtn.onclick = () => { step--; render(); };
-      if (nextBtn) nextBtn.onclick = () => { step++; render(); };
-      if (doneBtn) doneBtn.onclick = () => complete(overlay);
-      if (skipBtn) skipBtn.onclick = () => { overlay.remove(); active = false; };
-    }
+      .kg-onboard-tooltip h3 {
+        margin: 0 0 10px 0;
+        font-size: 1.15rem;
+        color: #e5c158;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        padding-bottom: 6px;
+      }
 
-    render();
+      .kg-onboard-tooltip p {
+        margin: 0 0 16px 0;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #ccccdd;
+      }
+
+      .kg-onboard-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .kg-onboard-btn {
+        background: transparent;
+        border: 1px solid #5a5a75;
+        color: #a0a0b8;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+      }
+
+      .kg-onboard-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+      }
+
+      .kg-onboard-btn-primary {
+        background: #d4af37;
+        border: 1px solid #d4af37;
+        color: #0e0e15;
+      }
+
+      .kg-onboard-btn-primary:hover {
+        background: #f1cc64;
+        border-color: #f1cc64;
+        color: #0e0e15;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
-  async function complete(overlay) {
-    if (currentUser) {
-      await window.sb
-        .from('user_profiles')
-        .update({ onboarding_completed: true, onboarding_completed_at: new Date().toISOString() })
-        .eq('user_id', currentUser.id);
+  // 3. Helper to locate live DOM elements through fallbacks
+  function findElement(selectorString) {
+    const selectors = selectorString.split(',');
+    for (let sel of selectors) {
+      const el = document.querySelector(sel.trim());
+      if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+        return el;
+      }
     }
-    overlay.remove();
-    document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
-    active = false;
+    return null;
   }
 
-  // Expose globally so quest-board "Guide" button can trigger it
-  window.showOnboarding = (force) => show(force);
+  // 4. Render Step Content and Calculate Position Coordinates
+  function renderStep(index) {
+    // Clear out preceding structural highlights
+    document.querySelectorAll('.kg-onboard-highlight').forEach(el => {
+      el.classList.remove('kg-onboard-highlight');
+    });
 
-// Inject highlight style
-  const style = document.createElement('style');
-  style.textContent = `
-    .kg-onboard-highlight {
-      position: relative; z-index: 9999 !important;
-      outline: 3px solid #d4af37 !important;
-      box-shadow: 0 0 0 9999px rgba(4,4,6,0.85), 0 0 30px rgba(212,175,55,0.5) !important;
-      border-radius: 12px; background: #14141e !important;
-      pointer-events: none !important; /* Prevents accidental clicks and redirects during guide */
+    if (index >= onboardingSteps.length) {
+      endOnboarding();
+      return;
     }
-  `;
-  document.head.appendChild(style);
-  
-  // Auto-init on load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+
+    currentStep = index;
+    const stepData = onboardingSteps[currentStep];
+    const targetElement = findElement(stepData.element);
+
+    if (!targetElement) {
+      // Skip cleanly if the step element layout variant is missing on this specific page view
+      console.warn(`Onboarding target selector not found: ${stepData.element}. Skipping step.`);
+      renderStep(index + 1);
+      return;
+    }
+
+    // Scroll elements into alignment cleanly if needed
+    targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    targetElement.classList.add('kg-onboard-highlight');
+
+    // Generate tooltip frame layout if non-existent
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.className = 'kg-onboard-tooltip';
+      document.body.appendChild(tooltip);
+    }
+
+    const isLast = currentStep === onboardingSteps.length - 1;
+
+    tooltip.innerHTML = `
+      <h3>${stepData.title}</h3>
+      <p>${stepData.intro}</p>
+      <div class="kg-onboard-buttons">
+        <button class="kg-onboard-btn" id="kg-skip-btn">Skip Tour</button>
+        <button class="kg-onboard-btn kg-onboard-btn-primary" id="kg-next-btn">
+          ${isLast ? "Finish 🎉" : "Continue"}
+        </button>
+      </div>
+    `;
+
+    // Calculate rendering alignment bounds dynamic offsetting
+    setTimeout(() => {
+      const rect = targetElement.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+
+      let top = rect.bottom + window.scrollY + 12;
+      let left = rect.left + window.scrollX;
+
+      // Adjust up if layout drops past display fold lines
+      if (top + tooltipRect.height > window.innerHeight + window.scrollY) {
+        top = rect.top + window.scrollY - tooltipRect.height - 12;
+      }
+
+      // Constrain context bounds inside inner page view parameters
+      if (left + tooltipRect.width > window.innerWidth) {
+        left = window.innerWidth - tooltipRect.width - 20;
+      }
+      if (left < 10) left = 10;
+
+      tooltip.style.top = `${top}px`;
+      tooltip.style.left = `${left}px`;
+    }, 100);
+
+    // Explicit manual click handlers to isolate tour state mutations
+    document.getElementById('kg-skip-btn').onclick = endOnboarding;
+    document.getElementById('kg-next-btn').onclick = () => renderStep(currentStep + 1);
+  }
+
+  // 5. Run Execution Sequence Loop Initializer
+  function startOnboarding(force = false) {
+    if (!force && localStorage.getItem('kg_onboarding_completed') === 'true') {
+      return;
+    }
+
+    injectStyles();
+
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.className = 'kg-onboard-backdrop';
+      document.body.appendChild(backdrop);
+    }
+
+    renderStep(0);
+  }
+
+  // 6. Tear down Walkthrough variables context completely
+  function endOnboarding() {
+    localStorage.setItem('kg_onboarding_completed', 'true');
+
+    if (backdrop) {
+      backdrop.remove();
+      backdrop = null;
+    }
+    if (tooltip) {
+      tooltip.remove();
+      tooltip = null;
+    }
+
+    document.querySelectorAll('.kg-onboard-highlight').forEach(el => {
+      el.classList.remove('kg-onboard-highlight');
+    });
+  }
+
+  // Bind to international window layout context for quest-board.html button triggers
+  window.showOnboarding = function (forceStart = false) {
+    startOnboarding(forceStart);
+  };
+
+  // Check interactive attachment state lifecycle hooks
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    startOnboarding(false);
   } else {
-    init();
+    document.addEventListener('DOMContentLoaded', () => startOnboarding(false));
   }
 })();
