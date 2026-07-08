@@ -85,6 +85,7 @@
     const publicMenuItems = [
         { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html' },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
+        { name: 'Feedback', icon: 'fa-comments', file: 'feedback.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
     ];
 
@@ -94,6 +95,7 @@
         { name: 'Be a Worker', icon: 'fa-hammer', file: 'worker-post.html' },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
         { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
+        { name: 'Feedback', icon: 'fa-comments', file: 'feedback.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
     ];
 
