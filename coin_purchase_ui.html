@@ -24,16 +24,18 @@
       --border: #2a2a40;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Segoe UI', system-ui, sans-serif;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 40px 20px;
+      flex-direction: column;   /* Stacks navbar on top, container below */
+      align-items: center;       /* Centers content horizontally */
+      justify-content: flex-start;
     }
+    
     .container {
       max-width: 480px;
       width: 100%;
@@ -41,7 +43,9 @@
       border-radius: 16px;
       padding: 32px;
       border: 1px solid var(--border);
+      margin: 40px 20px;         /* Adds symmetrical spacing below navbar */
     }
+    
     h1 {
       font-size: 1.5rem;
       margin-bottom: 8px;
