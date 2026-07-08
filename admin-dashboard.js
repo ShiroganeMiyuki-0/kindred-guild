@@ -1,245 +1,497 @@
-// ============================================
-// KINDRED GUILD — ADMIN DASHBOARD CONTROLLER (IMPROVED v2)
-// ============================================
-const SUPABASE_URL = 'https://owpyqeubmfvtuqjaxauo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93cHlxZXVibWZ2dHVxamF4YXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MTYxODQsImV4cCI6MjA5NTI5MjE4NH0.9lQ8jxTgiCdhjC8VeYAuU3EI7UzvwHiwuGIuwyxMGLM';
+/**
+ * Kindred Guild - Admin Dashboard Manager
+ * File: admin-dashboard.js
+ */
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let activeTab = 'quests';
+let allFeedback = [];
 
-(async function checkAccess() {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) {
-    window.location.href = 'auth.html';
-    return;
-  }
-
-  const { data: profile, error } = await sb
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('user_id', user.id)
-    .single();
-
-  if (error || !profile?.is_admin) {
-    alert('Access Restricted. Yash / Admins only.');
-    window.location.href = 'quest-board.html';
-    return;
-  }
-
-  loadStats();
-  loadPendingPurchases();
-  loadVerifiedPurchases();
-})();
-
-async function loadStats() {
-  const { count: pendingCount } = await sb
-    .from('coin_purchases')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'pending');
-  document.getElementById('pendingCount').textContent = pendingCount || 0;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const { count: verifiedToday } = await sb
-    .from('coin_purchases')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'verified')
-    .gte('created_at', today.toISOString());
-  document.getElementById('verifiedTodayCount').textContent = verifiedToday || 0;
-
-  const { count: totalVerified } = await sb
-    .from('coin_purchases')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'verified');
-  document.getElementById('totalVerifiedCount').textContent = totalVerified || 0;
-}
-
-window.switchTab = function(tabName) {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-  
-  event.target.classList.add('active');
-  document.getElementById(tabName + 'Tab').classList.add('active');
-  
-  if (tabName === 'history') loadVerifiedPurchases();
-};
-
-async function loadPendingPurchases() {
-  const { data, error } = await sb
-    .from('coin_purchases')
-    .select(`
-      *,
-      user:user_profiles!coin_purchases_user_id_fkey(username, display_name)
-    `)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true });
-
-  if (error) {
-    console.error(error);
-    document.getElementById('adminQueueBody').innerHTML = `
-      <tr>
-        <td colspan="5" class="empty-state">
-          <div class="empty-state-icon">❌</div>
-          Error loading data.
-        </td>
-      </tr>`;
-    return;
-  }
-
-  const body = document.getElementById('adminQueueBody');
-  if (!data || data.length === 0) {
-    body.innerHTML = `
-      <tr>
-        <td colspan="5" class="empty-state">
-          <div class="empty-state-icon">🎉</div>
-          All queue cleared. No pending requests.
-        </td>
-      </tr>`;
-    return;
-  }
-
-  body.innerHTML = data.map(p => {
-    const user = p.user?.display_name || p.user?.username || 'Member';
-    const date = new Date(p.created_at).toLocaleString('en-IN', {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+// 1. Tab Switching Module
+function switchTab(tabId) {
+    activeTab = tabId;
+    
+    // Toggle Active Styles on tabs
+    document.querySelectorAll('[id^="tab-"]').forEach(el => {
+        el.classList.remove('active-tab');
     });
-    const timeAgo = getTimeAgo(p.created_at);
-    
-    const noteHtml = p.payment_note 
-      ? `<div class="payment-note-cell">${p.payment_note}</div>`
-      : '<div class="no-utr">No payment note</div>';
-    
-    const utrHtml = p.upi_transaction_ref
-      ? `<div class="utr-cell">UTR: ${p.upi_transaction_ref}</div>`
-      : '<div class="no-utr">No UTR provided — match by note + amount</div>';
+    const currentTab = document.getElementById(`tab-${tabId}`);
+    if (currentTab) currentTab.classList.add('active-tab');
 
-    return `
-      <tr>
-        <td>
-          <div style="font-weight: 600;">${user}</div>
-          <div style="font-size: 0.8rem; color: var(--text-dim);">@${p.user?.username || 'unknown'}</div>
-        </td>
-        <td>
-          <div style="font-weight: 700; color: var(--accent); font-size: 1.1rem;">${p.coin_amount} FC</div>
-          <div style="font-size: 0.8rem; color: var(--text-dim);">₹${p.coin_amount}</div>
-        </td>
-        <td>
-          ${noteHtml}
-          ${utrHtml}
-        </td>
-        <td>
-          <div style="font-size: 0.85rem;">${date}</div>
-          <div style="font-size: 0.75rem; color: var(--text-dim);">${timeAgo}</div>
-        </td>
-        <td>
-          <button class="btn btn-approve" onclick="approvePurchase('${p.id}', '${p.user_id}', ${p.coin_amount})">
-            ✅ Approve
-          </button>
-          <button class="btn btn-reject" onclick="rejectPurchase('${p.id}')">
-            ❌ Reject
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-  
-  loadStats();
-}
-
-async function loadVerifiedPurchases() {
-  const { data, error } = await sb
-    .from('coin_purchases')
-    .select(`
-      *,
-      user:user_profiles!coin_purchases_user_id_fkey(username, display_name)
-    `)
-    .in('status', ['verified', 'rejected'])
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  const container = document.getElementById('verifiedQueueBody');
-  if (error || !data || data.length === 0) {
-    container.innerHTML = `
-      <tr>
-        <td colspan="5" class="empty-state">
-          <div class="empty-state-icon">📜</div>
-          No history yet.
-        </td>
-      </tr>`;
-    return;
-  }
-
-  container.innerHTML = data.map(p => {
-    const user = p.user?.display_name || p.user?.username || 'Member';
-    const date = new Date(p.created_at).toLocaleString('en-IN', {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    // Toggle Panel Visibility
+    document.querySelectorAll('.panel-view').forEach(panel => {
+        panel.classList.add('hidden');
     });
-    const statusClass = p.status === 'verified' ? 'badge-verified' : 'badge-rejected';
-    const statusText = p.status === 'verified' ? 'Verified' : 'Rejected';
+    const currentPanel = document.getElementById(`panel-${tabId}`);
+    if (currentPanel) currentPanel.classList.remove('hidden');
+
+    // Load corresponding data
+    if (tabId === 'quests') fetchPendingQuests();
+    if (tabId === 'coins') fetchPendingCoins();
+    if (tabId === 'workers') fetchWorkersPool();
+    if (tabId === 'feedback') fetchFeedbackPortal();
+}
+
+// 2. Authentication Check
+async function checkAdminAuthorization() {
+    if (!window.supabase) {
+        showGlobalAlert("Database connection is offline. Please review your credentials.", "error");
+        return;
+    }
+
+    const { data: { session }, error } = await window.supabase.auth.getSession();
+    if (error || !session) {
+        window.location.href = 'auth.html';
+        return;
+    }
+
+    const user = session.user;
+    const isAdmin = user.user_metadata?.role === 'admin' || user.email?.includes('admin');
     
-    return `
-      <tr>
-        <td>
-          <div style="font-weight: 600;">${user}</div>
-          <div style="font-size: 0.8rem; color: var(--text-dim);">@${p.user?.username || 'unknown'}</div>
-        </td>
-        <td>
-          <div style="font-weight: 700; color: var(--accent);">${p.coin_amount} FC</div>
-          <div style="font-size: 0.8rem; color: var(--text-dim);">₹${p.coin_amount}</div>
-        </td>
-        <td>
-          <div class="payment-note-cell" style="font-size: 0.8rem;">${p.payment_note || '-'}</div>
-          ${p.upi_transaction_ref ? `<div class="utr-cell">${p.upi_transaction_ref}</div>` : ''}
-        </td>
-        <td style="font-size: 0.85rem; color: var(--text-dim);">${date}</td>
-        <td><span class="badge ${statusClass}">${statusText}</span></td>
-      </tr>
-    `;
-  }).join('');
+    if (!isAdmin) {
+        showGlobalAlert("Access Denied: You do not carry the Guild Master credentials.", "error");
+        // Force redirect regular players after a short delay
+        setTimeout(() => {
+            window.location.href = 'quest-board.html';
+        }, 2500);
+        return;
+    }
+
+    // Initialize Dashboard data
+    fetchPendingQuests();
+    preloadFeedbackBadge();
 }
 
-function getTimeAgo(dateString) {
-  const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
-  if (seconds < 60) return 'just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+// 3. UI Status Alerts
+function showGlobalAlert(message, type = "success") {
+    const alertBox = document.getElementById('dashboardAlert');
+    if (!alertBox) return;
+
+    alertBox.className = `mb-6 p-4 rounded-xl text-sm font-medium ${
+        type === 'success' 
+            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+    }`;
+    alertBox.textContent = message;
+    alertBox.classList.remove('hidden');
+
+    setTimeout(() => {
+        alertBox.classList.add('hidden');
+    }, 5000);
 }
 
-window.approvePurchase = async function(purchaseId, userId, coins) {
-  if (!confirm(`Verify and approve ${coins} FC to ledger?\n\nPlease confirm you received ₹${coins} in your UPI app with matching payment note/UTR.`)) return;
+// 4. Fetch Pending Quests Module
+async function fetchPendingQuests() {
+    const tableBody = document.getElementById('questsTableBody');
+    if (!tableBody) return;
 
-  const { error } = await sb.rpc('approve_coin_purchase', {
-    p_purchase_id: purchaseId
-  });
+    try {
+        const { data, error } = await window.supabase
+            .from('quests')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
 
-  if (error) {
-    alert('Failed to approve: ' + error.message);
-  } else {
-    alert('✅ Approved successfully! Coins credited.');
-  }
+        if (error) throw error;
 
-  loadPendingPurchases();
-  loadVerifiedPurchases();
-  loadStats();
-};
+        if (!data || data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-gray-500">
+                        <i class="fa-solid fa-circle-check text-emerald-400 mb-2 block text-xl"></i> No pending quests to approve.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
 
-window.rejectPurchase = async function(purchaseId) {
-  if (!confirm('Reject transaction entry request?\n\nUser will not receive coins.')) return;
+        tableBody.innerHTML = data.map(quest => `
+            <tr class="border-b border-slate-800/40 hover:bg-slate-900/20 transition-colors">
+                <td class="py-4 font-semibold text-white">${escapeHtml(quest.title)}</td>
+                <td class="py-4 text-gray-400">${escapeHtml(quest.creator_email || 'Adventurer')}</td>
+                <td class="py-4 text-amber-400 font-bold">${quest.reward_coins} FC</td>
+                <td class="py-4 text-gray-400">${new Date(quest.created_at).toLocaleDateString()}</td>
+                <td class="py-4 text-right">
+                    <button onclick="approveQuest('${quest.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg transition mr-2">Approve</button>
+                    <button onclick="rejectQuest('${quest.id}')" class="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-400 text-xs px-3 py-1.5 rounded-lg transition">Deny</button>
+                </td>
+            </tr>
+        `).join('');
 
-  const { error } = await sb.rpc('reject_coin_purchase', {
-    p_purchase_id: purchaseId
-  });
+    } catch (err) {
+        console.error("Quests loading error:", err);
+        tableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-rose-400">Failed to load quests: ${err.message}</td></tr>`;
+    }
+}
 
-  if (error) {
-    alert(error.message);
-  } else {
-    alert('❌ Request rejected.');
-  }
+// 5. Quest Actions
+async function approveQuest(id) {
+    try {
+        const { error } = await window.supabase
+            .from('quests')
+            .update({ status: 'active' })
+            .eq('id', id);
 
-  loadPendingPurchases();
-  loadVerifiedPurchases();
-  loadStats();
-};
+        if (error) throw error;
+        showGlobalAlert("Quest successfully approved and published onto the Quest Board!");
+        fetchPendingQuests();
+    } catch (err) {
+        showGlobalAlert(err.message, "error");
+    }
+}
+
+async function rejectQuest(id) {
+    try {
+        const { error } = await window.supabase
+            .from('quests')
+            .update({ status: 'rejected' })
+            .eq('id', id);
+
+        if (error) throw error;
+        showGlobalAlert("Quest has been rejected.");
+        fetchPendingQuests();
+    } catch (err) {
+        showGlobalAlert(err.message, "error");
+    }
+}
+
+
+// 6. Fetch Coin Ledger Transactions
+async function fetchPendingCoins() {
+    const tableBody = document.getElementById('coinsTableBody');
+    if (!tableBody) return;
+
+    try {
+        const { data, error } = await window.supabase
+            .from('coin_purchases')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-gray-500">
+                        <i class="fa-solid fa-clipboard-check text-emerald-400 mb-2 block text-xl"></i> Ledger is clean. No pending verifications.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = data.map(tx => `
+            <tr class="border-b border-slate-800/40 hover:bg-slate-900/20 transition-colors">
+                <td class="py-4 font-semibold text-white">${escapeHtml(tx.email)}</td>
+                <td class="py-4 text-amber-400 font-bold">${tx.amount_coins} FC</td>
+                <td class="py-4 text-gray-400 font-mono text-xs">${escapeHtml(tx.utr || 'N/A')}</td>
+                <td class="py-4 text-gray-400">${new Date(tx.created_at).toLocaleDateString()}</td>
+                <td class="py-4 text-right">
+                    <button onclick="approveCoins('${tx.id}', '${tx.user_id}', ${tx.amount_coins})" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg transition mr-2">Verify & Add Coins</button>
+                    <button onclick="rejectCoins('${tx.id}')" class="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-400 text-xs px-3 py-1.5 rounded-lg transition">Deny</button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        console.error("Ledger reading error:", err);
+        tableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-rose-400">Failed to scan ledger: ${err.message}</td></tr>`;
+    }
+}
+
+// 7. Coin Actions
+async function approveCoins(txId, userId, coinsAmount) {
+    try {
+        // Step A: Approve transactional ticket
+        const { error: txError } = await window.supabase
+            .from('coin_purchases')
+            .update({ status: 'verified' })
+            .eq('id', txId);
+
+        if (txError) throw txError;
+
+        // Step B: Get the user's current coins
+        const { data: profile, error: profileGetError } = await window.supabase
+            .from('profiles')
+            .select('coins')
+            .eq('id', userId)
+            .single();
+
+        if (profileGetError) throw profileGetError;
+
+        // Step C: Increment and save balance
+        const updatedCoins = (profile.coins || 0) + coinsAmount;
+        const { error: profileUpdateError } = await window.supabase
+            .from('profiles')
+            .update({ coins: updatedCoins })
+            .eq('id', userId);
+
+        if (profileUpdateError) throw profileUpdateError;
+
+        showGlobalAlert(`Payment approved! credited +${coinsAmount} Fairy Coins to the adventurer's wallet.`);
+        fetchPendingCoins();
+    } catch (err) {
+        showGlobalAlert(`Error: ${err.message}`, "error");
+    }
+}
+
+async function rejectCoins(txId) {
+    try {
+        const { error } = await window.supabase
+            .from('coin_purchases')
+            .update({ status: 'denied' })
+            .eq('id', txId);
+
+        if (error) throw error;
+        showGlobalAlert("Coin request denied and marked as invalid transaction.");
+        fetchPendingCoins();
+    } catch (err) {
+        showGlobalAlert(err.message, "error");
+    }
+}
+
+
+// 8. Fetch Worker Pools Tab
+async function fetchWorkersPool() {
+    const tableBody = document.getElementById('workersTableBody');
+    if (!tableBody) return;
+
+    try {
+        const { data, error } = await window.supabase
+            .from('profiles')
+            .select('*')
+            .eq('is_worker', true)
+            .order('reputation', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-gray-500">
+                        No registered workers found in the database.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = data.map(worker => `
+            <tr class="border-b border-slate-800/40 hover:bg-slate-900/20 transition-colors">
+                <td class="py-4 font-semibold text-white">${escapeHtml(worker.username || 'Anonymous')}</td>
+                <td class="py-4 text-gray-400">${escapeHtml(worker.skills || 'General Helper')}</td>
+                <td class="py-4 text-amber-400 font-bold">${worker.reputation || 0} ⭐</td>
+                <td class="py-4 text-gray-400">${worker.created_at ? new Date(worker.created_at).toLocaleDateString() : 'N/A'}</td>
+                <td class="py-4 text-right">
+                    <button onclick="adjustReputation('${worker.id}', 5)" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-2.5 py-1.5 rounded-lg transition mr-1">+5 Rep</button>
+                    <button onclick="adjustReputation('${worker.id}', -5)" class="bg-slate-800 hover:bg-slate-700 text-gray-300 text-xs px-2.5 py-1.5 rounded-lg transition">Reduce Rep</button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        console.error("Worker fetching error:", err);
+        tableBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-rose-400">Failed to load registry: ${err.message}</td></tr>`;
+    }
+}
+
+async function adjustReputation(workerId, amount) {
+    try {
+        const { data: worker, error: fetchErr } = await window.supabase
+            .from('profiles')
+            .select('reputation')
+            .eq('id', workerId)
+            .single();
+
+        if (fetchErr) throw fetchErr;
+
+        const currentRep = worker.reputation || 0;
+        const newRep = Math.max(0, currentRep + amount);
+
+        const { error: updateErr } = await window.supabase
+            .from('profiles')
+            .update({ reputation: newRep })
+            .eq('id', workerId);
+
+        if (updateErr) throw updateErr;
+
+        showGlobalAlert(`Reputation adjusted successfully for the worker!`);
+        fetchWorkersPool();
+    } catch (err) {
+        showGlobalAlert(err.message, "error");
+    }
+}
+
+
+// 9. Guild Feedback Fetch & Display (NEW)
+async function fetchFeedbackPortal() {
+    const listContainer = document.getElementById('feedbackListContainer');
+    if (!listContainer) return;
+
+    try {
+        const { data, error } = await window.supabase
+            .from('feedback')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        allFeedback = data || [];
+        renderFeedbackCards(allFeedback);
+        updateFeedbackCountBadges();
+
+    } catch (err) {
+        console.error("Feedback loading error:", err);
+        listContainer.innerHTML = `
+            <div class="col-span-full py-12 text-center text-rose-400 glass-card rounded-2xl">
+                <i class="fa-solid fa-triangle-exclamation text-3xl mb-3 block"></i>
+                Failed to load feedback from Supabase: ${err.message}
+            </div>
+        `;
+    }
+}
+
+function renderFeedbackCards(feedbackList) {
+    const listContainer = document.getElementById('feedbackListContainer');
+    if (!listContainer) return;
+
+    if (feedbackList.length === 0) {
+        listContainer.innerHTML = `
+            <div class="col-span-full py-12 text-center text-gray-500 glass-card rounded-2xl">
+                <i class="fa-solid fa-envelope-open text-3xl text-slate-700 mb-3 block"></i>
+                No feedback entries found in this category.
+            </div>
+        `;
+        return;
+    }
+
+    const categoryBadges = {
+        'Bug': 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
+        'Feature Request': 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
+        'Appreciation': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+        'Inquiry': 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+    };
+
+    const categoryIcons = {
+        'Bug': 'fa-bug',
+        'Feature Request': 'fa-lightbulb',
+        'Appreciation': 'fa-heart',
+        'Inquiry': 'fa-circle-question'
+    };
+
+    listContainer.innerHTML = feedbackList.map(item => {
+        const badgeClass = categoryBadges[item.category] || 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+        const iconClass = categoryIcons[item.category] || 'fa-comments';
+        
+        return `
+            <div class="glass-card rounded-2xl p-6 flex flex-col justify-between hover:border-slate-700 transition duration-150">
+                <div>
+                    <!-- Header -->
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <span class="${badgeClass} px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid ${iconClass}"></i> ${escapeHtml(item.category)}
+                        </span>
+                        <span class="text-xs text-gray-500">${new Date(item.created_at).toLocaleDateString()}</span>
+                    </div>
+
+                    <!-- Content -->
+                    <h3 class="text-white font-bold text-lg mb-2">${escapeHtml(item.subject)}</h3>
+                    <p class="text-gray-400 text-sm whitespace-pre-wrap leading-relaxed mb-4" style="max-height: 180px; overflow-y: auto;">${escapeHtml(item.message)}</p>
+                </div>
+
+                <!-- Footer & Action -->
+                <div class="flex items-center justify-between border-t border-slate-800/60 pt-4 mt-auto">
+                    <div class="text-xs text-gray-500 truncate max-w-[200px]">
+                        <span class="block text-[10px] text-gray-600 uppercase font-semibold">From Adventurer</span>
+                        <span class="text-gray-400 font-medium">${escapeHtml(item.email)}</span>
+                    </div>
+                    <button onclick="deleteFeedback('${item.id}')" class="text-rose-500 hover:text-white hover:bg-rose-950/30 px-3 py-1.5 rounded-lg text-xs transition duration-150 flex items-center gap-1.5 border border-transparent hover:border-rose-500/20 cursor-pointer">
+                        <i class="fa-solid fa-trash-can"></i> Archive
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// FILTER FEEDBACK LOCAL DROPDOWN
+function filterFeedback() {
+    const value = document.getElementById('feedbackFilter').value;
+    if (value === 'ALL') {
+        renderFeedbackCards(allFeedback);
+    } else {
+        const filtered = allFeedback.filter(item => item.category === value);
+        renderFeedbackCards(filtered);
+    }
+}
+
+// ARCHIVE / DELETE FEEDBACK
+async function deleteFeedback(id) {
+    if (!confirm("Are you sure you want to archive and clear this feedback from the keep?")) return;
+
+    try {
+        const { error } = await window.supabase
+            .from('feedback')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        showGlobalAlert("Feedback successfully archived!");
+        fetchFeedbackPortal();
+
+    } catch (err) {
+        showGlobalAlert(`Error: ${err.message}`, "error");
+    }
+}
+
+// DYNAMIC BADGE CALCULATOR
+function updateFeedbackCountBadges() {
+    const badge = document.getElementById('feedback-count-badge');
+    const sideBadge = document.getElementById('feedback-count-badge-side');
+    const dot = document.getElementById('feedback-dot');
+    
+    if (badge) badge.textContent = allFeedback.length;
+    if (sideBadge) sideBadge.textContent = allFeedback.length;
+    
+    if (dot) {
+        if (allFeedback.length > 0) {
+            dot.classList.remove('hidden');
+        } else {
+            dot.classList.add('hidden');
+        }
+    }
+}
+
+// ASYNC PRELOADER BADGE
+async function preloadFeedbackBadge() {
+    try {
+        const { data, error } = await window.supabase
+            .from('feedback')
+            .select('id');
+        if (data && !error) {
+            const count = data.length;
+            const countDisplay = document.getElementById('feedback-count-badge');
+            const dot = document.getElementById('feedback-dot');
+            if (countDisplay) countDisplay.textContent = count;
+            if (dot && count > 0) dot.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.warn("Failed to preload feedback status badge.");
+    }
+}
+
+// Helper: Escape raw HTML values securely
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+}
+
+// 10. Startup Lifecycle initialization
+window.addEventListener('load', () => {
+    // Wait briefly for Supabase to establish session
+    setTimeout(checkAdminAuthorization, 200);
+});
