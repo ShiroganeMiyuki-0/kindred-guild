@@ -1,7 +1,8 @@
 /**
- * Kindred Guild - Non-Disruptive Guided Tips Walkthrough
+ * Kindred Guild - Non-Blocking Guided Tips Walkthrough
  * Location: shiroganemiyuki-0/kindred-guild/onboarding.js
- * Purpose: A purely informative tip tour. Does not trigger modals, clicks, or page redirects.
+ * Purpose: A beautiful fantasy-themed guided tour that explains layout features
+ * while keeping the page 100% interactive and clickable at all times.
  */
 
 (function () {
@@ -9,70 +10,85 @@
   let backdrop = null;
   let tooltip = null;
 
-  // 1. Static Tip Configuration (Targets existing elements on the Quest Board page)
+  // 1. Defined steps targeting the key elements of your dashboard
   const onboardingSteps = [
     {
       target: '#quest-board-container, .quest-board, main, .container',
       title: "⚔️ Welcome to the Quest Board",
-      intro: "This is the main hub of the Guild Hall! Here you can view, filter, and track active adventures posted by yourself and other members."
+      intro: "This is the central heart of the Guild! Here, you can view, filter, and track all active adventures posted by your fellow guild members."
     },
     {
-      // Strict layout selector to grab the yellow header action button directly
-      target: 'button.btn-warning, .btn-post-task, #post-task-btn, [id*="post"]',
+      // Target the yellow "Post Task" button precisely
+      target: 'button.btn-warning, button[onclick*="Post"], button[onclick*="post"], .btn-post-task, #post-task-btn',
       title: "📜 Commissioning Quests",
-      intro: "When you need help with real-world tasks or chores, you can use this button to draft a new quest scroll and post it up for the guild."
+      intro: "Need something done? Click this button to draft a new quest scroll, set a coin bounty, and pin it to the board for other adventurers."
     },
     {
       target: '#coin-balance, .coin-display, #fairy-coins, [class*="coin"]',
-      title: "🪙 Your Guild Pouch",
-      intro: "Tracks your Fairy Coins (FC) balance. You spend coins as bounties to post quests, and earn them back by completing tasks for others."
+      title: "🪙 Your Guild Coin Pouch",
+      intro: "This displays your current Fairy Coins (FC) balance. Post quests to spend them as rewards, or accept and complete quests to earn more!"
     },
     {
       target: '.nav-links, #site-nav, .navbar, .flex-wrap',
       title: "🗺️ Guild Navigation",
-      intro: "Quickly journey across the realm! Use these tabs to jump between your Profile settings, personal History logs, or the specialized Wish board."
+      intro: "Use these navigation links to easily travel between your Profile settings, active Quest History, or the magical Wish board."
     }
   ];
 
-  // 2. Inject Dark Theme Custom UI Styles
+  // 2. Inject CSS styles containing the critical pointer-events fix
   function injectStyles() {
     if (document.getElementById('kg-onboard-styles')) return;
 
     const style = document.createElement('style');
     style.id = 'kg-onboard-styles';
     style.textContent = `
+      /* The Dark Tint Layer */
       .kg-onboard-backdrop {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(8, 8, 12, 0.75);
+        background: rgba(8, 8, 12, 0.5); /* Soft, cinematic dim */
         z-index: 9998;
-        pointer-events: auto;
-        transition: opacity 0.2s ease;
-      }
-
-      .kg-onboard-highlight {
-        position: relative !important;
-        z-index: 9999 !important;
-        outline: 3px solid #d4af37 !important; /* Guild Gold Accent */
-        box-shadow: 0 0 25px rgba(212, 175, 55, 0.45) !important;
-        border-radius: 6px;
+        transition: opacity 0.3s ease;
         
-        /* CRITICAL: Prevents any underlying buttons/links from being clicked during the tour */
+        /* FIX: Allows all clicks to pass straight through this layer to the page */
         pointer-events: none !important; 
       }
 
+      /* Glowing Pulsing Outline around the active element */
+      .kg-onboard-highlight {
+        position: relative !important;
+        z-index: 9999 !important;
+        outline: 3px solid #d4af37 !important; /* Elegant Guild Gold */
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 0 4px rgba(212, 175, 55, 0.2) !important;
+        border-radius: 6px;
+        animation: kg-glowing-pulse 2s infinite ease-in-out;
+        
+        /* Ensure highlighted items can still be hovered/interacted with normally */
+        pointer-events: auto !important; 
+      }
+
+      @keyframes kg-glowing-pulse {
+        0% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 0 0px rgba(212, 175, 55, 0.3); }
+        50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.8), 0 0 0 8px rgba(212, 175, 55, 0); }
+        100% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 0 0px rgba(212, 175, 55, 0.3); }
+      }
+
+      /* Premium Floating Tooltip Box */
       .kg-onboard-tooltip {
         position: fixed;
         z-index: 10000;
-        background: #161622;
+        background: #151522;
         border: 1px solid #d4af37;
         border-radius: 12px;
         padding: 20px;
         width: 310px;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 10px rgba(212, 175, 55, 0.05);
         color: #f0f0f5;
         font-family: system-ui, -apple-system, sans-serif;
-        transition: all 0.2s ease-out;
+        transition: top 0.25s ease-out, left 0.25s ease-out;
+        
+        /* Crucial: Must accept mouse clicks so buttons can be clicked */
+        pointer-events: auto !important; 
       }
 
       .kg-onboard-tooltip h3 {
@@ -80,14 +96,15 @@
         font-size: 1.1rem;
         color: #e5c158;
         border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-        padding-bottom: 6px;
+        padding-bottom: 8px;
+        font-weight: 700;
       }
 
       .kg-onboard-tooltip p {
         margin: 0 0 16px 0;
         font-size: 0.92rem;
-        line-height: 1.45;
-        color: #bcccdd;
+        line-height: 1.5;
+        color: #ccd0df;
       }
 
       .kg-onboard-buttons {
@@ -97,20 +114,21 @@
       }
 
       .kg-onboard-btn {
-        background: transparent;
+        background: rgba(255, 255, 255, 0.03);
         border: 1px solid #4a4a60;
-        color: #9a9ab0;
+        color: #a0a0ba;
         padding: 6px 12px;
         border-radius: 6px;
         cursor: pointer;
         font-size: 0.85rem;
         font-weight: 600;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
       }
 
       .kg-onboard-btn:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+        border-color: #626280;
       }
 
       .kg-onboard-btn-primary {
@@ -122,22 +140,23 @@
       .kg-onboard-btn-primary:hover {
         background: #f1cc64;
         border-color: #f1cc64;
+        color: #0c0c12;
       }
     `;
     document.head.appendChild(style);
   }
 
-  // 3. Strict Selector Query Matcher (Resolves context collision problems)
+  // 3. Strict query selector engine avoiding tab index collisions
   function findElement(selectorString) {
     const selectors = selectorString.split(',');
     for (let sel of selectors) {
       sel = sel.trim();
       const el = document.querySelector(sel);
       
-      // Ensure element exists, is visible, and isn't a sub-filter tab component
       if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+        // Prevent matching filter tabs instead of the real action buttons
         if (el.textContent.toLowerCase().includes('posted') && sel.includes('button')) {
-          continue; // Guard clause against filter tab collision
+          continue; 
         }
         return el;
       }
@@ -145,9 +164,9 @@
     return null;
   }
 
-  // 4. Pure Visual Rendering Cycle Loop
+  // 4. Draw step indicators
   function renderStep(index) {
-    // Strip active highlights from previous steps cleanly
+    // Clean old highlights
     document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
 
     if (index >= onboardingSteps.length) {
@@ -160,15 +179,16 @@
     const targetElement = findElement(stepData.target);
 
     if (!targetElement) {
-      console.warn(`Target step element missing or out of view context: ${stepData.target}. Skipping tip.`);
+      console.warn(`Target step element missing: ${stepData.target}. Advancing to next tip.`);
       renderStep(index + 1);
       return;
     }
 
-    // Align layout smoothly to view screen parameters
+    // Scroll cleanly to target element
     targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
     targetElement.classList.add('kg-onboard-highlight');
 
+    // Create floating card if missing
     if (!tooltip) {
       tooltip = document.createElement('div');
       tooltip.className = 'kg-onboard-tooltip';
@@ -188,32 +208,32 @@
       </div>
     `;
 
-    // Accurate Coordinate Position Mapping
+    // Calculate positioning offsets
     const rect = targetElement.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
 
     let top = rect.bottom + window.scrollY + 12;
     let left = rect.left + window.scrollX;
 
-    // Reposition above if layout crosses beneath view bottom limits
+    // Reposition above element if it slips below viewport fold line
     if (top + tooltipRect.height > window.innerHeight + window.scrollY) {
       top = rect.top + window.scrollY - tooltipRect.height - 12;
     }
-    // Prevent horizontal overflow bounds collisions
+    // Prevent clipping horizontal viewport borders
     if (left + tooltipRect.width > window.innerWidth) {
-      left = window.innerWidth - tooltipRect.width - 20;
+      left = window.innerWidth - tooltipRect.width - 24;
     }
     if (left < 12) left = 12;
 
     tooltip.style.top = `${top}px`;
     tooltip.style.left = `${left}px`;
 
-    // Rebind navigation click listeners
+    // Hook listeners
     document.getElementById('kg-skip-btn').onclick = endOnboarding;
     document.getElementById('kg-next-btn').onclick = () => renderStep(currentStep + 1);
   }
 
-  // 5. Build Initializers Hooks
+  // 5. Initializer interface
   function startOnboarding(force = false) {
     if (!force && localStorage.getItem('kg_onboarding_completed') === 'true') return;
 
@@ -228,7 +248,7 @@
     renderStep(0);
   }
 
-  // 6. Complete Removal Cleanup
+  // 6. Complete tear down
   function endOnboarding() {
     localStorage.setItem('kg_onboarding_completed', 'true');
 
@@ -238,10 +258,12 @@
     document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
   }
 
+  // Global window handle for quest-board.html trigger buttons
   window.showOnboarding = function (forceStart = false) {
     startOnboarding(forceStart);
   };
 
+  // Run immediately on setup
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     startOnboarding(false);
   } else {
