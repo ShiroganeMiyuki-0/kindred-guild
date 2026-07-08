@@ -1,162 +1,164 @@
 /**
- * Kindred Guild - Non-Blocking Guided Tips Walkthrough
+ * Kindred Guild - Context-Aware, Automated Onboarding Walkthrough
  * Location: shiroganemiyuki-0/kindred-guild/onboarding.js
- * Purpose: A beautiful fantasy-themed guided tour that explains layout features
- * while keeping the page 100% interactive and clickable at all times.
+ * Purpose: Automatically triggers non-blocking guide tips when users interact with
+ * features for the first time. Keeps the page 100% interactive.
  */
 
 (function () {
-  let currentStep = 0;
-  let backdrop = null;
-  let tooltip = null;
+  // Track completed tips in localStorage to ensure they only trigger once per user life-cycle
+  const storagePrefix = 'kg_tip_';
+  let activeTooltip = null;
+  let activeBackdrop = null;
+  let currentHighlightedEl = null;
 
-  // 1. Defined steps targeting the key elements of your dashboard
-  const onboardingSteps = [
-    {
-      target: '#quest-board-container, .quest-board, main, .container',
-      title: "⚔️ Welcome to the Quest Board",
-      intro: "This is the central heart of the Guild! Here, you can view, filter, and track all active adventures posted by your fellow guild members."
+  // Define our 6 streamlined guide milestones
+  const guideMilestones = {
+    welcome: {
+      id: 'welcome',
+      target: '#quest-board-container, .quest-board, main',
+      title: "⚔️ Welcome to the Guild Hall!",
+      intro: "This is the active Quest Board where adventures and chores are pinned. Take on quests posted by others or draft your own!"
     },
-    {
-      // Target the yellow "Post Task" button precisely
-      target: 'button.btn-warning, button[onclick*="Post"], button[onclick*="post"], .btn-post-task, #post-task-btn',
+    coins: {
+      id: 'coins',
+      target: '#coin-balance, .coin-display, #fairy-coins',
+      title: "🪙 Your Coin Pouch",
+      intro: "Fairy Coins (FC) drive the guild. Earn coins by completing quests, or spend them as bounties when you delegate tasks."
+    },
+    postBtn: {
+      id: 'postBtn',
+      target: 'button.btn-warning, .btn-post-task, #post-task-btn, [id*="post"]',
       title: "📜 Commissioning Quests",
-      intro: "Need something done? Click this button to draft a new quest scroll, set a coin bounty, and pin it to the board for other adventurers."
+      intro: "Need a chore done or a target met? Click here to commission a new quest scroll and reward helpers with Fairy Coins."
     },
-    {
-      target: '#coin-balance, .coin-display, #fairy-coins, [class*="coin"]',
-      title: "🪙 Your Guild Coin Pouch",
-      intro: "This displays your current Fairy Coins (FC) balance. Post quests to spend them as rewards, or accept and complete quests to earn more!"
+    modalOpen: {
+      id: 'modalOpen',
+      target: '#post-task-modal, .modal-content, #quest-form',
+      title: "✍️ Structuring Your Decree",
+      intro: "Set a clear task description, assign category tags, and pledge a coin bounty. Real gold inspires real efforts!"
     },
-    {
-      target: '.nav-links, #site-nav, .navbar, .flex-wrap',
-      title: "🗺️ Guild Navigation",
-      intro: "Use these navigation links to easily travel between your Profile settings, active Quest History, or the magical Wish board."
+    manageQuests: {
+      id: 'manageQuests',
+      target: '.my-posted-filter, [onclick*="Posted"], button:contains("My Posted")',
+      title: "🛠️ Managing Your Quests",
+      intro: "View, edit, or cancel your active decrees from this tab. You can easily modify bounties or delete drafts before helpers claim them."
+    },
+    navigation: {
+      id: 'navigation',
+      target: '.nav-links, #site-nav, .navbar',
+      title: "🗺️ Navigating the Realm",
+      intro: "Easily journey across your adventure logs! Check your Profile settings, active Quest History, or view magical Wishes."
     }
-  ];
+  };
 
-  // 2. Inject CSS styles containing the critical pointer-events fix
   function injectStyles() {
-    if (document.getElementById('kg-onboard-styles')) return;
+    if (document.getElementById('kg-advanced-onboard-styles')) return;
 
     const style = document.createElement('style');
-    style.id = 'kg-onboard-styles';
+    style.id = 'kg-advanced-onboard-styles';
     style.textContent = `
-      /* The Dark Tint Layer */
-      .kg-onboard-backdrop {
+      /* Cinematic, non-blocking theatrical dim overlay */
+      .kg-onboard-vignette {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(8, 8, 12, 0.5); /* Soft, cinematic dim */
+        background: radial-gradient(circle, rgba(14, 14, 22, 0.2) 40%, rgba(8, 8, 12, 0.65) 100%);
         z-index: 9998;
-        transition: opacity 0.3s ease;
-        
-        /* FIX: Allows all clicks to pass straight through this layer to the page */
-        pointer-events: none !important; 
+        pointer-events: none !important; /* Absolute interaction pass-through */
+        transition: opacity 0.4s ease;
       }
 
-      /* Glowing Pulsing Outline around the active element */
-      .kg-onboard-highlight {
+      /* Non-blocking premium highlight */
+      .kg-onboard-spotlight {
         position: relative !important;
         z-index: 9999 !important;
-        outline: 3px solid #d4af37 !important; /* Elegant Guild Gold */
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 0 4px rgba(212, 175, 55, 0.2) !important;
-        border-radius: 6px;
-        animation: kg-glowing-pulse 2s infinite ease-in-out;
-        
-        /* Ensure highlighted items can still be hovered/interacted with normally */
-        pointer-events: auto !important; 
+        outline: 2px solid #d4af37 !important;
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.2) !important;
+        border-radius: 8px;
+        animation: kg-spotlight-glow 2.5s infinite ease-in-out;
+        pointer-events: auto !important; /* Allow direct interactions with highlighted element */
       }
 
-      @keyframes kg-glowing-pulse {
-        0% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 0 0px rgba(212, 175, 55, 0.3); }
-        50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.8), 0 0 0 8px rgba(212, 175, 55, 0); }
-        100% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 0 0px rgba(212, 175, 55, 0.3); }
+      @keyframes kg-spotlight-glow {
+        0% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+        50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.7); }
+        100% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
       }
 
-      /* Premium Floating Tooltip Box */
-      .kg-onboard-tooltip {
+      /* Elegant floating fantasy tooltip */
+      .kg-onboard-card {
         position: fixed;
         z-index: 10000;
-        background: #151522;
+        background: #14141f;
         border: 1px solid #d4af37;
         border-radius: 12px;
-        padding: 20px;
-        width: 310px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 10px rgba(212, 175, 55, 0.05);
+        padding: 18px 22px;
+        width: 320px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
         color: #f0f0f5;
         font-family: system-ui, -apple-system, sans-serif;
-        transition: top 0.25s ease-out, left 0.25s ease-out;
-        
-        /* Crucial: Must accept mouse clicks so buttons can be clicked */
-        pointer-events: auto !important; 
+        transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1), left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: auto !important; /* Keep card fully clickable */
       }
 
-      .kg-onboard-tooltip h3 {
+      .kg-onboard-card h4 {
         margin: 0 0 8px 0;
         font-size: 1.1rem;
         color: #e5c158;
         border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-        padding-bottom: 8px;
+        padding-bottom: 6px;
         font-weight: 700;
       }
 
-      .kg-onboard-tooltip p {
+      .kg-onboard-card p {
         margin: 0 0 16px 0;
         font-size: 0.92rem;
         line-height: 1.5;
         color: #ccd0df;
       }
 
-      .kg-onboard-buttons {
+      .kg-onboard-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
       }
 
-      .kg-onboard-btn {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid #4a4a60;
-        color: #a0a0ba;
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
+      .kg-onboard-progress {
+        font-size: 0.78rem;
+        color: #8c8ca5;
+        font-weight: 500;
       }
 
-      .kg-onboard-btn:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #ffffff;
-        border-color: #626280;
-      }
-
-      .kg-onboard-btn-primary {
+      .kg-onboard-action-btn {
         background: #d4af37;
         border: 1px solid #d4af37;
         color: #0e0e15;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
       }
 
-      .kg-onboard-btn-primary:hover {
+      .kg-onboard-action-btn:hover {
         background: #f1cc64;
         border-color: #f1cc64;
-        color: #0c0c12;
       }
     `;
     document.head.appendChild(style);
   }
 
-  // 3. Strict query selector engine avoiding tab index collisions
-  function findElement(selectorString) {
+  // Safe DOM finder helper
+  function getElement(selectorString) {
     const selectors = selectorString.split(',');
-    for (let sel of selectors) {
-      sel = sel.trim();
-      const el = document.querySelector(sel);
-      
+    for (let selector of selectors) {
+      selector = selector.trim();
+      const el = document.querySelector(selector);
       if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
-        // Prevent matching filter tabs instead of the real action buttons
-        if (el.textContent.toLowerCase().includes('posted') && sel.includes('button')) {
-          continue; 
+        // Prevent targeting filtering tabs when searching for functional buttons
+        if (selector.includes('button') && el.textContent.toLowerCase().includes('posted')) {
+          continue;
         }
         return el;
       }
@@ -164,109 +166,168 @@
     return null;
   }
 
-  // 4. Draw step indicators
-  function renderStep(index) {
-    // Clean old highlights
-    document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
-
-    if (index >= onboardingSteps.length) {
-      endOnboarding();
-      return;
+  // Clear current spotlight highlighting safely
+  function clearHighlight() {
+    if (currentHighlightedEl) {
+      currentHighlightedEl.classList.remove('kg-onboard-spotlight');
+      currentHighlightedEl = null;
     }
-
-    currentStep = index;
-    const stepData = onboardingSteps[currentStep];
-    const targetElement = findElement(stepData.target);
-
-    if (!targetElement) {
-      console.warn(`Target step element missing: ${stepData.target}. Advancing to next tip.`);
-      renderStep(index + 1);
-      return;
-    }
-
-    // Scroll cleanly to target element
-    targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    targetElement.classList.add('kg-onboard-highlight');
-
-    // Create floating card if missing
-    if (!tooltip) {
-      tooltip = document.createElement('div');
-      tooltip.className = 'kg-onboard-tooltip';
-      document.body.appendChild(tooltip);
-    }
-
-    const isLast = currentStep === onboardingSteps.length - 1;
-
-    tooltip.innerHTML = `
-      <h3>${stepData.title}</h3>
-      <p>${stepData.intro}</p>
-      <div class="kg-onboard-buttons">
-        <button class="kg-onboard-btn" id="kg-skip-btn">Skip Tour</button>
-        <button class="kg-onboard-btn kg-onboard-btn-primary" id="kg-next-btn">
-          ${isLast ? "Done ✨" : "Continue"}
-        </button>
-      </div>
-    `;
-
-    // Calculate positioning offsets
-    const rect = targetElement.getBoundingClientRect();
-    const tooltipRect = tooltip.getBoundingClientRect();
-
-    let top = rect.bottom + window.scrollY + 12;
-    let left = rect.left + window.scrollX;
-
-    // Reposition above element if it slips below viewport fold line
-    if (top + tooltipRect.height > window.innerHeight + window.scrollY) {
-      top = rect.top + window.scrollY - tooltipRect.height - 12;
-    }
-    // Prevent clipping horizontal viewport borders
-    if (left + tooltipRect.width > window.innerWidth) {
-      left = window.innerWidth - tooltipRect.width - 24;
-    }
-    if (left < 12) left = 12;
-
-    tooltip.style.top = `${top}px`;
-    tooltip.style.left = `${left}px`;
-
-    // Hook listeners
-    document.getElementById('kg-skip-btn').onclick = endOnboarding;
-    document.getElementById('kg-next-btn').onclick = () => renderStep(currentStep + 1);
   }
 
-  // 5. Initializer interface
-  function startOnboarding(force = false) {
-    if (!force && localStorage.getItem('kg_onboarding_completed') === 'true') return;
+  // Renders a targeted tooltip overlay dynamically
+  function showGuidedTip(milestone, customNextCallback = null) {
+    // If the milestone was already viewed by the user, bypass it
+    if (localStorage.getItem(storagePrefix + milestone.id) === 'true') {
+      return false;
+    }
+
+    const targetEl = getElement(milestone.target);
+    if (!targetEl) return false;
 
     injectStyles();
 
-    if (!backdrop) {
-      backdrop = document.createElement('div');
-      backdrop.className = 'kg-onboard-backdrop';
-      document.body.appendChild(backdrop);
+    // Setup Vignette dim layer if missing
+    if (!activeBackdrop) {
+      activeBackdrop = document.createElement('div');
+      activeBackdrop.className = 'kg-onboard-vignette';
+      document.body.appendChild(activeBackdrop);
     }
 
-    renderStep(0);
+    // Isolate previous highlights
+    clearHighlight();
+
+    // Generate floating card container
+    if (!activeTooltip) {
+      activeTooltip = document.createElement('div');
+      activeTooltip.className = 'kg-onboard-card';
+      document.body.appendChild(activeTooltip);
+    }
+
+    targetEl.classList.add('kg-onboard-spotlight');
+    currentHighlightedEl = targetEl;
+
+    activeTooltip.innerHTML = `
+      <h4>${milestone.title}</h4>
+      <p>${milestone.intro}</p>
+      <div class="kg-onboard-footer">
+        <span class="kg-onboard-progress">Guild Assistant</span>
+        <button class="kg-onboard-action-btn" id="kg-onboard-ack">Got it!</button>
+      </div>
+    `;
+
+    // Position coordinate calculations
+    targetEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    
+    setTimeout(() => {
+      const rect = targetEl.getBoundingClientRect();
+      const tooltipRect = activeTooltip.getBoundingClientRect();
+
+      let top = rect.bottom + window.scrollY + 12;
+      let left = rect.left + window.scrollX;
+
+      // Swap positioning to render above elements if it falls below the viewport fold
+      if (top + tooltipRect.height > window.innerHeight + window.scrollY) {
+        top = rect.top + window.scrollY - tooltipRect.height - 12;
+      }
+      // Guarantee left/right boundaries aren't clipped
+      if (left + tooltipRect.width > window.innerWidth) {
+        left = window.innerWidth - tooltipRect.width - 20;
+      }
+      if (left < 12) left = 12;
+
+      activeTooltip.style.top = `${top}px`;
+      activeTooltip.style.left = `${left}px`;
+    }, 150);
+
+    // Acknowledge event listener to clear/save state
+    document.getElementById('kg-onboard-ack').onclick = function () {
+      localStorage.setItem(storagePrefix + milestone.id, 'true');
+      dismissActiveTip();
+
+      // Trigger sequential actions if attached
+      if (typeof customNextCallback === 'function') {
+        customNextCallback();
+      }
+    };
+
+    return true;
   }
 
-  // 6. Complete tear down
-  function endOnboarding() {
-    localStorage.setItem('kg_onboarding_completed', 'true');
-
-    if (backdrop) { backdrop.remove(); backdrop = null; }
-    if (tooltip) { tooltip.remove(); tooltip = null; }
-
-    document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
+  // Dismiss overlays cleanly without blocking interactive behaviors
+  function dismissActiveTip() {
+    clearHighlight();
+    if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
+    if (activeBackdrop) { activeBackdrop.remove(); activeBackdrop = null; }
   }
 
-  // Global window handle for quest-board.html trigger buttons
+  // Monitors user actions and automatically pushes notifications real-time
+  function initAutomatedTriggers() {
+    // 1. Welcome & Coin Pouch (Sequence trigger on initial landing)
+    setTimeout(() => {
+      showGuidedTip(guideMilestones.welcome, () => {
+        // Automatically chain-triggers Coin Pouch highlight immediately after they close Welcome
+        setTimeout(() => {
+          showGuidedTip(guideMilestones.coins, () => {
+            // Then chain-trigger Post Quest highlight
+            setTimeout(() => {
+              showGuidedTip(guideMilestones.postBtn);
+            }, 500);
+          });
+        }, 500);
+      });
+    }, 1000);
+
+    // 2. Intercept "Post Task" Modal Open Trigger
+    document.body.addEventListener('click', (e) => {
+      const postBtnTarget = e.target.closest('button.btn-warning, .btn-post-task, #post-task-btn, [id*="post"]');
+      if (postBtnTarget) {
+        // Wait a split second for the modal opening transition to complete, then highlight it
+        setTimeout(() => {
+          showGuidedTip(guideMilestones.modalOpen);
+        }, 400);
+      }
+    });
+
+    // 3. Intercept Filter Changes to guide Edit/Delete Actions
+    document.body.addEventListener('click', (e) => {
+      const manageTarget = e.target.closest('.my-posted-filter, [onclick*="Posted"], button:contains("My Posted")') || 
+                           (e.target.textContent && e.target.textContent.trim().toLowerCase() === 'my posted');
+      if (manageTarget) {
+        setTimeout(() => {
+          showGuidedTip(guideMilestones.manageQuests);
+        }, 400);
+      }
+    });
+
+    // 4. Intercept Profile / Navigation Elements Hover or Interaction
+    const navEl = getElement('.nav-links, #site-nav, .navbar');
+    if (navEl) {
+      const triggerNavTip = () => {
+        if (showGuidedTip(guideMilestones.navigation)) {
+          navEl.removeEventListener('mouseenter', triggerNavTip);
+        }
+      };
+      navEl.addEventListener('mouseenter', triggerNavTip);
+    }
+  }
+
+  // Expose reset interface via Guide navigation element to restart onboarding
   window.showOnboarding = function (forceStart = false) {
-    startOnboarding(forceStart);
+    if (forceStart) {
+      // Flush storage flags for all milestones
+      Object.keys(guideMilestones).forEach(key => {
+        localStorage.removeItem(storagePrefix + guideMilestones[key].id);
+      });
+      localStorage.removeItem('kg_onboarding_completed');
+    }
+    dismissActiveTip();
+    initAutomatedTriggers();
   };
 
-  // Run immediately on setup
+  // Run immediately on page mount
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    startOnboarding(false);
+    initAutomatedTriggers();
   } else {
-    document.addEventListener('DOMContentLoaded', () => startOnboarding(false));
+    document.addEventListener('DOMContentLoaded', initAutomatedTriggers);
   }
 })();
