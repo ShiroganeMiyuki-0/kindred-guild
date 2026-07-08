@@ -127,13 +127,15 @@ $$ LANGUAGE sql SECURITY DEFINER;
 
 
 -- Transactional posting of a quest (deducts commission/rewards upfront)
+-- NOTE: commission is computed SERVER-SIDE from the actual amount, not
+-- trusted from the client, to prevent commission bypass via direct RPC calls.
 CREATE OR REPLACE FUNCTION post_quest_with_commission(
   p_title TEXT,
   p_description TEXT,
   p_payment_type TEXT,
   p_coin_amount INTEGER,
   p_upi_amount INTEGER,
-  p_commission_coins INTEGER,
+  p_commission_coins INTEGER, -- kept for call-signature compatibility; value is ignored and recomputed below
   p_deadline TIMESTAMP WITH TIME ZONE
 )
 RETURNS UUID AS $$
@@ -142,6 +144,7 @@ DECLARE
   v_balance INTEGER;
   v_quest_id UUID;
   v_required_coins INTEGER;
+  v_commission INTEGER;
 BEGIN
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
@@ -155,21 +158,31 @@ BEGIN
 
   v_balance := get_coin_balance(v_user_id);
 
-  -- Validate balances and compute requirements
+  -- Validate balances and compute requirements (commission recomputed here, not trusted from client)
   IF p_payment_type = 'coins' THEN
-    v_required_coins := p_coin_amount + p_commission_coins;
+    IF COALESCE(p_coin_amount, 0) <= 0 THEN
+      RAISE EXCEPTION 'Coin amount must be greater than 0.';
+    END IF;
+    v_commission := CEIL(p_coin_amount * 0.1)::INTEGER;
+    v_required_coins := p_coin_amount + v_commission;
     IF v_balance < v_required_coins THEN
       RAISE EXCEPTION 'Not enough Fairy Coins. You need % FC (Reward + % FC commission) but only have % FC.', 
-        v_required_coins, p_commission_coins, v_balance;
+        v_required_coins, v_commission, v_balance;
     END IF;
   ELSIF p_payment_type = 'upi' THEN
-    v_required_coins := p_commission_coins;
+    IF COALESCE(p_upi_amount, 0) <= 0 THEN
+      RAISE EXCEPTION 'UPI amount must be greater than 0.';
+    END IF;
+    v_commission := CEIL(p_upi_amount * 0.1)::INTEGER;
+    v_required_coins := v_commission;
     IF v_balance < v_required_coins THEN
       RAISE EXCEPTION 'Not enough Fairy Coins. You need % FC for commission (10%% of Rupee value) but only have % FC.', 
         v_required_coins, v_balance;
     END IF;
+  ELSIF p_payment_type = 'free' THEN
+    v_commission := 0;
   ELSE
-    v_required_coins := 0;
+    RAISE EXCEPTION 'Invalid payment type.';
   END IF;
 
   -- Create Quest
@@ -179,20 +192,20 @@ BEGIN
     v_user_id, p_title, p_description, p_payment_type, 
     CASE WHEN p_payment_type = 'coins' THEN p_coin_amount ELSE NULL END,
     CASE WHEN p_payment_type = 'upi' THEN p_upi_amount ELSE NULL END,
-    CASE WHEN p_payment_type IN ('coins', 'upi') THEN p_commission_coins ELSE NULL END,
+    CASE WHEN p_payment_type IN ('coins', 'upi') THEN v_commission ELSE NULL END,
     'open', p_deadline, NOW()
   ) RETURNING id INTO v_quest_id;
 
   -- Deduct balances upfront (Lock Funds)
   IF p_payment_type = 'coins' THEN
     INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
-    VALUES (v_user_id, -p_commission_coins, 'commission_locked', v_quest_id, NOW());
+    VALUES (v_user_id, -v_commission, 'commission_locked', v_quest_id, NOW());
     
     INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
     VALUES (v_user_id, -p_coin_amount, 'reward_locked', v_quest_id, NOW());
   ELSIF p_payment_type = 'upi' THEN
     INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
-    VALUES (v_user_id, -p_commission_coins, 'commission_locked', v_quest_id, NOW());
+    VALUES (v_user_id, -v_commission, 'commission_locked', v_quest_id, NOW());
   END IF;
 
   RETURN v_quest_id;
@@ -593,14 +606,39 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- Function to adjust quest reward (poster can increase only while quest is open)
-CREATE OR REPLACE FUNCTION adjust_quest_reward(p_quest_id UUID, p_new_coin_amount INTEGER, p_new_upi_amount INTEGER)
+-- ============================================================================
+-- The following three functions were already live in production but were
+-- missing from this schema file (schema drift). Synced back in so this file
+-- is an accurate record of what's actually deployed.
+-- ============================================================================
+
+-- Edits an open/accepted quest. Recomputes commission_coins to always be 10%
+-- of the CURRENT reward/amount and CURRENT payment type -- including across
+-- a payment-type change -- and locks/refunds only the difference.
+CREATE OR REPLACE FUNCTION public.edit_quest(
+  p_quest_id UUID,
+  p_title TEXT DEFAULT NULL,
+  p_description TEXT DEFAULT NULL,
+  p_tags TEXT[] DEFAULT NULL,
+  p_payment_type TEXT DEFAULT NULL,
+  p_coin_amount INTEGER DEFAULT NULL,
+  p_upi_amount INTEGER DEFAULT NULL
+)
 RETURNS BOOLEAN AS $$
 DECLARE
   v_user_id UUID;
   v_quest RECORD;
+  v_old_data JSONB;
+  v_new_data JSONB;
   v_balance INTEGER;
-  v_additional_coins INTEGER;
+  v_next_payment_type TEXT;
+  v_next_coin_amount INTEGER;
+  v_next_upi_amount INTEGER;
+  v_old_commission INTEGER;
+  v_next_commission INTEGER;
+  v_commission_diff INTEGER;
+  v_coin_diff INTEGER;
+  v_net_extra_needed INTEGER;
 BEGIN
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
@@ -612,45 +650,167 @@ BEGIN
     RAISE EXCEPTION 'Quest not found.';
   END IF;
 
-  -- Only allow adjustments when quest is still open (not yet accepted)
-  IF v_quest.status != 'open' THEN
-    RAISE EXCEPTION 'Quest reward can only be adjusted while quest is open and unaccepted.';
+  IF v_quest.poster_id != v_user_id THEN
+    RAISE EXCEPTION 'Only the quest poster can edit this quest.';
   END IF;
 
-  -- Poster can increase reward
-  IF v_quest.poster_id = v_user_id THEN
-    IF v_quest.payment_type = 'coins' THEN
-      IF p_new_coin_amount <= v_quest.coin_amount THEN
-        RAISE EXCEPTION 'Poster can only INCREASE the coin reward, not decrease it.';
-      END IF;
-      
-      v_additional_coins := p_new_coin_amount - v_quest.coin_amount;
-      v_balance := get_coin_balance(v_user_id);
-      
-      IF v_balance < v_additional_coins THEN
-        RAISE EXCEPTION 'Insufficient balance. You need % additional FC but only have % FC.', v_additional_coins, v_balance;
-      END IF;
-      
-      -- Deduct additional coins from poster
-      INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
-      VALUES (v_user_id, -v_additional_coins, 'reward_increase_locked', p_quest_id, NOW());
-      
-      -- Update quest with new amount
-      UPDATE quests SET coin_amount = p_new_coin_amount WHERE id = p_quest_id;
-      
-    ELSIF v_quest.payment_type = 'upi' THEN
-      IF p_new_upi_amount <= v_quest.upi_amount THEN
-        RAISE EXCEPTION 'Poster can only INCREASE the UPI reward, not decrease it.';
-      END IF;
-      
-      -- Update quest with new UPI amount (no coin deduction needed for UPI reward itself)
-      UPDATE quests SET upi_amount = p_new_upi_amount WHERE id = p_quest_id;
-    END IF;
-    
-  ELSE
-    RAISE EXCEPTION 'Only the quest poster can adjust the reward.';
+  IF v_quest.status NOT IN ('open', 'accepted') THEN
+    RAISE EXCEPTION 'Quest cannot be edited in current status.';
   END IF;
+
+  v_old_data := row_to_json(v_quest);
+  v_next_payment_type := COALESCE(p_payment_type, v_quest.payment_type);
+  IF v_next_payment_type NOT IN ('coins', 'upi', 'free') THEN
+    RAISE EXCEPTION 'Invalid payment type.';
+  END IF;
+  v_next_coin_amount := COALESCE(p_coin_amount, v_quest.coin_amount);
+  v_next_upi_amount := COALESCE(p_upi_amount, v_quest.upi_amount);
+
+  IF v_next_payment_type = 'coins' AND COALESCE(v_next_coin_amount, 0) <= 0 THEN
+    RAISE EXCEPTION 'Coin amount must be greater than 0.';
+  END IF;
+  IF v_next_payment_type = 'upi' AND COALESCE(v_next_upi_amount, 0) <= 0 THEN
+    RAISE EXCEPTION 'UPI amount must be greater than 0.';
+  END IF;
+
+  -- Reward (coin_amount) lock/refund
+  v_coin_diff := 0;
+  IF v_next_payment_type = 'coins' AND COALESCE(v_next_coin_amount, 0) != COALESCE(v_quest.coin_amount, 0) THEN
+    IF v_quest.payment_type = 'coins' THEN
+      v_coin_diff := v_next_coin_amount - v_quest.coin_amount;
+    ELSE
+      v_coin_diff := v_next_coin_amount;
+    END IF;
+  ELSIF v_quest.payment_type = 'coins' AND v_next_payment_type != 'coins' AND COALESCE(v_quest.coin_amount, 0) > 0 THEN
+    v_coin_diff := -v_quest.coin_amount;
+  END IF;
+
+  -- Commission always recomputed as 10% of the CURRENT basis, for the CURRENT type
+  v_old_commission := COALESCE(v_quest.commission_coins, 0);
+  v_next_commission := CASE
+    WHEN v_next_payment_type = 'coins' THEN CEIL(COALESCE(v_next_coin_amount, 0) * 0.1)::INTEGER
+    WHEN v_next_payment_type = 'upi' THEN CEIL(COALESCE(v_next_upi_amount, 0) * 0.1)::INTEGER
+    ELSE 0
+  END;
+  v_commission_diff := v_next_commission - v_old_commission;
+
+  v_net_extra_needed := GREATEST(v_coin_diff, 0) + GREATEST(v_commission_diff, 0);
+  IF v_net_extra_needed > 0 THEN
+    v_balance := get_coin_balance(v_user_id);
+    IF v_balance < v_net_extra_needed THEN
+      RAISE EXCEPTION 'Insufficient balance. You need % additional FC but only have % FC.', v_net_extra_needed, v_balance;
+    END IF;
+  END IF;
+
+  IF v_coin_diff > 0 THEN
+    INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+    VALUES (v_user_id, -v_coin_diff, 'reward_increase_locked', p_quest_id, NOW());
+  ELSIF v_coin_diff < 0 THEN
+    INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+    VALUES (v_user_id, -v_coin_diff, 'reward_decrease_refund', p_quest_id, NOW());
+  END IF;
+
+  IF v_commission_diff > 0 THEN
+    INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+    VALUES (v_user_id, -v_commission_diff, 'commission_increase_locked', p_quest_id, NOW());
+  ELSIF v_commission_diff < 0 THEN
+    INSERT INTO fairy_ledger (user_id, amount, reason, quest_id, created_at)
+    VALUES (v_user_id, -v_commission_diff, 'commission_decrease_refund', p_quest_id, NOW());
+  END IF;
+
+  UPDATE quests
+  SET
+    title = COALESCE(p_title, title),
+    description = COALESCE(p_description, description),
+    tags = COALESCE(p_tags, tags),
+    payment_type = v_next_payment_type,
+    coin_amount = CASE WHEN v_next_payment_type = 'coins' THEN v_next_coin_amount ELSE NULL END,
+    upi_amount = CASE WHEN v_next_payment_type = 'upi' THEN v_next_upi_amount ELSE NULL END,
+    commission_coins = CASE WHEN v_next_payment_type IN ('coins','upi') THEN v_next_commission ELSE NULL END,
+    edited_at = NOW(),
+    edit_history = edit_history || jsonb_build_array(jsonb_build_object('edited_at', NOW(), 'old_data', v_old_data))
+  WHERE id = p_quest_id;
+
+  SELECT row_to_json(q) INTO v_new_data FROM quests q WHERE id = p_quest_id;
+
+  INSERT INTO action_log (user_id, action_type, quest_id, old_data, new_data, can_undo, undo_until)
+  VALUES (v_user_id, 'quest_edited', p_quest_id, v_old_data, v_new_data, TRUE, NOW() + INTERVAL '24 hours');
 
   RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- Admin verifies a pending coin purchase and credits the coins. Row-locked
+-- and guarded against double-crediting an already-verified purchase.
+CREATE OR REPLACE FUNCTION public.approve_coin_purchase(p_purchase_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+DECLARE
+  v_admin_id UUID;
+  v_purchase RECORD;
+BEGIN
+  v_admin_id := auth.uid();
+  IF v_admin_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required.';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM user_profiles WHERE user_id = v_admin_id AND is_admin = true) THEN
+    RAISE EXCEPTION 'Only admins can approve purchases.';
+  END IF;
+
+  SELECT * INTO v_purchase FROM coin_purchases WHERE id = p_purchase_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Purchase not found.';
+  END IF;
+
+  IF v_purchase.status = 'verified' THEN
+    RAISE EXCEPTION 'Purchase already verified.';
+  END IF;
+
+  UPDATE coin_purchases SET status = 'verified' WHERE id = p_purchase_id;
+
+  INSERT INTO fairy_ledger (user_id, amount, reason, created_at)
+  VALUES (v_purchase.user_id, v_purchase.coin_amount, 'upi_purchase', NOW());
+
+  RETURN TRUE;
+END;
+$function$;
+
+
+-- Admin rejects a pending coin purchase. Guarded so an already-verified
+-- (and already-credited) purchase can't be silently marked rejected without
+-- reversing the ledger entry first.
+CREATE OR REPLACE FUNCTION public.reject_coin_purchase(p_purchase_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+DECLARE
+  v_admin_id UUID;
+  v_purchase RECORD;
+BEGIN
+  v_admin_id := auth.uid();
+  IF v_admin_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required.';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM user_profiles WHERE user_id = v_admin_id AND is_admin = true) THEN
+    RAISE EXCEPTION 'Only admins can reject purchases.';
+  END IF;
+
+  SELECT * INTO v_purchase FROM coin_purchases WHERE id = p_purchase_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Purchase not found.';
+  END IF;
+
+  IF v_purchase.status = 'verified' THEN
+    RAISE EXCEPTION 'This purchase was already verified and credited. Rejecting it now would not reverse the coins already given -- reverse that manually first if needed.';
+  END IF;
+
+  UPDATE coin_purchases SET status = 'rejected' WHERE id = p_purchase_id;
+  RETURN TRUE;
+END;
+$function$;
