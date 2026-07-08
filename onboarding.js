@@ -6,9 +6,10 @@
  * 100% interactive underneath). Also triggerable manually via the floating
  * "Guide" button (added in site-nav.js) on ANY page.
  *
- * Include this file on: quest-board.html and quest-post.html.
- * (site-nav.js's Guide button works everywhere else too — it just redirects
- * to quest-board.html and auto-starts the guide there.)
+ * Include this file on: quest-board.html, quest-post.html, fairy-wishes.html,
+ * worker-post.html, undo-history.html, and profile.html.
+ * (site-nav.js's Guide button works from any other page too — it redirects
+ * to quest-board.html and auto-starts the core guide there.)
  */
 
 (function () {
@@ -63,7 +64,51 @@
     }
   };
 
-  const allMilestoneGroups = [questBoardMilestones, questPostMilestones];
+  // ---- Feature Tour: separate intros for the rest of the site, one per page ----
+  const fairyWishesMilestones = {
+    wishesIntro: {
+      id: 'wishesIntro',
+      target: '.wish-filters, #wishesFeed, .container',
+      title: '✨ The Fairy Wishes Board',
+      intro: 'This is the guild wishlist — community-funded ideas. Vote for wishes you care about, or scroll down to pitch your own and rally coin backers.'
+    }
+  };
+
+  const workerPostMilestones = {
+    workersIntro: {
+      id: 'workersIntro',
+      target: '.post-form, .container',
+      title: '🛡️ List Yourself as a Worker',
+      intro: 'Post your skills, add tags like #coding or #art, and set your rate here. Quest-givers browsing for help will be able to find and hire you.'
+    }
+  };
+
+  const undoHistoryMilestones = {
+    undoIntro: {
+      id: 'undoIntro',
+      target: '#actionHistoryContainer, .container',
+      title: '📜 Your Undo History',
+      intro: "Made a mistake? Recent reversible actions show up here so you can undo them — a safety net for accidental edits, deletes, or approvals."
+    }
+  };
+
+  const profileMilestones = {
+    profileIntro: {
+      id: 'profileIntro',
+      target: '.profile-card, .container',
+      title: '🪪 Your Guild Profile',
+      intro: 'Track your reputation, browse your Posted and Completed quests, and open Settings to update your display name, avatar, or UPI payout details.'
+    }
+  };
+
+  const allMilestoneGroups = [
+    questBoardMilestones,
+    questPostMilestones,
+    fairyWishesMilestones,
+    workerPostMilestones,
+    undoHistoryMilestones,
+    profileMilestones
+  ];
 
   function injectStyles() {
     if (document.getElementById('kg-advanced-onboard-styles')) return;
@@ -155,6 +200,31 @@
       .kg-onboard-action-btn:hover {
         background: #f1cc64;
         border-color: #f1cc64;
+      }
+
+      /* ---- Responsive: tablet ---- */
+      @media (max-width: 768px) {
+        .kg-onboard-card {
+          width: 280px;
+          padding: 16px 18px;
+        }
+        .kg-onboard-card h4 { font-size: 1rem; }
+        .kg-onboard-card p { font-size: 0.88rem; }
+      }
+
+      /* ---- Responsive: phones ---- */
+      @media (max-width: 480px) {
+        .kg-onboard-card {
+          left: 12px !important;
+          right: 12px;
+          width: auto !important;
+          max-width: none;
+          padding: 14px 16px;
+        }
+        .kg-onboard-card h4 { font-size: 0.98rem; margin-bottom: 6px; }
+        .kg-onboard-card p { font-size: 0.85rem; margin-bottom: 12px; line-height: 1.45; }
+        .kg-onboard-action-btn { padding: 8px 16px; font-size: 0.9rem; }
+        .kg-onboard-spotlight { outline-width: 1.5px; }
       }
     `;
     document.head.appendChild(style);
@@ -306,12 +376,27 @@
     }, 800);
   }
 
+  // ---- Feature Tour pages: a single intro tip, shown once on first visit ----
+  function runSingleTipPage(milestone) {
+    setTimeout(() => {
+      showGuidedTip(milestone);
+    }, 800);
+  }
+
   function initAutomatedTriggers() {
     dismissActiveTip();
     if (path === 'quest-board.html' || path === '') {
       runQuestBoardSequence();
     } else if (path === 'quest-post.html') {
       runQuestPostSequence();
+    } else if (path === 'fairy-wishes.html') {
+      runSingleTipPage(fairyWishesMilestones.wishesIntro);
+    } else if (path === 'worker-post.html') {
+      runSingleTipPage(workerPostMilestones.workersIntro);
+    } else if (path === 'undo-history.html') {
+      runSingleTipPage(undoHistoryMilestones.undoIntro);
+    } else if (path === 'profile.html') {
+      runSingleTipPage(profileMilestones.profileIntro);
     }
   }
 

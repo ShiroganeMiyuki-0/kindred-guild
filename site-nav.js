@@ -137,6 +137,11 @@
       #kg-floating-nav button { width: 34px; height: 34px; }
       #kg-scroll-guide { font-size: 11px; padding: 6px 12px; }
     }
+    @media (max-width: 480px) {
+      #kg-floating-nav { gap: 5px; }
+      #kg-floating-nav button { width: 30px; height: 30px; }
+      #kg-guide-btn { font-size: 13px; }
+    }
   `;
   document.head.appendChild(style);
 })();
