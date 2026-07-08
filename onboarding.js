@@ -172,7 +172,7 @@
   // Expose globally so quest-board "Guide" button can trigger it
   window.showOnboarding = (force) => show(force);
 
-  // Inject highlight style
+// Inject highlight style
   const style = document.createElement('style');
   style.textContent = `
     .kg-onboard-highlight {
@@ -180,10 +180,11 @@
       outline: 3px solid #d4af37 !important;
       box-shadow: 0 0 0 9999px rgba(4,4,6,0.85), 0 0 30px rgba(212,175,55,0.5) !important;
       border-radius: 12px; background: #14141e !important;
+      pointer-events: none !important; /* Prevents accidental clicks and redirects during guide */
     }
   `;
   document.head.appendChild(style);
-
+  
   // Auto-init on load
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
