@@ -1,81 +1,94 @@
 /**
- * Kindred Guild - Onboarding Walkthrough Script
+ * Kindred Guild - Advanced Interactive Onboarding Walkthrough
  * Location: shiroganemiyuki-0/kindred-guild/onboarding.js
- * Purpose: A purely informational guide that explains features without forcing interactions or triggering modals.
+ * Purpose: Actively drives the UI, triggers modals, and cleans up states on completion or skip.
  */
 
 (function () {
-  // 1. Define the step configurations using element fallbacks
-  const onboardingSteps = [
-    {
-      element: '#quest-board-container, .quest-board, #quest-board',
-      title: "⚔️ The Quest Board",
-      intro: "Welcome to the Guild! This is where all active tasks and adventures are listed. You can browse through available quests posted by other guild members."
-    },
-    {
-      element: '#btn-post-task, .btn-post-task, [onclick*="post"], #post-task-btn',
-      title: "📜 Posting a New Quest",
-      intro: "When you have tasks, chores, or goals you need help with, this section allows you to post them as new quests to the board. (Don't worry, we won't open it right now!)"
-    },
-    {
-      element: '#coin-balance, .coin-display, #fairy-coins',
-      title: "🪙 Fairy Coins Balance",
-      intro: "Track your rewards here! Complete quests to earn coins, or spend them to post your own requests for other adventurers to tackle."
-    },
-    {
-      element: '.nav-links, #site-nav, .sidebar',
-      title: "🗺️ Guild Navigation",
-      intro: "Use these links to easily hop between your Profile, the Hall of Fame, and your personal Quest History tracker."
-    }
-  ];
-
   let currentStep = 0;
   let backdrop = null;
   let tooltip = null;
 
-  // 2. Inject Required Styling into the Document Head
+  // 1. Core Step Configurations with Interactive State Hooks
+  const onboardingSteps = [
+    {
+      target: '#quest-board-container, .quest-board, main',
+      title: "⚔️ The Quest Board",
+      intro: "Welcome to the Guild Hall! This is your live board where all active community and personal quests are displayed.",
+      action: null // No action needed for intro
+    },
+    {
+      target: 'button:has-text("Post Task"), button:has-text("Post a Task"), #post-task-btn, .btn-warning',
+      title: "📜 Ready to Delegate?",
+      intro: "This button lets you issue a new guild decree. Let's click 'Continue' to programmatically open the ledger and see how it looks!",
+      action: null
+    },
+    {
+      target: '#post-task-modal, .modal, #quest-form, [id*="modal"]',
+      title: "✍️ Crafting a Quest",
+      intro: "Behold the Quest Scroll! Here you define your task descriptions, categorize them with tags, and set the bounty. Let's move on.",
+      // ACTION: Automatically open the modal when entering this step
+      action: function() {
+        // Try finding the button highlighted in the previous step and click it
+        const postBtn = findElement('button:has-text("Post Task"), button:has-text("Post a Task"), #post-task-btn, .btn-warning');
+        if (postBtn) {
+          postBtn.click();
+        } else {
+          // Fallback if click fails: try finding common modal containers and force reveal them
+          const modal = findElement('#post-task-modal, .modal, [id*="modal"]');
+          if (modal) modal.style.display = 'block';
+        }
+      }
+    },
+    {
+      target: '#coin-balance, .coin-display, #fairy-coins',
+      title: "🪙 Fairy Coins Balance",
+      intro: "Your personal treasury! Posting quests dispenses coins as rewards, while completing quests refills your pouch.",
+      // ACTION: Close the modal since we are moving to a different UI element
+      action: function() {
+        closeActiveModals();
+      }
+    }
+  ];
+
+  // 2. Inject Refined Theme UI Styles
   function injectStyles() {
     if (document.getElementById('kg-onboard-styles')) return;
 
     const style = document.createElement('style');
     style.id = 'kg-onboard-styles';
     style.textContent = `
-      /* Dark Backdrop Mask */
       .kg-onboard-backdrop {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(10, 10, 16, 0.75);
+        background: rgba(8, 8, 12, 0.8);
         z-index: 9998;
         pointer-events: auto;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.25s ease;
       }
 
-      /* Highlight styling for the current element */
       .kg-onboard-highlight {
         position: relative !important;
         z-index: 9999 !important;
-        outline: 3px solid #d4af37 !important; /* Guild Gold border */
-        box-shadow: 0 0 20px rgba(212, 175, 55, 0.4) !important;
+        outline: 3px solid #d4af37 !important;
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.5) !important;
         border-radius: 8px;
-        background: #14141e !important;
-        
-        /* FIX: Prevents underlying buttons or modal open scripts from firing when clicked */
-        pointer-events: none !important; 
+        /* ALLOW interactions inside the highlighted element (like forms or scrollbars) */
+        pointer-events: auto !important; 
       }
 
-      /* Beautiful Guild-Themed Tooltip Card */
       .kg-onboard-tooltip {
         position: fixed;
         z-index: 10000;
-        background: #1c1c27;
+        background: #171722;
         border: 1px solid #d4af37;
         border-radius: 12px;
-        padding: 20px;
+        padding: 22px;
         width: 320px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
         color: #f0f0f5;
         font-family: system-ui, -apple-system, sans-serif;
-        transition: all 0.25s ease;
+        transition: all 0.2s ease-out;
       }
 
       .kg-onboard-tooltip h3 {
@@ -83,14 +96,14 @@
         font-size: 1.15rem;
         color: #e5c158;
         border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-        padding-bottom: 6px;
+        padding-bottom: 8px;
       }
 
       .kg-onboard-tooltip p {
-        margin: 0 0 16px 0;
+        margin: 0 0 18px 0;
         font-size: 0.95rem;
         line-height: 1.5;
-        color: #ccccdd;
+        color: #b9b9cb;
       }
 
       .kg-onboard-buttons {
@@ -101,14 +114,14 @@
 
       .kg-onboard-btn {
         background: transparent;
-        border: 1px solid #5a5a75;
+        border: 1px solid #4a4a65;
         color: #a0a0b8;
-        padding: 6px 12px;
+        padding: 8px 14px;
         border-radius: 6px;
         cursor: pointer;
         font-size: 0.85rem;
         font-weight: 600;
-        transition: all 0.2s ease;
+        transition: all 0.2s;
       }
 
       .kg-onboard-btn:hover {
@@ -125,17 +138,27 @@
       .kg-onboard-btn-primary:hover {
         background: #f1cc64;
         border-color: #f1cc64;
-        color: #0e0e15;
       }
     `;
     document.head.appendChild(style);
   }
 
-  // 3. Helper to locate live DOM elements through fallbacks
+  // 3. Intelligent Element Query Finder (Fixes selector collision bugs)
   function findElement(selectorString) {
     const selectors = selectorString.split(',');
     for (let sel of selectors) {
-      const el = document.querySelector(sel.trim());
+      sel = sel.trim();
+      
+      // Dynamic Text Content Matcher for button structures
+      if (sel.includes(':has-text(')) {
+        const textToFind = sel.match(/"([^"]+)"/)[1];
+        const buttons = Array.from(document.querySelectorAll('button, a'));
+        const found = buttons.find(b => b.textContent.trim().toLowerCase().includes(textToFind.toLowerCase()));
+        if (found && found.offsetWidth > 0) return found;
+        continue;
+      }
+
+      const el = document.querySelector(sel);
       if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
         return el;
       }
@@ -143,12 +166,22 @@
     return null;
   }
 
-  // 4. Render Step Content and Calculate Position Coordinates
+  // 4. Close Modals Gracefully Helper
+  function closeActiveModals() {
+    // Try standard UI close button trigger click
+    const closeBtn = document.querySelector('#post-task-modal .close, [onclick*="closeModal"], .modal-close');
+    if (closeBtn) {
+      closeBtn.click();
+    } else {
+      // Direct DOM manipulation fallback
+      const modal = document.querySelector('#post-task-modal, .modal');
+      if (modal) modal.style.display = 'none';
+    }
+  }
+
+  // 5. Execution Step Router
   function renderStep(index) {
-    // Clear out preceding structural highlights
-    document.querySelectorAll('.kg-onboard-highlight').forEach(el => {
-      el.classList.remove('kg-onboard-highlight');
-    });
+    document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
 
     if (index >= onboardingSteps.length) {
       endOnboarding();
@@ -157,72 +190,70 @@
 
     currentStep = index;
     const stepData = onboardingSteps[currentStep];
-    const targetElement = findElement(stepData.element);
 
-    if (!targetElement) {
-      // Skip cleanly if the step element layout variant is missing on this specific page view
-      console.warn(`Onboarding target selector not found: ${stepData.element}. Skipping step.`);
-      renderStep(index + 1);
-      return;
+    // Fire the interactive state actions if defined
+    if (typeof stepData.action === 'function') {
+      stepData.action();
     }
 
-    // Scroll elements into alignment cleanly if needed
-    targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    targetElement.classList.add('kg-onboard-highlight');
-
-    // Generate tooltip frame layout if non-existent
-    if (!tooltip) {
-      tooltip = document.createElement('div');
-      tooltip.className = 'kg-onboard-tooltip';
-      document.body.appendChild(tooltip);
-    }
-
-    const isLast = currentStep === onboardingSteps.length - 1;
-
-    tooltip.innerHTML = `
-      <h3>${stepData.title}</h3>
-      <p>${stepData.intro}</p>
-      <div class="kg-onboard-buttons">
-        <button class="kg-onboard-btn" id="kg-skip-btn">Skip Tour</button>
-        <button class="kg-onboard-btn kg-onboard-btn-primary" id="kg-next-btn">
-          ${isLast ? "Finish 🎉" : "Continue"}
-        </button>
-      </div>
-    `;
-
-    // Calculate rendering alignment bounds dynamic offsetting
+    // Small delay allows programmatic UI/modal animations to finalize before calculation
     setTimeout(() => {
+      const targetElement = findElement(stepData.target);
+
+      if (!targetElement) {
+        console.warn(`Onboarding target not ready or missing: ${stepData.target}. Skipping step.`);
+        renderStep(index + 1);
+        return;
+      }
+
+      targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      targetElement.classList.add('kg-onboard-highlight');
+
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.className = 'kg-onboard-tooltip';
+        document.body.appendChild(tooltip);
+      }
+
+      const isLast = currentStep === onboardingSteps.length - 1;
+
+      tooltip.innerHTML = `
+        <h3>${stepData.title}</h3>
+        <p>${stepData.intro}</p>
+        <div class="kg-onboard-buttons">
+          <button class="kg-onboard-btn" id="kg-skip-btn">Skip Tour</button>
+          <button class="kg-onboard-btn kg-onboard-btn-primary" id="kg-next-btn">
+            ${isLast ? "Complete 🎉" : "Continue"}
+          </button>
+        </div>
+      `;
+
+      // Context Alignment Positioning Calculations
       const rect = targetElement.getBoundingClientRect();
       const tooltipRect = tooltip.getBoundingClientRect();
 
-      let top = rect.bottom + window.scrollY + 12;
+      let top = rect.bottom + window.scrollY + 14;
       let left = rect.left + window.scrollX;
 
-      // Adjust up if layout drops past display fold lines
       if (top + tooltipRect.height > window.innerHeight + window.scrollY) {
-        top = rect.top + window.scrollY - tooltipRect.height - 12;
+        top = rect.top + window.scrollY - tooltipRect.height - 14;
       }
-
-      // Constrain context bounds inside inner page view parameters
       if (left + tooltipRect.width > window.innerWidth) {
-        left = window.innerWidth - tooltipRect.width - 20;
+        left = window.innerWidth - tooltipRect.width - 24;
       }
-      if (left < 10) left = 10;
+      if (left < 12) left = 12;
 
       tooltip.style.top = `${top}px`;
       tooltip.style.left = `${left}px`;
-    }, 100);
 
-    // Explicit manual click handlers to isolate tour state mutations
-    document.getElementById('kg-skip-btn').onclick = endOnboarding;
-    document.getElementById('kg-next-btn').onclick = () => renderStep(currentStep + 1);
+      document.getElementById('kg-skip-btn').onclick = endOnboarding;
+      document.getElementById('kg-next-btn').onclick = () => renderStep(currentStep + 1);
+    }, 150);
   }
 
-  // 5. Run Execution Sequence Loop Initializer
+  // 6. Global Initializer Hooks
   function startOnboarding(force = false) {
-    if (!force && localStorage.getItem('kg_onboarding_completed') === 'true') {
-      return;
-    }
+    if (!force && localStorage.getItem('kg_onboarding_completed') === 'true') return;
 
     injectStyles();
 
@@ -235,30 +266,21 @@
     renderStep(0);
   }
 
-  // 6. Tear down Walkthrough variables context completely
+  // 7. Dynamic Cleanup
   function endOnboarding() {
     localStorage.setItem('kg_onboarding_completed', 'true');
+    closeActiveModals();
 
-    if (backdrop) {
-      backdrop.remove();
-      backdrop = null;
-    }
-    if (tooltip) {
-      tooltip.remove();
-      tooltip = null;
-    }
+    if (backdrop) { backdrop.remove(); backdrop = null; }
+    if (tooltip) { tooltip.remove(); tooltip = null; }
 
-    document.querySelectorAll('.kg-onboard-highlight').forEach(el => {
-      el.classList.remove('kg-onboard-highlight');
-    });
+    document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
   }
 
-  // Bind to international window layout context for quest-board.html button triggers
   window.showOnboarding = function (forceStart = false) {
     startOnboarding(forceStart);
   };
 
-  // Check interactive attachment state lifecycle hooks
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     startOnboarding(false);
   } else {
