@@ -1,7 +1,7 @@
 /**
- * Kindred Guild - Advanced Interactive Onboarding Walkthrough
+ * Kindred Guild - Non-Disruptive Guided Tips Walkthrough
  * Location: shiroganemiyuki-0/kindred-guild/onboarding.js
- * Purpose: Actively drives the UI, triggers modals, and cleans up states on completion or skip.
+ * Purpose: A purely informative tip tour. Does not trigger modals, clicks, or page redirects.
  */
 
 (function () {
@@ -9,49 +9,32 @@
   let backdrop = null;
   let tooltip = null;
 
-  // 1. Core Step Configurations with Interactive State Hooks
+  // 1. Static Tip Configuration (Targets existing elements on the Quest Board page)
   const onboardingSteps = [
     {
-      target: '#quest-board-container, .quest-board, main',
-      title: "⚔️ The Quest Board",
-      intro: "Welcome to the Guild Hall! This is your live board where all active community and personal quests are displayed.",
-      action: null // No action needed for intro
+      target: '#quest-board-container, .quest-board, main, .container',
+      title: "⚔️ Welcome to the Quest Board",
+      intro: "This is the main hub of the Guild Hall! Here you can view, filter, and track active adventures posted by yourself and other members."
     },
     {
-      target: 'button:has-text("Post Task"), button:has-text("Post a Task"), #post-task-btn, .btn-warning',
-      title: "📜 Ready to Delegate?",
-      intro: "This button lets you issue a new guild decree. Let's click 'Continue' to programmatically open the ledger and see how it looks!",
-      action: null
+      // Strict layout selector to grab the yellow header action button directly
+      target: 'button.btn-warning, .btn-post-task, #post-task-btn, [id*="post"]',
+      title: "📜 Commissioning Quests",
+      intro: "When you need help with real-world tasks or chores, you can use this button to draft a new quest scroll and post it up for the guild."
     },
     {
-      target: '#post-task-modal, .modal, #quest-form, [id*="modal"]',
-      title: "✍️ Crafting a Quest",
-      intro: "Behold the Quest Scroll! Here you define your task descriptions, categorize them with tags, and set the bounty. Let's move on.",
-      // ACTION: Automatically open the modal when entering this step
-      action: function() {
-        // Try finding the button highlighted in the previous step and click it
-        const postBtn = findElement('button:has-text("Post Task"), button:has-text("Post a Task"), #post-task-btn, .btn-warning');
-        if (postBtn) {
-          postBtn.click();
-        } else {
-          // Fallback if click fails: try finding common modal containers and force reveal them
-          const modal = findElement('#post-task-modal, .modal, [id*="modal"]');
-          if (modal) modal.style.display = 'block';
-        }
-      }
+      target: '#coin-balance, .coin-display, #fairy-coins, [class*="coin"]',
+      title: "🪙 Your Guild Pouch",
+      intro: "Tracks your Fairy Coins (FC) balance. You spend coins as bounties to post quests, and earn them back by completing tasks for others."
     },
     {
-      target: '#coin-balance, .coin-display, #fairy-coins',
-      title: "🪙 Fairy Coins Balance",
-      intro: "Your personal treasury! Posting quests dispenses coins as rewards, while completing quests refills your pouch.",
-      // ACTION: Close the modal since we are moving to a different UI element
-      action: function() {
-        closeActiveModals();
-      }
+      target: '.nav-links, #site-nav, .navbar, .flex-wrap',
+      title: "🗺️ Guild Navigation",
+      intro: "Quickly journey across the realm! Use these tabs to jump between your Profile settings, personal History logs, or the specialized Wish board."
     }
   ];
 
-  // 2. Inject Refined Theme UI Styles
+  // 2. Inject Dark Theme Custom UI Styles
   function injectStyles() {
     if (document.getElementById('kg-onboard-styles')) return;
 
@@ -61,49 +44,50 @@
       .kg-onboard-backdrop {
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(8, 8, 12, 0.8);
+        background: rgba(8, 8, 12, 0.75);
         z-index: 9998;
         pointer-events: auto;
-        transition: opacity 0.25s ease;
+        transition: opacity 0.2s ease;
       }
 
       .kg-onboard-highlight {
         position: relative !important;
         z-index: 9999 !important;
-        outline: 3px solid #d4af37 !important;
-        box-shadow: 0 0 25px rgba(212, 175, 55, 0.5) !important;
-        border-radius: 8px;
-        /* ALLOW interactions inside the highlighted element (like forms or scrollbars) */
-        pointer-events: auto !important; 
+        outline: 3px solid #d4af37 !important; /* Guild Gold Accent */
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.45) !important;
+        border-radius: 6px;
+        
+        /* CRITICAL: Prevents any underlying buttons/links from being clicked during the tour */
+        pointer-events: none !important; 
       }
 
       .kg-onboard-tooltip {
         position: fixed;
         z-index: 10000;
-        background: #171722;
+        background: #161622;
         border: 1px solid #d4af37;
         border-radius: 12px;
-        padding: 22px;
-        width: 320px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        padding: 20px;
+        width: 310px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
         color: #f0f0f5;
         font-family: system-ui, -apple-system, sans-serif;
         transition: all 0.2s ease-out;
       }
 
       .kg-onboard-tooltip h3 {
-        margin: 0 0 10px 0;
-        font-size: 1.15rem;
+        margin: 0 0 8px 0;
+        font-size: 1.1rem;
         color: #e5c158;
-        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+        padding-bottom: 6px;
       }
 
       .kg-onboard-tooltip p {
-        margin: 0 0 18px 0;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        color: #b9b9cb;
+        margin: 0 0 16px 0;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        color: #bcccdd;
       }
 
       .kg-onboard-buttons {
@@ -114,9 +98,9 @@
 
       .kg-onboard-btn {
         background: transparent;
-        border: 1px solid #4a4a65;
-        color: #a0a0b8;
-        padding: 8px 14px;
+        border: 1px solid #4a4a60;
+        color: #9a9ab0;
+        padding: 6px 12px;
         border-radius: 6px;
         cursor: pointer;
         font-size: 0.85rem;
@@ -143,44 +127,27 @@
     document.head.appendChild(style);
   }
 
-  // 3. Intelligent Element Query Finder (Fixes selector collision bugs)
+  // 3. Strict Selector Query Matcher (Resolves context collision problems)
   function findElement(selectorString) {
     const selectors = selectorString.split(',');
     for (let sel of selectors) {
       sel = sel.trim();
-      
-      // Dynamic Text Content Matcher for button structures
-      if (sel.includes(':has-text(')) {
-        const textToFind = sel.match(/"([^"]+)"/)[1];
-        const buttons = Array.from(document.querySelectorAll('button, a'));
-        const found = buttons.find(b => b.textContent.trim().toLowerCase().includes(textToFind.toLowerCase()));
-        if (found && found.offsetWidth > 0) return found;
-        continue;
-      }
-
       const el = document.querySelector(sel);
+      
+      // Ensure element exists, is visible, and isn't a sub-filter tab component
       if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+        if (el.textContent.toLowerCase().includes('posted') && sel.includes('button')) {
+          continue; // Guard clause against filter tab collision
+        }
         return el;
       }
     }
     return null;
   }
 
-  // 4. Close Modals Gracefully Helper
-  function closeActiveModals() {
-    // Try standard UI close button trigger click
-    const closeBtn = document.querySelector('#post-task-modal .close, [onclick*="closeModal"], .modal-close');
-    if (closeBtn) {
-      closeBtn.click();
-    } else {
-      // Direct DOM manipulation fallback
-      const modal = document.querySelector('#post-task-modal, .modal');
-      if (modal) modal.style.display = 'none';
-    }
-  }
-
-  // 5. Execution Step Router
+  // 4. Pure Visual Rendering Cycle Loop
   function renderStep(index) {
+    // Strip active highlights from previous steps cleanly
     document.querySelectorAll('.kg-onboard-highlight').forEach(el => el.classList.remove('kg-onboard-highlight'));
 
     if (index >= onboardingSteps.length) {
@@ -190,68 +157,63 @@
 
     currentStep = index;
     const stepData = onboardingSteps[currentStep];
+    const targetElement = findElement(stepData.target);
 
-    // Fire the interactive state actions if defined
-    if (typeof stepData.action === 'function') {
-      stepData.action();
+    if (!targetElement) {
+      console.warn(`Target step element missing or out of view context: ${stepData.target}. Skipping tip.`);
+      renderStep(index + 1);
+      return;
     }
 
-    // Small delay allows programmatic UI/modal animations to finalize before calculation
-    setTimeout(() => {
-      const targetElement = findElement(stepData.target);
+    // Align layout smoothly to view screen parameters
+    targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    targetElement.classList.add('kg-onboard-highlight');
 
-      if (!targetElement) {
-        console.warn(`Onboarding target not ready or missing: ${stepData.target}. Skipping step.`);
-        renderStep(index + 1);
-        return;
-      }
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.className = 'kg-onboard-tooltip';
+      document.body.appendChild(tooltip);
+    }
 
-      targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      targetElement.classList.add('kg-onboard-highlight');
+    const isLast = currentStep === onboardingSteps.length - 1;
 
-      if (!tooltip) {
-        tooltip = document.createElement('div');
-        tooltip.className = 'kg-onboard-tooltip';
-        document.body.appendChild(tooltip);
-      }
+    tooltip.innerHTML = `
+      <h3>${stepData.title}</h3>
+      <p>${stepData.intro}</p>
+      <div class="kg-onboard-buttons">
+        <button class="kg-onboard-btn" id="kg-skip-btn">Skip Tour</button>
+        <button class="kg-onboard-btn kg-onboard-btn-primary" id="kg-next-btn">
+          ${isLast ? "Done ✨" : "Continue"}
+        </button>
+      </div>
+    `;
 
-      const isLast = currentStep === onboardingSteps.length - 1;
+    // Accurate Coordinate Position Mapping
+    const rect = targetElement.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
 
-      tooltip.innerHTML = `
-        <h3>${stepData.title}</h3>
-        <p>${stepData.intro}</p>
-        <div class="kg-onboard-buttons">
-          <button class="kg-onboard-btn" id="kg-skip-btn">Skip Tour</button>
-          <button class="kg-onboard-btn kg-onboard-btn-primary" id="kg-next-btn">
-            ${isLast ? "Complete 🎉" : "Continue"}
-          </button>
-        </div>
-      `;
+    let top = rect.bottom + window.scrollY + 12;
+    let left = rect.left + window.scrollX;
 
-      // Context Alignment Positioning Calculations
-      const rect = targetElement.getBoundingClientRect();
-      const tooltipRect = tooltip.getBoundingClientRect();
+    // Reposition above if layout crosses beneath view bottom limits
+    if (top + tooltipRect.height > window.innerHeight + window.scrollY) {
+      top = rect.top + window.scrollY - tooltipRect.height - 12;
+    }
+    // Prevent horizontal overflow bounds collisions
+    if (left + tooltipRect.width > window.innerWidth) {
+      left = window.innerWidth - tooltipRect.width - 20;
+    }
+    if (left < 12) left = 12;
 
-      let top = rect.bottom + window.scrollY + 14;
-      let left = rect.left + window.scrollX;
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
 
-      if (top + tooltipRect.height > window.innerHeight + window.scrollY) {
-        top = rect.top + window.scrollY - tooltipRect.height - 14;
-      }
-      if (left + tooltipRect.width > window.innerWidth) {
-        left = window.innerWidth - tooltipRect.width - 24;
-      }
-      if (left < 12) left = 12;
-
-      tooltip.style.top = `${top}px`;
-      tooltip.style.left = `${left}px`;
-
-      document.getElementById('kg-skip-btn').onclick = endOnboarding;
-      document.getElementById('kg-next-btn').onclick = () => renderStep(currentStep + 1);
-    }, 150);
+    // Rebind navigation click listeners
+    document.getElementById('kg-skip-btn').onclick = endOnboarding;
+    document.getElementById('kg-next-btn').onclick = () => renderStep(currentStep + 1);
   }
 
-  // 6. Global Initializer Hooks
+  // 5. Build Initializers Hooks
   function startOnboarding(force = false) {
     if (!force && localStorage.getItem('kg_onboarding_completed') === 'true') return;
 
@@ -266,10 +228,9 @@
     renderStep(0);
   }
 
-  // 7. Dynamic Cleanup
+  // 6. Complete Removal Cleanup
   function endOnboarding() {
     localStorage.setItem('kg_onboarding_completed', 'true');
-    closeActiveModals();
 
     if (backdrop) { backdrop.remove(); backdrop = null; }
     if (tooltip) { tooltip.remove(); tooltip = null; }
