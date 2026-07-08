@@ -15,7 +15,7 @@
     {
       "has": [{ "type": "host", "value": "kindred-guild.vercel.app" }],
       "source": "/(.*)",
-      "destination": "https://kindredguild.in/:1",
+      "destination": "https://kindredguild.org/:1",
       "permanent": true
     }
   ]
