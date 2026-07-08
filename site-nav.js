@@ -7,7 +7,7 @@
   const HOME = 'index.html';
   const path = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
 
-  // ---- 1. Floating back + home buttons ----
+  // ---- 1. Floating back + home buttons + quick links ----
   const nav = document.createElement('div');
   nav.id = 'kg-floating-nav';
   nav.innerHTML = `
@@ -25,6 +25,12 @@
     <button id="kg-guide-btn" title="Show me around" aria-label="Show guide">
       <span>🎮</span>
     </button>
+    <button id="kg-coins-btn" title="Buy Fairy Coins" aria-label="Buy Fairy Coins">
+      <span>💰</span>
+    </button>
+    <button id="kg-support-btn" title="Support & Donate" aria-label="Support & Donate">
+      <span>❤️</span>
+    </button>
   `;
   document.body.appendChild(nav);
 
@@ -37,6 +43,14 @@
       // Guide lives on the Quest Board — jump there and auto-start it
       window.location.href = 'quest-board.html?startGuide=1';
     }
+  });
+
+  document.getElementById('kg-coins-btn').addEventListener('click', () => {
+    window.location.href = 'coin_purchase_ui.html';
+  });
+
+  document.getElementById('kg-support-btn').addEventListener('click', () => {
+    window.location.href = 'donation.html';
   });
 
   if (path === HOME) {
@@ -88,6 +102,8 @@
       z-index: 9999;
       display: flex;
       gap: 6px;
+      flex-wrap: wrap;
+      max-width: 200px;
     }
     #kg-floating-nav button {
       width: 38px;

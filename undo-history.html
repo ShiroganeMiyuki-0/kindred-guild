@@ -9,9 +9,13 @@
 </head>
 <body>
   <div class="container" style="max-width:700px;padding-top:20px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px">
       <h1 style="font-size:1.4rem;color:var(--accent)">📜 Action History</h1>
-      <a href="quest-board.html" class="btn btn-ghost btn-sm">← Board</a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="coin_purchase_ui.html" class="btn btn-ghost btn-sm">💰 Buy Coins</a>
+        <a href="donation.html" class="btn btn-ghost btn-sm">❤️ Support</a>
+        <a href="quest-board.html" class="btn btn-ghost btn-sm">← Board</a>
+      </div>
     </div>
     <p style="color:var(--text-dim);margin-bottom:20px;font-size:0.9rem">Actions within the grace window can be undone. After the window closes, changes are permanent.</p>
     <div id="actionHistoryContainer">
