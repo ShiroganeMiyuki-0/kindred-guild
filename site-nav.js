@@ -22,8 +22,22 @@
         <path d="M5 9.5V21h14V9.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
+    <button id="kg-guide-btn" title="Show me around" aria-label="Show guide">
+      <span>🎮</span>
+    </button>
   `;
   document.body.appendChild(nav);
+
+  // ---- Guide button: works from any page ----
+  document.getElementById('kg-guide-btn').addEventListener('click', () => {
+    if (typeof window.showOnboarding === 'function') {
+      // onboarding.js is loaded on this page (quest-board.html or quest-post.html)
+      window.showOnboarding(true);
+    } else {
+      // Guide lives on the Quest Board — jump there and auto-start it
+      window.location.href = 'quest-board.html?startGuide=1';
+    }
+  });
 
   if (path === HOME) {
     document.getElementById('kg-back-btn').style.display = 'none';
@@ -93,6 +107,7 @@
       background: var(--surface-2, #20202d);
       transform: translateY(-1px);
     }
+    #kg-guide-btn { font-size: 15px; }
     #kg-scroll-guide {
       position: fixed;
       bottom: 20px;
