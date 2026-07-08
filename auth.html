@@ -12,12 +12,20 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
   <link rel="stylesheet" href="css/globals.css">
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;    /* Stacks navbar cleanly on top */
+      align-items: center;        /* Centers card horizontally */
+      justify-content: center;    /* Centers card vertically */
       padding: 20px;
     }
+    
     .auth-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -26,6 +34,7 @@
       width: 100%;
       max-width: 420px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      margin: 40px auto;          /* Provides breathing room from nav bar */
     }
     .logo {
       text-align: center;
@@ -87,7 +96,6 @@
       <p>Help your community, earn trust</p>
     </div>
 
-    <!-- Step 1: Email -->
     <div id="emailStep">
       <div class="form-group">
         <label for="email">Email Address</label>
@@ -97,7 +105,6 @@
       <p class="trust-note">We'll send a login link to your email. No password needed.<br><a href="terms-of-service.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></p>
     </div>
 
-    <!-- Step 2: Check email -->
     <div id="checkStep" class="hidden">
       <div class="email-display" id="emailDisplay"></div>
       <div class="check-email">
