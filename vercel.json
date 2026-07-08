@@ -14,8 +14,8 @@
   "redirects": [
     {
       "has": [{ "type": "host", "value": "kindred-guild.vercel.app" }],
-      "source": "/(.*)",
-      "destination": "https://kindredguild.org/:1",
+      "source": "/:path*",
+      "destination": "https://kindredguild.org/:path*",
       "permanent": true
     }
   ]
