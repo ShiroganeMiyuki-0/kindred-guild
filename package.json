@@ -1,0 +1,23 @@
+{
+  "name": "kindred-guild",
+  "version": "1.0.0",
+  "description": "A community board where people post tasks and get help",
+  "type": "module",
+  "scripts": {
+    "build": "echo 'Static site - no build needed'",
+    "dev": "npx serve .",
+    "lint": "echo 'No linter configured'"
+  },
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.12"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "community",
+    "tasks",
+    "escrow"
+  ],
+  "author": "Kindred Guild",
+  "license": "UNLICENSED",
+  "private": true
+}
