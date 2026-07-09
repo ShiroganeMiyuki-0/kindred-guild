@@ -155,21 +155,11 @@ async function fetchPendingCoins() {
     }
 }
 
-// 6. Coin Actions — uses fairy_ledger for proper balance tracking
+// 6. Coin Actions — uses SECURITY DEFINER RPCs (bypasses RLS correctly)
 async function approveCoins(txId, userId, coinsAmount) {
     try {
-        const { error: txError } = await window.sb
-            .from('coin_purchases')
-            .update({ status: 'verified' })
-            .eq('id', txId);
-        if (txError) throw txError;
-
-        // Credit coins via the ledger (same pattern as the rest of the app)
-        const { error: ledgerError } = await window.sb
-            .from('fairy_ledger')
-            .insert({ user_id: userId, amount: coinsAmount, reason: 'upi_purchase' });
-        if (ledgerError) throw ledgerError;
-
+        const { error } = await window.sb.rpc('approve_coin_purchase', { p_purchase_id: txId });
+        if (error) throw error;
         showGlobalAlert(`Payment approved! Credited +${coinsAmount} Fairy Coins.`);
         fetchPendingCoins();
     } catch (err) {
@@ -179,10 +169,7 @@ async function approveCoins(txId, userId, coinsAmount) {
 
 async function rejectCoins(txId) {
     try {
-        const { error } = await window.sb
-            .from('coin_purchases')
-            .update({ status: 'rejected' })
-            .eq('id', txId);
+        const { error } = await window.sb.rpc('reject_coin_purchase', { p_purchase_id: txId });
         if (error) throw error;
         showGlobalAlert("Coin request denied.");
         fetchPendingCoins();
