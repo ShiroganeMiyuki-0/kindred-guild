@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <rect x="60" y="60" width="1080" height="510" rx="20" fill="#111111" stroke="#d4af37" stroke-width="2"/>
+  <text x="600" y="220" text-anchor="middle" fill="#d4af37" font-family="system-ui, sans-serif" font-size="72" font-weight="bold">⚔️ Kindred Guild</text>
+  <text x="600" y="300" text-anchor="middle" fill="#e0e0e0" font-family="system-ui, sans-serif" font-size="32">Help your community, earn trust.</text>
+  <text x="600" y="370" text-anchor="middle" fill="#888888" font-family="system-ui, sans-serif" font-size="24">Post tasks • Get help • Build reputation</text>
+  <text x="600" y="450" text-anchor="middle" fill="#d4af37" font-family="system-ui, sans-serif" font-size="28" font-weight="bold">kindredguild.org</text>
+</svg>
