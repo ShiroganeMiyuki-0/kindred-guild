@@ -1,5 +1,7 @@
 // ============================================
 // KINDRED GUILD — MODAL AND TOAST UTILITIES
+// Copyright (c) 2026 Kindred Guild. All Rights Reserved.
+// Unauthorized copying or redistribution is prohibited.
 // ============================================
 
 const MODAL_HTML_STRUCTURE = `

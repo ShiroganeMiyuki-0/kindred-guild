@@ -139,5 +139,6 @@ window.deleteWorkerPost = async function (postId) {
 };
 
 window.contactWorker = function (postId, name) {
-  alert('Contact feature coming soon! You would message ' + name + ' here.');
+  // Open quest-post with pre-filled context
+  window.location.href = 'quest-post.html?worker=' + encodeURIComponent(postId);
 };

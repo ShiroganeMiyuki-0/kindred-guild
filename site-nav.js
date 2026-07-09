@@ -1,5 +1,7 @@
  /**
  * Kindred Guild - Dynamic Site Navigation & Auth Sync System
+ * Copyright (c) 2026 Kindred Guild. All Rights Reserved.
+ * Unauthorized copying or redistribution is prohibited.
  * Highly responsive, resilient, and automatically synchronized with Supabase authentication.
  * Includes auto-healing viewport structures to prevent layout squishing on flex centered cards.
  */

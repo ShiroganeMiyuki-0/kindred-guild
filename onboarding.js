@@ -1,5 +1,7 @@
 /**
  * Kindred Guild - Context-Aware, Automated Onboarding Walkthrough
+ * Copyright (c) 2026 Kindred Guild. All Rights Reserved.
+ * Unauthorized copying or redistribution is prohibited.
  * Location: shiroganemiyuki-0/kindred-guild/onboarding.js
  * Purpose: Automatically triggers non-blocking guide tips the first time a user
  * lands on a page or interacts with a feature. Fully non-blocking (page stays

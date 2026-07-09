@@ -10,14 +10,14 @@ let currentUser = null;
 let currentPaymentNote = '';
 
 (async function init() {
-  const { data: { user } } = await sb.auth.getUser();
+  const { data: { user } } = await window.sb.auth.getUser();
   if (!user) {
     window.location.href = 'auth.html';
     return;
   }
   currentUser = user;
 
-  const { data: balance } = await sb.rpc('get_coin_balance', { p_user_id: user.id });
+  const { data: balance } = await window.sb.rpc('get_coin_balance', { p_user_id: user.id });
   document.getElementById('currentBalanceDisplay').textContent = balance || 0;
 
   loadPendingPurchases();
@@ -80,7 +80,7 @@ window.submitPaymentReference = async function() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Logging...';
 
-  const { error } = await sb
+  const { error } = await window.sb
     .from('coin_purchases')
     .insert({
       user_id: currentUser.id,
@@ -113,7 +113,7 @@ window.submitPaymentReference = async function() {
 };
 
 async function loadPendingPurchases() {
-  const { data, error } = await sb
+  const { data, error } = await window.sb
     .from('coin_purchases')
     .select('id, coin_amount, upi_transaction_ref, payment_note, status, created_at')
     .eq('user_id', currentUser.id)

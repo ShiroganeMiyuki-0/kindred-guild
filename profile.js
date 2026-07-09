@@ -107,8 +107,8 @@ window.handleQrFileUpload = async function (input) {
 };
 
 async function loadUserQuestsHistory() {
-  const { data: posted } = await window.sb.from('quests').select('*').eq('poster_id', profileUser.user_id).order('created_at', { ascending: false });
-  const { data: completed } = await window.sb.from('quests').select('*').eq('worker_id', profileUser.user_id).order('created_at', { ascending: false });
+  const { data: posted } = await window.sb.from('quests').select('*').eq('poster_id', profileUser.user_id).eq('is_deleted', false).order('created_at', { ascending: false });
+  const { data: completed } = await window.sb.from('quests').select('*').eq('worker_id', profileUser.user_id).eq('is_deleted', false).order('created_at', { ascending: false });
 
   const pList = document.getElementById('postedQuestsList');
   pList.innerHTML = posted?.length
