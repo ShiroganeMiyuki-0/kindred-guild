@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Copyright (c) 2026 Kindred Guild. All Rights Reserved. -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kindred Guild — Fairy Wishes Board</title>
@@ -143,7 +144,7 @@
     })();
 
     async function loadWishes() {
-      const { data: wishes } = await window.sb.from('wishes').select('*, creator:user_profiles!wishes_creator_id_fkey(username, display_name)').eq('status', 'active');
+      const { data: wishes } = await window.sb.from('wishes').select('*, creator:user_profiles!wishes_creator_id_fkey(username, display_name)').eq('status', 'active').eq('is_deleted', false);
       const { data: votes } = await window.sb.from('wish_votes').select('wish_id').eq('voter_id', currentUser.id);
       myVotesList = (votes || []).map(v => v.wish_id);
 
@@ -182,6 +183,8 @@
         const isVoted = myVotesList.includes(w.id);
         const name = w.creator?.display_name || w.creator?.username || 'Member';
 
+        const isOwn = w.creator_id === currentUser?.id;
+
         return `
           <div class="wish-card">
             <div class="wish-info">
@@ -189,6 +192,7 @@
               <div class="wish-title">${escapeHtml(w.title)}</div>
               <div class="wish-desc">${escapeHtml(w.description)}</div>
               <div style="font-size:0.7rem;color:var(--text-dim);margin-top:6px">by @${escapeHtml(name)}</div>
+              ${isOwn ? `<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:0.75rem;color:var(--error);" onclick="deleteWish('${w.id}')">🗑️ Delete Wish</button>` : ''}
             </div>
             <div class="vote-panel ${isVoted ? 'voted' : ''}" onclick="toggleVote('${w.id}')">
               <div class="vote-icon">▲</div>
@@ -204,6 +208,19 @@
       } else {
         await window.sb.from('wish_votes').insert({ wish_id: wishId, voter_id: currentUser.id });
       }
+      await loadWishes();
+    };
+
+    window.deleteWish = async function (wishId) {
+      const confirmed = await showCustomConfirm('Delete Wish', 'Are you sure you want to delete this wish? Any coin backing will be refunded.');
+      if (!confirmed) return;
+
+      const { error } = await window.sb.rpc('soft_delete_wish', { p_wish_id: wishId });
+      if (error) {
+        await showCustomAlert('Error', error.message, true);
+        return;
+      }
+      await showCustomAlert('Deleted', 'Your wish has been removed and any backing refunded.', true);
       await loadWishes();
     };
 

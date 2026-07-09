@@ -82,4 +82,8 @@ A community task board where people post jobs and others help them out. Free or 
 
 ## License
 
-© 2026 Kindred Guild. Built for community cooperation.
+© 2026 Kindred Guild — ShiroganeMiyuki-0. All Rights Reserved.
+
+This is proprietary software. Unauthorized copying, redistribution, modification, or hosting of this software is strictly prohibited. See [LICENSE](LICENSE) for full terms.
+
+For licensing inquiries: https://github.com/ShiroganeMiyuki-0

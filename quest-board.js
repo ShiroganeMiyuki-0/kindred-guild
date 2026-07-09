@@ -1,5 +1,7 @@
 // ============================================
 // KINDRED GUILD — QUEST BOARD CONTROLLER
+// Copyright (c) 2026 Kindred Guild. All Rights Reserved.
+// Unauthorized copying or redistribution is prohibited.
 // Uses shared window.sb from supabase-client.js
 // ============================================
 

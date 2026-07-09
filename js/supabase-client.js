@@ -1,5 +1,7 @@
 // ============================================
 // KINDRED GUILD — SHARED SUPABASE CLIENT
+// Copyright (c) 2026 Kindred Guild. All Rights Reserved.
+// Unauthorized copying or redistribution is prohibited.
 // Include on EVERY page: <script src="js/supabase-client.js"></script>
 // Must be loaded AFTER the Supabase CDN script.
 // ============================================
