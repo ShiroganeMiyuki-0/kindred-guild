@@ -324,9 +324,9 @@
         // Handle Logout Button actions (both desktop and mobile formats)
         const logoutHandler = async (e) => {
             e.preventDefault();
-            if (window.supabase) {
+            if (window.sb || window.supabase) {
                 try {
-                    const { error } = await window.supabase.auth.signOut();
+                    const { error } = await (window.sb || window.supabase).auth.signOut();
                     if (error) throw error;
                     // Force refresh back to main portal upon logging out
                     window.location.href = getPath('index.html');
@@ -348,16 +348,16 @@
 
     // 6. DISCOVER SUPABASE & RETRIEVE ACTIVE USER
     async function initNavigationState() {
-        let supabaseClient = window.supabase;
+        let supabaseClient = window.sb || window.supabase;
 
         // If not loaded on window immediately, attempt to wait for 2 seconds
         if (!supabaseClient) {
             let retries = 0;
             supabaseClient = await new Promise((resolve) => {
                 const interval = setInterval(() => {
-                    if (window.supabase) {
+                    if (window.sb || window.supabase) {
                         clearInterval(interval);
-                        resolve(window.supabase);
+                        resolve(window.sb || window.supabase);
                     }
                     retries++;
                     if (retries > 40) { // Limit retry to 2 seconds
@@ -387,15 +387,15 @@
                             isAdmin = cachedRole === 'admin';
                         } else {
                             const { data, error } = await supabaseClient
-                                .from('profiles')
-                                .select('role')
-                                .eq('id', user.id)
+                                .from('user_profiles')
+                                .select('is_admin')
+                                .eq('user_id', user.id)
                                 .maybeSingle();
-                            if (data && data.role === 'admin') {
+                            if (data && data.is_admin) {
                                 isAdmin = true;
                                 sessionStorage.setItem(`user_role_${user.id}`, 'admin');
                             } else if (data) {
-                                sessionStorage.setItem(`user_role_${user.id}`, data.role || 'user');
+                                sessionStorage.setItem(`user_role_${user.id}`, 'user');
                             }
                         }
                     } catch (e) {
