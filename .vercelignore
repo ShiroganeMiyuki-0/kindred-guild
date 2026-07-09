@@ -1,0 +1,17 @@
+# Supabase edge functions (deployed separately via Supabase CLI)
+supabase/
+supabase_edge_function.ts
+
+# Migration SQL files
+migration_*.sql
+supabase_sql_schema.sql
+supabase_pg_cron_setup.sql
+
+# Documentation
+docs/
+
+# Dev files
+.env
+.env.*
+*.md
+.openclaw/
