@@ -216,6 +216,8 @@ window.uploadProofFiles = async function () {
     stagedProofFiles = [];
     renderStagedFilesList();
     showAlert('Proof submitted!', 'success');
+    // Notify poster
+    if (currentQuest?.poster_id) window.sendNotification('proof_submitted', currentQuest.poster_id, currentQuest.id);
     setTimeout(() => refreshQuestData(), 1200);
   } catch (err) {
     showAlert('Upload failed: ' + err.message, 'error');
@@ -277,6 +279,8 @@ window.triggerApproval = async function () {
   const { error } = await window.sb.rpc('approve_quest', { p_quest_id: currentQuest.id });
   if (error) { showAlert('Failed: ' + error.message, 'error'); return; }
   showAlert('Approved!', 'success');
+  // Notify worker
+  if (currentQuest?.worker_id) window.sendNotification('quest_approved', currentQuest.worker_id, currentQuest.id);
   setTimeout(() => refreshQuestData(), 1500);
 };
 
@@ -286,6 +290,9 @@ window.triggerDisputeLaunch = async function () {
   if (error) { showAlert('Failed: ' + error.message, 'error'); return; }
   await window.sb.from('quest_comments').insert({ quest_id: currentQuest.id, user_id: currentUser.id, content: '🚨 Dispute filed.' });
   showAlert('Dispute opened.', 'error');
+  // Notify both parties
+  if (currentQuest?.poster_id) window.sendNotification('dispute_filed', currentQuest.poster_id, currentQuest.id);
+  if (currentQuest?.worker_id) window.sendNotification('dispute_filed', currentQuest.worker_id, currentQuest.id);
   setTimeout(() => refreshQuestData(), 1200);
 };
 

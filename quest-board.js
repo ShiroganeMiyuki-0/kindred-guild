@@ -231,6 +231,8 @@ window.acceptQuest = async function (questId) {
       alert('Failed: ' + error.message);
       return;
     }
+    // Notify poster that quest was accepted
+    if (quest.poster_id) window.sendNotification('quest_accepted', quest.poster_id, questId);
     window.location.href = 'quest-detail.html?id=' + questId;
   };
 
