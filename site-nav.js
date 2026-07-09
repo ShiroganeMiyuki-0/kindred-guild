@@ -224,9 +224,7 @@
                         <!-- Brand Identity -->
                         <div class="flex-shrink-0 flex items-center mr-8">
                             <a href="${getPath('index.html')}" class="flex items-center gap-2 group">
-                                <div class="bg-amber-500/10 text-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 p-2 rounded-xl transition-all duration-300 border border-amber-500/20 shadow-lg shadow-amber-500/5 group-hover:scale-105">
-                                    <i class="fa-solid fa-shield-halved text-xl"></i>
-                                </div>
+                                <img src="${getPath('logo.png')}" alt="Kindred Guild" class="h-10 w-10 rounded-xl object-cover ring-2 ring-amber-500/30 group-hover:ring-amber-500 transition-all duration-300 group-hover:scale-105">
                                 <div class="flex flex-col">
                                     <span class="text-lg font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none">KINDRED GUILD</span>
                                     <span class="text-[10px] text-amber-500/60 font-medium tracking-widest uppercase mt-0.5">Adventure awaits</span>
