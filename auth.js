@@ -11,6 +11,7 @@ const checkStep = document.getElementById('checkStep');
 const emailDisplay = document.getElementById('emailDisplay');
 const messageEl = document.getElementById('message');
 const sendBtn = document.getElementById('sendBtn');
+const refInput = document.getElementById('referralCode');
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -54,6 +55,10 @@ window.sendMagicLink = async function () {
     emailDisplay.textContent = email;
     emailStep.classList.add('hidden');
     checkStep.classList.remove('hidden');
+
+    // Save referral code if provided
+    const refCode = (refInput?.value || '').trim().toUpperCase();
+    if (refCode) localStorage.setItem('kg_referral_code', refCode);
   } catch (err) {
     sendBtn.disabled = false;
     sendBtn.textContent = 'Send Magic Link';
@@ -69,8 +74,24 @@ window.backToEmail = function () {
 
 (async function init() {
   try {
+    // Check for referral code in URL
+    const urlRef = new URLSearchParams(window.location.search).get('ref');
+    if (urlRef && refInput) {
+      refInput.value = urlRef.toUpperCase();
+      localStorage.setItem('kg_referral_code', urlRef.toUpperCase());
+    }
+
     const { data: { session } } = await window.sb.auth.getSession();
     if (session?.user) {
+      // Apply referral code if stored
+      const storedRef = localStorage.getItem('kg_referral_code');
+      if (storedRef) {
+        try {
+          await window.sb.rpc('apply_referral_code', { p_code: storedRef, p_referred_id: session.user.id });
+          localStorage.removeItem('kg_referral_code');
+        } catch (e) { localStorage.removeItem('kg_referral_code'); }
+      }
+
       const { data: profile } = await window.sb
         .from('user_profiles')
         .select('username')

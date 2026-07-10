@@ -102,6 +102,10 @@
         <label for="email">Email Address</label>
         <input type="email" id="email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')sendMagicLink()">
       </div>
+      <div class="form-group">
+        <label for="referralCode">Referral Code (optional)</label>
+        <input type="text" id="referralCode" placeholder="e.g. A1B2C3D4" maxlength="8" style="text-transform:uppercase">
+      </div>
       <button id="sendBtn" class="btn btn-primary" style="width:100%;padding:14px" onclick="sendMagicLink()">Send Magic Link</button>
       <p class="trust-note">We'll send a login link to your email. No password needed.<br><a href="terms-of-service.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></p>
     </div>

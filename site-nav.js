@@ -90,6 +90,7 @@
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html' },
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
+        { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
     ];
 
@@ -101,6 +102,7 @@
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html' },
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
+        { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
         { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
     ];
