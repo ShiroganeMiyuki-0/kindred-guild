@@ -95,7 +95,7 @@ window.cancelQuest = async function () {
   btn.disabled = true; btn.textContent = 'Cancelling...';
 
   try {
-    const { error } = await window.sb.rpc('soft_delete_quest', { p_quest_id: currentQuest.id });
+    const { error } = await window.sb.rpc('cancel_quest', { p_quest_id: currentQuest.id });
     if (error) { showMessage('Error: ' + error.message, 'error'); btn.disabled = false; btn.textContent = 'Cancel Quest'; return; }
     showMessage('Quest cancelled and refunded!', 'success');
     setTimeout(() => window.location.href = 'quest-board.html', 1500);
