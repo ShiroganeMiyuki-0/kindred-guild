@@ -122,7 +122,7 @@ function renderQuestUI() {
   document.getElementById('deadlineStr').innerHTML = `<strong>${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong> ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
 
   // Reset panels
-  ['workerProofPanel', 'posterAppraisalPanel', 'disputePanel', 'ratingPanel', 'abandonContainer'].forEach(id => {
+  ['workerProofPanel', 'posterAppraisalPanel', 'disputePanel', 'ratingPanel', 'abandonContainer', 'cancelContainer'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
   if (countdownInterval) clearInterval(countdownInterval);
@@ -133,7 +133,12 @@ function renderQuestUI() {
       document.getElementById('workerProofPanel').style.display = 'block';
       document.getElementById('abandonContainer').style.display = 'block';
     } else if (isPoster) {
+      document.getElementById('cancelContainer').style.display = 'block';
       showAlert('Task accepted. Waiting for worker to submit proof.', 'success');
+    }
+  } else if (q.status === 'open') {
+    if (isPoster) {
+      document.getElementById('cancelContainer').style.display = 'block';
     }
   } else if (q.status === 'submitted') {
     if (isPoster) {
@@ -264,6 +269,14 @@ window.triggerAbandonQuest = async function () {
   setTimeout(() => window.location.href = 'quest-board.html', 1500);
 };
 
+window.triggerCancelQuest = async function () {
+  if (!await showCustomConfirm('Cancel Quest', 'Cancel this quest and get your coins refunded?')) return;
+  const { error } = await window.sb.rpc('cancel_quest', { p_quest_id: currentQuest.id });
+  if (error) { showAlert('Failed: ' + error.message, 'error'); return; }
+  showAlert('Quest cancelled. Coins refunded.', 'success');
+  setTimeout(() => window.location.href = 'quest-board.html', 1500);
+};
+
 window.triggerRevisionRequest = async function () {
   if (!await showCustomConfirm('Request Revision', 'Reject proof and request changes?')) return;
   const { error } = await window.sb.rpc('request_revision', { p_quest_id: currentQuest.id });
@@ -286,13 +299,9 @@ window.triggerApproval = async function () {
 
 window.triggerDisputeLaunch = async function () {
   if (!await showCustomConfirm('File Dispute', 'Lock funds and open arbitration?')) return;
-  const { error } = await window.sb.from('quests').update({ status: 'disputed', appraisal_deadline: null }).eq('id', currentQuest.id);
+  const { error } = await window.sb.rpc('file_dispute', { p_quest_id: currentQuest.id, p_reason: 'Dispute filed via quest detail' });
   if (error) { showAlert('Failed: ' + error.message, 'error'); return; }
-  await window.sb.from('quest_comments').insert({ quest_id: currentQuest.id, user_id: currentUser.id, content: '🚨 Dispute filed.' });
   showAlert('Dispute opened.', 'error');
-  // Notify both parties
-  if (currentQuest?.poster_id) window.sendNotification('dispute_filed', currentQuest.poster_id, currentQuest.id);
-  if (currentQuest?.worker_id) window.sendNotification('dispute_filed', currentQuest.worker_id, currentQuest.id);
   setTimeout(() => refreshQuestData(), 1200);
 };
 

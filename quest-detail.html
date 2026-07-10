@@ -103,6 +103,10 @@
         <span style="color:var(--text-dim);font-size:0.8rem;display:block;margin-bottom:6px">Changed your mind? Release this task back to the board.</span>
         <button class="btn btn-error btn-sm" onclick="triggerAbandonQuest()">⚠️ Abandon Quest</button>
       </div>
+      <div id="cancelContainer" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+        <span style="color:var(--text-dim);font-size:0.8rem;display:block;margin-bottom:6px">Need to cancel? Your locked coins will be refunded.</span>
+        <button class="btn btn-error btn-sm" onclick="triggerCancelQuest()">❌ Cancel & Refund</button>
+      </div>
     </div>
 
     <div id="workerProofPanel" class="action-panel" style="display:none">
