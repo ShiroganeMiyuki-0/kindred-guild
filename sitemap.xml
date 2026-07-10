@@ -21,6 +21,21 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://kindredguild.org/guild-hall.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://kindredguild.org/leaderboard.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://kindredguild.org/activity.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://kindredguild.org/worker-post.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>

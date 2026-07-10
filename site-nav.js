@@ -88,6 +88,8 @@
         { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html' },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html' },
+        { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
+        { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
     ];
 
@@ -97,6 +99,8 @@
         { name: 'Be a Worker', icon: 'fa-hammer', file: 'worker-post.html' },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html' },
+        { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
+        { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
         { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
     ];
@@ -150,6 +154,12 @@
             
             actionPanelHtml = `
                 <div class="flex items-center gap-4">
+                    <!-- Notification Bell -->
+                    <a href="${getPath('notifications.html')}" class="relative flex items-center text-gray-300 hover:text-amber-400 transition duration-150" title="Notifications">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                        <span id="nav-notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+                    </a>
+                    
                     <!-- Profile Link -->
                     <a href="${getPath('profile.html')}" class="flex items-center gap-2 group ${profileActive ? 'text-amber-400' : 'text-gray-300 hover:text-amber-400'} transition duration-150 ease-in-out">
                         <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 shadow-md group-hover:scale-105 transition-transform duration-150">
@@ -288,6 +298,9 @@
 
         // Run self-healing layout checking routines
         adjustFlexBody();
+
+        // Load notification count for logged-in users
+        if (user) loadNotificationCount();
     }
 
     // Centering flex pages layout healing engine
@@ -428,6 +441,25 @@
             // Fallback rendering in case database configuration is pending or local preview
             renderNavContainer(null, false);
         }
+    }
+
+    // Load notification count for the bell icon
+    async function loadNotificationCount() {
+        try {
+            if (!window.sb) return;
+            const { data, error } = await window.sb.rpc('get_unread_notification_count');
+            if (error) return;
+            const count = data || 0;
+            const badge = document.getElementById('nav-notif-badge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 9 ? '9+' : count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        } catch (e) { /* silent */ }
     }
 
     // Initialize nav loading sequence
