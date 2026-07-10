@@ -5,6 +5,93 @@
 -- =========================================================================
 
 -- =========================================================================
+-- 0. FIX: Drop any existing triggers/functions that reference public.profiles
+--    (Fixes "relation public.profiles does not exist" error)
+-- =========================================================================
+
+-- Drop triggers on wishes table that might reference profiles
+DO $$
+DECLARE r RECORD;
+BEGIN
+  FOR r IN SELECT tgname FROM pg_trigger WHERE tgrelid = 'wishes'::regclass AND NOT tgisinternal
+  LOOP
+    EXECUTE 'DROP TRIGGER IF EXISTS ' || r.tgname || ' ON wishes CASCADE';
+  END LOOP;
+END $$;
+
+-- Drop triggers on wish_votes table
+DO $$
+DECLARE r RECORD;
+BEGIN
+  FOR r IN SELECT tgname FROM pg_trigger WHERE tgrelid = 'wish_votes'::regclass AND NOT tgisinternal
+  LOOP
+    EXECUTE 'DROP TRIGGER IF EXISTS ' || r.tgname || ' ON wish_votes CASCADE';
+  END LOOP;
+END $$;
+
+-- Drop any function that references profiles table (catch-all)
+DO $$
+DECLARE r RECORD;
+BEGIN
+  FOR r IN SELECT routine_name, routine_schema FROM information_schema.routines
+           WHERE routine_definition LIKE '%profiles%' AND routine_schema = 'public'
+  LOOP
+    BEGIN
+      EXECUTE 'DROP FUNCTION IF EXISTS ' || r.routine_schema || '.' || r.routine_name || '() CASCADE';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END LOOP;
+END $$;
+
+-- Recreate the get_wish_votes function (it may have been dropped above)
+CREATE OR REPLACE FUNCTION get_wish_votes(p_wish_id UUID)
+RETURNS BIGINT AS $$
+  SELECT COUNT(*) FROM wish_votes WHERE wish_id = p_wish_id;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Recreate post_wish_with_commission if it was dropped
+CREATE OR REPLACE FUNCTION post_wish_with_commission(
+  p_title TEXT, p_description TEXT, p_wish_type TEXT,
+  p_coin_amount INTEGER, p_upi_amount INTEGER, p_commission_coins INTEGER
+)
+RETURNS UUID AS $$
+DECLARE
+  v_user_id UUID;
+  v_balance INTEGER;
+  v_wish_id UUID;
+  v_commission INTEGER;
+BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN RAISE EXCEPTION 'Authentication required.'; END IF;
+  IF EXISTS (SELECT 1 FROM user_profiles WHERE user_id = v_user_id AND is_suspended = TRUE) THEN
+    RAISE EXCEPTION 'Your account is suspended.';
+  END IF;
+  v_balance := get_coin_balance(v_user_id);
+  IF p_wish_type = 'coins' THEN
+    IF COALESCE(p_coin_amount, 0) <= 0 THEN RAISE EXCEPTION 'Coin amount must be > 0.'; END IF;
+    v_commission := CEIL(p_coin_amount * 0.1)::INTEGER;
+    IF v_balance < p_coin_amount + v_commission THEN RAISE EXCEPTION 'Insufficient balance.'; END IF;
+    INSERT INTO fairy_ledger (user_id, amount, reason, created_at) VALUES (v_user_id, -p_coin_amount, 'wish_backing_locked', NOW());
+    INSERT INTO fairy_ledger (user_id, amount, reason, created_at) VALUES (v_user_id, -v_commission, 'wish_commission', NOW());
+  ELSIF p_wish_type = 'upi' THEN
+    IF COALESCE(p_upi_amount, 0) <= 0 THEN RAISE EXCEPTION 'UPI amount must be > 0.'; END IF;
+    v_commission := CEIL(p_upi_amount * 0.1)::INTEGER;
+    IF v_balance < v_commission THEN RAISE EXCEPTION 'Insufficient balance for commission.'; END IF;
+    INSERT INTO fairy_ledger (user_id, amount, reason, created_at) VALUES (v_user_id, -v_commission, 'wish_commission', NOW());
+  ELSE
+    v_commission := 0;
+  END IF;
+  INSERT INTO wishes (creator_id, title, description, wish_type, coin_amount, upi_amount, status, created_at)
+  VALUES (v_user_id, p_title, p_description, p_wish_type,
+    CASE WHEN p_wish_type = 'coins' THEN p_coin_amount ELSE NULL END,
+    CASE WHEN p_wish_type = 'upi' THEN p_upi_amount ELSE NULL END,
+    'active', NOW())
+  RETURNING id INTO v_wish_id;
+  RETURN v_wish_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- =========================================================================
 -- 1. WISH BACKINGS — Users can back wishes with coins/UPI when voting
 -- =========================================================================
 
