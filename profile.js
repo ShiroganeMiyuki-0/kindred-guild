@@ -76,6 +76,19 @@ function renderProfileOverview() {
   document.getElementById('profileRepScore').textContent = `${score} / 5.0`;
   if (p.avatar_url) document.getElementById('profileAvatar').src = p.avatar_url;
   if (p.is_suspended) document.getElementById('suspensionNotice').style.display = 'block';
+  loadProfileStats();
+}
+
+async function loadProfileStats() {
+  const { data: stats } = await window.sb.rpc('get_profile_stats', { p_user_id: profileUser.user_id });
+  if (!stats) return;
+  const el = (id) => document.getElementById(id);
+  if (el('statCompleted')) el('statCompleted').textContent = stats.quests_completed || 0;
+  if (el('statPosted')) el('statPosted').textContent = stats.quests_posted || 0;
+  if (el('statWishesBacked')) el('statWishesBacked').textContent = stats.wishes_backed || 0;
+  if (el('statGuildMsgs')) el('statGuildMsgs').textContent = stats.guild_messages || 0;
+  if (el('statTotalEarned')) el('statTotalEarned').textContent = (stats.total_earned || 0) + ' FC';
+  if (el('statAvgRating')) el('statAvgRating').textContent = stats.avg_rating ? parseFloat(stats.avg_rating).toFixed(1) : '—';
 }
 
 window.switchProfileTab = function (tabId) {

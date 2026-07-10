@@ -72,6 +72,15 @@
       </div>
     </div>
 
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px;">
+      <div class="card" style="text-align:center;padding:14px;"><div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Completed</div><div id="statCompleted" style="font-size:1.3rem;font-weight:700;color:var(--accent)">0</div></div>
+      <div class="card" style="text-align:center;padding:14px;"><div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Posted</div><div id="statPosted" style="font-size:1.3rem;font-weight:700;color:var(--accent)">0</div></div>
+      <div class="card" style="text-align:center;padding:14px;"><div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Wishes Backed</div><div id="statWishesBacked" style="font-size:1.3rem;font-weight:700;color:var(--accent)">0</div></div>
+      <div class="card" style="text-align:center;padding:14px;"><div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Guild Msgs</div><div id="statGuildMsgs" style="font-size:1.3rem;font-weight:700;color:var(--accent)">0</div></div>
+      <div class="card" style="text-align:center;padding:14px;"><div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Earned</div><div id="statTotalEarned" style="font-size:1.3rem;font-weight:700;color:var(--success)">0 FC</div></div>
+      <div class="card" style="text-align:center;padding:14px;"><div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase">Avg Rating</div><div id="statAvgRating" style="font-size:1.3rem;font-weight:700;color:var(--accent)">—</div></div>
+    </div>
+
     <div class="tabs">
       <div class="tab active" data-tab="tab-posted" onclick="switchProfileTab('tab-posted')">Posted Tasks</div>
       <div class="tab" data-tab="tab-completed" onclick="switchProfileTab('tab-completed')">Completed</div>
