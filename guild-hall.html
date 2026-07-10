@@ -98,11 +98,14 @@
       <!-- Chat Area -->
       <div class="chat-area">
         <div class="chat-header">
-          <div>
+          <div style="flex:1">
             <h4 id="chatChannelName"># general</h4>
             <div class="ch-desc" id="chatChannelDesc">General discussion for all guild members</div>
           </div>
-          <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="msgSearchInput" placeholder="Search messages..." style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text);font-size:0.8rem;width:180px;" oninput="filterMessages()">
+            <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
+          </div>
         </div>
 
         <div class="chat-messages" id="chatMessages">
@@ -310,6 +313,17 @@
     };
 
     // Mobile sidebar toggle
+    // Search/filter messages
+    window.filterMessages = function () {
+      const term = document.getElementById('msgSearchInput').value.toLowerCase().trim();
+      const msgEls = document.querySelectorAll('#chatMessages .msg');
+      msgEls.forEach(el => {
+        if (!term) { el.style.display = ''; return; }
+        const text = el.textContent.toLowerCase();
+        el.style.display = text.includes(term) ? '' : 'none';
+      });
+    };
+
     window.toggleMobileSidebar = function () {
       document.getElementById('channelSidebar').classList.toggle('mobile-open');
     };

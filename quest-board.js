@@ -10,6 +10,7 @@ let quests = [];
 let currentView = 'open';
 let activeTagFilter = null;
 let searchTimeout = null;
+let bookmarkedIds = [];
 
 const questGrid = document.getElementById('questGrid');
 const filterType = document.getElementById('filterType');
@@ -35,6 +36,10 @@ const searchInput = document.getElementById('searchInput');
 
   const { data: balance } = await window.sb.rpc('get_coin_balance', { p_user_id: user.id });
   document.getElementById('coinBalance').textContent = balance || 0;
+
+  // Load bookmarked quest IDs
+  const { data: bmData } = await window.sb.rpc('get_bookmarked_quest_ids');
+  bookmarkedIds = (bmData || []).map(r => r.quest_id);
 
   loadQuests();
   renderPresetTags();
@@ -95,6 +100,9 @@ async function loadQuests() {
     query = query.eq('poster_id', currentUser.id).eq('is_deleted', false);
   } else if (currentView === 'my_completed') {
     query = query.eq('status', 'approved');
+  } else if (currentView === 'bookmarked') {
+    if (bookmarkedIds.length === 0) { quests = []; renderQuests(); return; }
+    query = query.in('id', bookmarkedIds);
   }
 
   const typeFilter = filterType.value;
@@ -189,11 +197,14 @@ function renderQuests() {
       actionBtn = `<a href="quest-detail.html?id=${quest.id}" class="action-btn">View Details (${quest.status})</a>`;
     }
 
+    const isBookmarked = bookmarkedIds.includes(quest.id);
+
     return `
       <div class="quest-card">
         <div class="quest-body">
           <span class="badge ${badgeClass}">${badgeText}</span>
           <span class="status-badge status-${quest.status}">${quest.status}</span>
+          <button class="bookmark-btn" onclick="event.stopPropagation();toggleBookmark('${quest.id}')" title="${isBookmarked ? 'Remove bookmark' : 'Bookmark this quest'}" style="float:right;background:none;border:none;cursor:pointer;font-size:1.2rem;${isBookmarked ? 'color:var(--accent)' : 'color:var(--text-dim)'}">${isBookmarked ? '🔖' : '📑'}</button>
           <h3>${escapeHtml(quest.title)}</h3>
           <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a> ⭐ ${rep}</div>
           <div class="description">${escapeHtml(quest.description)}</div>
@@ -248,4 +259,19 @@ window.acceptQuest = async function (questId) {
 window.logout = async function () {
   await window.sb.auth.signOut();
   window.location.href = 'auth.html';
+};
+
+window.toggleBookmark = async function (questId) {
+  const { data: added, error } = await window.sb.rpc('toggle_quest_bookmark', { p_quest_id: questId });
+  if (error) { alert('Failed: ' + error.message); return; }
+  if (added) {
+    bookmarkedIds.push(questId);
+  } else {
+    bookmarkedIds = bookmarkedIds.filter(id => id !== questId);
+  }
+  if (currentView === 'bookmarked') {
+    loadQuests();
+  } else {
+    renderQuests();
+  }
 };

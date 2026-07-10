@@ -125,6 +125,31 @@ function renderWorkerPosts() {
   }).join('');
 }
 
+window.filterWorkerPosts = function () {
+  const term = (document.getElementById('workerSearchInput')?.value || '').toLowerCase().trim();
+  const payFilter = document.getElementById('workerPaymentFilter')?.value || 'all';
+  const filtered = workerPosts.filter(p => {
+    const matchPay = payFilter === 'all' || p.preferred_payment === payFilter;
+    const matchTerm = !term ||
+      p.title.toLowerCase().includes(term) ||
+      p.description.toLowerCase().includes(term) ||
+      (p.user?.display_name || '').toLowerCase().includes(term) ||
+      (p.user?.username || '').toLowerCase().includes(term) ||
+      (p.tags || []).some(t => t.toLowerCase().includes(term));
+    return matchPay && matchTerm;
+  });
+  const container = document.getElementById('workerGrid');
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><h2>No Matches</h2><p>Try different search terms.</p></div>';
+    return;
+  }
+  // Temporarily override workerPosts for rendering
+  const orig = workerPosts;
+  workerPosts = filtered;
+  renderWorkerPosts();
+  workerPosts = orig;
+};
+
 window.editWorkerPost = function (postId) {
   const post = workerPosts.find(p => p.id === postId);
   if (post) { clearMessage(); setFormMode(post); }

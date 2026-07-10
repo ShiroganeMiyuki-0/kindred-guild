@@ -462,6 +462,45 @@
         } catch (e) { /* silent */ }
     }
 
+    // ── PWA: Service Worker + Install Prompt ──
+    let deferredInstallPrompt = null;
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        showInstallBanner();
+    });
+
+    function showInstallBanner() {
+        if (localStorage.getItem('kg_install_dismissed')) return;
+        const banner = document.createElement('div');
+        banner.id = 'pwa-install-banner';
+        banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d4af37,#b8941e);color:#000;padding:12px 20px;border-radius:12px;display:flex;align-items:center;gap:12px;z-index:9999;box-shadow:0 4px 20px rgba(212,175,55,0.3);font-size:0.85rem;font-weight:600;max-width:90vw;';
+        banner.innerHTML = `
+            <span>🏰 Install Kindred Guild as an app!</span>
+            <button id="pwa-install-btn" style="background:#000;color:#d4af37;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.8rem;">Install</button>
+            <button id="pwa-dismiss-btn" style="background:none;border:none;color:rgba(0,0,0,0.5);cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>
+        `;
+        document.body.appendChild(banner);
+
+        document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+            if (!deferredInstallPrompt) return;
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            banner.remove();
+        });
+
+        document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+            localStorage.setItem('kg_install_dismissed', '1');
+            banner.remove();
+        });
+    }
+
     // Initialize nav loading sequence
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initNavigationState);

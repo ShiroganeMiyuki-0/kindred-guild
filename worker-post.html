@@ -59,6 +59,17 @@
       <button id="submitWorkerPostBtn" class="btn btn-primary" onclick="handleSubmitWorkerPost()">Post Availability</button>
     </div>
 
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <input type="text" id="workerSearchInput" placeholder="Search by name, skill, or tag..." style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-size:0.85rem;" oninput="filterWorkerPosts()">
+      <select id="workerPaymentFilter" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-size:0.85rem;" onchange="filterWorkerPosts()">
+        <option value="all">All Payment Types</option>
+        <option value="coins">🪙 Fairy Coins</option>
+        <option value="upi">₹ UPI</option>
+        <option value="free">🎁 Free</option>
+        <option value="any">Any</option>
+      </select>
+    </div>
+
     <div id="workerGrid" class="grid"></div>
   </div>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>

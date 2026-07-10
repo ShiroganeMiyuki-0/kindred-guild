@@ -153,6 +153,7 @@
       <button class="tab-btn" onclick="switchTab('users')">👥 Users</button>
       <button class="tab-btn" onclick="switchTab('guild')">🏰 Guild Hall</button>
       <button class="tab-btn" onclick="switchTab('warnings')">⚠️ Warnings</button>
+      <button class="tab-btn" onclick="switchTab('analytics')">📊 Analytics</button>
     </div>
 
     <!-- Quests Tab -->
@@ -243,6 +244,16 @@
       </div>
     </div>
 
+    <!-- Analytics Tab -->
+    <div id="panel-analytics" class="tab-content">
+      <div class="card">
+        <h3>📊 Platform Analytics</h3>
+        <p class="hint">Overview of platform health and growth metrics.</p>
+        <button class="btn btn-refresh" onclick="loadAnalytics()" style="margin-bottom:16px;">🔄 Refresh</button>
+        <div id="analyticsContent"><div class="empty-state">Click Refresh to load analytics.</div></div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/supabase-client.js"></script>
@@ -306,6 +317,7 @@
       if (tabId === 'quests') fetchQuests();
       if (tabId === 'wishes') fetchWishes();
       if (tabId === 'coins') fetchPendingCoins();
+      if (tabId === 'analytics') loadAnalytics();
     }
 
     // ── QUESTS ──
@@ -551,6 +563,62 @@
       if (type === 'wish') fetchWishes();
       if (type === 'message') fetchGuildMessages();
       loadStats();
+    }
+
+    // ── ANALYTICS ──
+    async function loadAnalytics() {
+      const container = document.getElementById('analyticsContent');
+      container.innerHTML = '<div class="empty-state">Loading analytics...</div>';
+
+      try {
+        const { data, error } = await window.sb.rpc('admin_get_analytics');
+        if (error) throw error;
+        const a = typeof data === 'string' ? JSON.parse(data) : data;
+
+        container.innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px;">
+            <div class="stat-card"><div class="label">Total Users</div><div class="value">${a.total_users}</div><div style="font-size:0.7rem;color:var(--text-dim)">+${a.new_users_7d} this week</div></div>
+            <div class="stat-card"><div class="label">Total Quests</div><div class="value">${a.total_quests}</div><div style="font-size:0.7rem;color:var(--text-dim)">+${a.new_quests_7d} this week</div></div>
+            <div class="stat-card"><div class="label">Active Quests</div><div class="value">${a.active_quests}</div></div>
+            <div class="stat-card"><div class="label">Completed</div><div class="value">${a.completed_quests}</div></div>
+            <div class="stat-card"><div class="label">Disputed</div><div class="value" style="color:${a.disputed_quests > 0 ? 'var(--error)' : 'var(--accent)'}">${a.disputed_quests}</div></div>
+            <div class="stat-card"><div class="label">Wishes</div><div class="value">${a.total_wishes}</div><div style="font-size:0.7rem;color:var(--text-dim)">${a.total_wish_backings} backings</div></div>
+            <div class="stat-card"><div class="label">Guild Messages</div><div class="value">${a.total_guild_messages}</div></div>
+            <div class="stat-card"><div class="label">Avg Reputation</div><div class="value">${a.avg_reputation}</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="card" style="padding:16px;">
+              <h4 style="color:var(--accent);margin-bottom:8px;font-size:0.9rem;">💰 Coin Economy</h4>
+              <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.8;">
+                <div>Total in circulation: <strong style="color:var(--success)">${a.total_coins_in_circulation} FC</strong></div>
+                <div>Total locked: <strong style="color:var(--warning)">${a.total_coins_locked} FC</strong></div>
+                <div>Transactions: <strong>${a.total_transactions}</strong></div>
+                <div>Pending purchases: <strong style="color:${a.pending_purchases > 0 ? 'var(--warning)' : 'var(--text-dim)'}">${a.pending_purchases}</strong></div>
+              </div>
+            </div>
+            <div class="card" style="padding:16px;">
+              <h4 style="color:var(--accent);margin-bottom:8px;font-size:0.9rem;">📋 Quest Types</h4>
+              <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.8;">
+                <div>🪙 Fairy Coins: <strong>${a.quests_by_type?.coins || 0}</strong></div>
+                <div>₹ UPI Direct: <strong>${a.quests_by_type?.upi || 0}</strong></div>
+                <div>🎁 Free: <strong>${a.quests_by_type?.free || 0}</strong></div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:16px;margin-top:16px;">
+            <h4 style="color:var(--accent);margin-bottom:8px;font-size:0.9rem;">📈 Growth (Last 12 Weeks)</h4>
+            <div style="display:flex;gap:8px;align-items:flex-end;height:120px;padding:8px 0;">
+              ${(a.users_by_week || []).map(w => {
+                const maxVal = Math.max(...(a.users_by_week || []).map(x => x.count), 1);
+                const h = Math.max(8, (w.count / maxVal) * 100);
+                return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:0.65rem;color:var(--accent)">${w.count}</div><div style="width:100%;height:${h}px;background:var(--accent);border-radius:4px 4px 0 0;opacity:0.8"></div><div style="font-size:0.55rem;color:var(--text-dim);writing-mode:vertical-rl;transform:rotate(180deg);height:30px;overflow:hidden">${w.week}</div></div>`;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="empty-state">Error loading analytics: ${escapeHtml(err.message)}</div>`;
+      }
     }
 
     // Init
