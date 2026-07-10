@@ -44,12 +44,14 @@ BEGIN
 END $$;
 
 -- Recreate the get_wish_votes function (it may have been dropped above)
+DROP FUNCTION IF EXISTS get_wish_votes(UUID);
 CREATE OR REPLACE FUNCTION get_wish_votes(p_wish_id UUID)
 RETURNS BIGINT AS $$
   SELECT COUNT(*) FROM wish_votes WHERE wish_id = p_wish_id;
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- Recreate post_wish_with_commission if it was dropped
+DROP FUNCTION IF EXISTS post_wish_with_commission(TEXT, TEXT, TEXT, INTEGER, INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION post_wish_with_commission(
   p_title TEXT, p_description TEXT, p_wish_type TEXT,
   p_coin_amount INTEGER, p_upi_amount INTEGER, p_commission_coins INTEGER
