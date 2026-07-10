@@ -416,7 +416,7 @@
     async function fetchUsers(showAll) {
       const tbody = document.getElementById('usersTableBody');
       tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
-      let query = window.sb.from('user_profiles').select('user_id, username, display_name, reputation_score, is_suspended, is_admin, created_at');
+      let query = window.sb.from('user_profiles').select('user_id, username, display_name, reputation_score, is_suspended, is_admin, is_verified, created_at');
       if (!showAll) {
         const search = document.getElementById('userSearchInput').value.trim();
         if (search) query = query.ilike('username', '%' + search + '%');
@@ -427,15 +427,16 @@
       tbody.innerHTML = data.map(u => {
         const name = u.display_name || u.username || 'Unknown';
         const rep = u.reputation_score ? (u.reputation_score / 10).toFixed(1) : '0.0';
-        const status = u.is_suspended ? '🚨 Suspended' : u.is_admin ? '🛡️ Admin' : '✅ Active';
+        const status = u.is_suspended ? '🚨 Suspended' : u.is_admin ? '🛡️ Admin' : u.is_verified ? '✅ Verified' : 'Active';
         return `<tr>
-          <td style="font-weight:600">${escapeHtml(name)}</td>
+          <td style="font-weight:600">${escapeHtml(name)}${u.is_verified ? ' <span style="color:#10b981">✅</span>' : ''}</td>
           <td>@${escapeHtml(u.username || '—')}</td>
           <td style="color:var(--accent)">${rep} ⭐</td>
           <td>${new Date(u.created_at).toLocaleDateString()}</td>
           <td>${status}</td>
           <td>
             <button class="btn btn-view" onclick="openWarningModal('${u.user_id}')" style="margin-right:4px">⚠️ Warn</button>
+            ${u.is_verified ? `<button class="btn btn-reject" onclick="toggleVerify('${u.user_id}', false)" style="margin-right:4px">Unverify</button>` : `<button class="btn btn-approve" onclick="toggleVerify('${u.user_id}', true)" style="margin-right:4px">✅ Verify</button>`}
             ${u.is_suspended ? `<button class="btn btn-approve" onclick="toggleSuspend('${u.user_id}', false)">Unsuspend</button>` : `<button class="btn btn-danger" onclick="toggleSuspend('${u.user_id}', true)">Suspend</button>`}
           </td>
         </tr>`;
@@ -447,6 +448,14 @@
       const { error } = await window.sb.rpc('admin_toggle_suspend', { p_user_id: userId, p_suspend: suspend });
       if (error) { showGlobalAlert(error.message, 'error'); return; }
       showGlobalAlert(suspend ? 'User suspended.' : 'User unsuspended.');
+      fetchUsers(true);
+    }
+
+    async function toggleVerify(userId, verify) {
+      if (!confirm(verify ? 'Verify this worker? They will get a verified badge.' : 'Remove verification from this user?')) return;
+      const { error } = await window.sb.rpc('admin_verify_worker', { p_user_id: userId, p_verify: verify });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert(verify ? 'Worker verified! ✅' : 'Verification removed.');
       fetchUsers(true);
     }
 

@@ -89,7 +89,7 @@ async function loadQuests() {
     .select(`
       id, title, description, payment_type, coin_amount, upi_amount,
       status, deadline, created_at, poster_id, worker_id, tags,
-      poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score)
+      poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score, is_verified)
     `);
 
   if (currentView === 'open') {
@@ -185,6 +185,7 @@ function renderQuests() {
     const rewardText = quest.payment_type === 'coins' ? quest.coin_amount + ' FC' : quest.payment_type === 'upi' ? '₹' + quest.upi_amount : 'Free';
     const posterName = quest.poster?.display_name || quest.poster?.username || 'Unknown';
     const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '—';
+    const posterVerified = quest.poster?.is_verified ? ' <span style="color:#10b981" title="Verified">✅</span>' : '';
 
     const tagsHtml = quest.tags?.length ? `<div class="card-tags">${quest.tags.map(t => `<span class="card-tag" onclick="event.stopPropagation();toggleTagFilter('${t}')">${t}</span>`).join('')}</div>` : '';
 
@@ -206,7 +207,7 @@ function renderQuests() {
           <span class="status-badge status-${quest.status}">${quest.status}</span>
           <button class="bookmark-btn" onclick="event.stopPropagation();toggleBookmark('${quest.id}')" title="${isBookmarked ? 'Remove bookmark' : 'Bookmark this quest'}" style="float:right;background:none;border:none;cursor:pointer;font-size:1.2rem;${isBookmarked ? 'color:var(--accent)' : 'color:var(--text-dim)'}">${isBookmarked ? '🔖' : '📑'}</button>
           <h3>${escapeHtml(quest.title)}</h3>
-          <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a> ⭐ ${rep}</div>
+          <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a>${posterVerified} ⭐ ${rep}</div>
           <div class="description">${escapeHtml(quest.description)}</div>
           ${tagsHtml}
         </div>

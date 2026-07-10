@@ -23,6 +23,59 @@ const commissionCoinsEl = document.getElementById('commissionCoins');
 const commissionUpiEl = document.getElementById('commissionUpi');
 const upiModal = document.getElementById('upiModal');
 
+// Quest templates
+const QUEST_TEMPLATES = {
+  logo: {
+    title: 'Logo Design for [Brand Name]',
+    description: 'Need a professional logo for my brand. Should be modern, clean, and work on both light and dark backgrounds. Deliverables: SVG, PNG (transparent), and favicon versions.',
+    tags: ['#design', '#logo', '#branding']
+  },
+  website: {
+    title: 'Website Development — [Type]',
+    description: 'Need a responsive website built. Should be mobile-friendly, fast-loading, and SEO-optimized. Please share your portfolio when applying.',
+    tags: ['#webdev', '#design', '#frontend']
+  },
+  writing: {
+    title: 'Content Writing — [Topic]',
+    description: 'Need well-researched, engaging content written. Must be original, grammatically correct, and SEO-friendly. Specify word count and tone when applying.',
+    tags: ['#writing', '#content', '#seo']
+  },
+  data: {
+    title: 'Data Entry — [Description]',
+    description: 'Need data entered into a spreadsheet/database. Accuracy is critical. Will provide source materials and template. Must be completed by deadline.',
+    tags: ['#data', '#entry', '#spreadsheet']
+  },
+  social: {
+    title: 'Social Media Management — [Platform]',
+    description: 'Need help managing social media accounts. Content creation, scheduling, and engagement. Must understand the platform analytics and trends.',
+    tags: ['#socialmedia', '#marketing', '#content']
+  },
+  tutor: {
+    title: 'Tutoring — [Subject]',
+    description: 'Looking for a tutor to help with [subject]. Prefer someone with experience and patience. Sessions can be online or in-person.',
+    tags: ['#tutoring', '#education', '#learning']
+  },
+  errand: {
+    title: 'Help with [Task Description]',
+    description: 'Need someone to help with a task. Must be reliable and communicative. Details will be shared upon acceptance.',
+    tags: ['#help', '#errand', '#task']
+  },
+  bugfix: {
+    title: 'Bug Fix — [Project/Feature]',
+    description: 'Found a bug that needs fixing. Will provide error logs, steps to reproduce, and codebase access. Must be familiar with the tech stack.',
+    tags: ['#bugfix', '#coding', '#debug']
+  }
+};
+
+window.applyTemplate = function (key) {
+  const t = QUEST_TEMPLATES[key];
+  if (!t) return;
+  titleInput.value = t.title;
+  descInput.value = t.description;
+  tagsInput.value = t.tags.join(', ');
+  titleInput.focus();
+};
+
 function showMessage(text, type) {
   messageEl.textContent = text;
   messageEl.className = 'message ' + (type || 'error');

@@ -53,6 +53,20 @@
       <div class="name" id="userName">Loading...</div>
       <div class="coins">💰 <span id="coinBalance">--</span> FC</div>
     </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h3 style="color:var(--accent);font-size:1rem;margin-bottom:10px;">📋 Quick Templates</h3>
+      <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:12px;">Pick a template to pre-fill your task, or start from scratch.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="applyTemplate('logo')">🎨 Logo Design</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyTemplate('website')">🌐 Website</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyTemplate('writing')">✍️ Content Writing</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyTemplate('data')">📊 Data Entry</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyTemplate('social')">📱 Social Media</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyTemplate('tutor')">📚 Tutoring</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyTemplate('errand')">🏃 Errand/Task</button>
+        <button class="btn btn-ghost btn-sm" onclick="applyTemplate('bugfix')">🐛 Bug Fix</button>
+      </div>
+    </div>
     <div class="card">
       <form id="questForm" onsubmit="event.preventDefault(); handleSubmit();">
         <div class="form-group">

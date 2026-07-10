@@ -74,6 +74,10 @@ function renderProfileOverview() {
   document.getElementById('profileUsername').textContent = '@' + p.username;
   const score = p.reputation_score ? (p.reputation_score / 10).toFixed(1) : '0.0';
   document.getElementById('profileRepScore').textContent = `${score} / 5.0`;
+  if (p.is_verified) {
+    const nameEl = document.getElementById('profileDisplayName');
+    nameEl.innerHTML = escapeHtml(p.display_name || p.username) + ' <span title="Verified Worker" style="color:#10b981;font-size:1.2rem;">✅</span>';
+  }
   if (p.avatar_url) document.getElementById('profileAvatar').src = p.avatar_url;
   if (p.is_suspended) document.getElementById('suspensionNotice').style.display = 'block';
   loadProfileStats();
@@ -89,6 +93,7 @@ async function loadProfileStats() {
   if (el('statGuildMsgs')) el('statGuildMsgs').textContent = stats.guild_messages || 0;
   if (el('statTotalEarned')) el('statTotalEarned').textContent = (stats.total_earned || 0) + ' FC';
   if (el('statAvgRating')) el('statAvgRating').textContent = stats.avg_rating ? parseFloat(stats.avg_rating).toFixed(1) : '—';
+  if (el('statVerified') && stats.is_verified) el('statVerified').style.display = 'block';
 }
 
 window.switchProfileTab = function (tabId) {

@@ -131,13 +131,14 @@
         const rep = u.reputation_score ? (u.reputation_score / 10).toFixed(1) : '0.0';
         const initial = name.charAt(0).toUpperCase();
         const totalActive = (u.quests_completed || 0) + (u.wishes_backed || 0) + (u.guild_messages || 0);
+        const verified = u.is_verified ? ' <span title="Verified Worker" style="color:#10b981;">✅</span>' : '';
 
         return `
           <div class="lb-row ${isTop3 ? 'top-3' : ''}">
             <div class="lb-rank">${isTop3 ? '<span class="medal">' + medals[rank - 1] + '</span>' : rank}</div>
             <div class="lb-avatar">${initial}</div>
             <div class="lb-info">
-              <div class="lb-name"><a href="profile.html?username=${escapeHtml(u.username)}">${escapeHtml(name)}</a></div>
+              <div class="lb-name"><a href="profile.html?username=${escapeHtml(u.username)}">${escapeHtml(name)}</a>${verified}</div>
               <div class="lb-username">@${escapeHtml(u.username || '—')}</div>
             </div>
             <div class="lb-stats">

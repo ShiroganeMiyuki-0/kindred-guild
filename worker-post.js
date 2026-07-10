@@ -81,7 +81,7 @@ window.handleSubmitWorkerPost = async function () {
 async function loadWorkerPosts() {
   const { data, error } = await window.sb
     .from('worker_posts')
-    .select('id, title, description, tags, preferred_payment, min_reward, created_at, user_id, user:user_profiles!worker_posts_user_id_fkey(username, display_name, reputation_score)')
+    .select('id, title, description, tags, preferred_payment, min_reward, created_at, user_id, user:user_profiles!worker_posts_user_id_fkey(username, display_name, reputation_score, is_verified)')
     .eq('is_deleted', false)
     .order('created_at', { ascending: false });
 
@@ -100,6 +100,7 @@ function renderWorkerPosts() {
     const isOwn = post.user_id === currentUser?.id;
     const name = post.user?.display_name || post.user?.username || 'Unknown';
     const rep = post.user?.reputation_score ? (post.user.reputation_score / 10).toFixed(1) : '—';
+    const verified = post.user?.is_verified ? ' <span title="Verified Worker" style="color:#10b981;">✅</span>' : '';
     const payBadge = post.preferred_payment === 'coins' ? '🪙 Coins' : post.preferred_payment === 'upi' ? '₹ UPI' : post.preferred_payment === 'free' ? '🎁 Free' : 'Any';
     const minText = post.min_reward > 0 ? `Min: ${post.min_reward}` : 'Flexible';
     const tagsHtml = post.tags?.length ? `<div class="card-tags">${post.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>` : '';
@@ -113,7 +114,7 @@ function renderWorkerPosts() {
         <div>
           <span class="badge badge-coins">${payBadge}</span>
           <h3 style="margin:8px 0 4px">${escapeHtml(post.title)}</h3>
-          <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">by <a href="profile.html?username=${post.user?.username}">${escapeHtml(name)}</a> ⭐ ${rep}</div>
+          <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">by <a href="profile.html?username=${post.user?.username}">${escapeHtml(name)}</a>${verified} ⭐ ${rep}</div>
           <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:12px">${escapeHtml(post.description)}</div>
           ${tagsHtml}
         </div>
