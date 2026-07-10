@@ -51,7 +51,7 @@
 
     <div class="hero-card">
       <h3>Invite Friends, Earn Coins</h3>
-      <p>Share your unique referral code with friends. When they sign up, both of you get <strong style="color:var(--accent)">25 Fairy Coins</strong> free!</p>
+      <p>Share your unique referral code with friends. When they sign up, you track your referrals and grow the community!</p>
       <div class="code-display">
         <div class="label">Your Referral Code</div>
         <div class="code" id="referralCode">Loading...</div>
@@ -63,10 +63,6 @@
       <div class="stat-card">
         <div class="label">Total Referrals</div>
         <div class="value" id="totalReferrals">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Coins Earned</div>
-        <div class="value" id="totalEarned">0 FC</div>
       </div>
       <div class="stat-card">
         <div class="label">Referrals Left</div>
@@ -102,8 +98,8 @@
         </div>
         <div class="how-step">
           <div class="num">3</div>
-          <h4>Both Get Rewarded</h4>
-          <p>You both receive 25 Fairy Coins instantly</p>
+          <h4>Community Grows</h4>
+          <p>You track your referrals and help the guild grow</p>>
         </div>
       </div>
     </div>
@@ -138,7 +134,6 @@
       const { data: stats } = await window.sb.rpc('get_referral_stats');
       if (stats) {
         document.getElementById('totalReferrals').textContent = stats.total_referrals || 0;
-        document.getElementById('totalEarned').textContent = (stats.total_bonus_earned || 0) + ' FC';
         document.getElementById('referralsLeft').textContent = stats.referrals_left ?? 50;
       }
     })();
