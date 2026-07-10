@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Copyright (c) 2026 Kindred Guild. All Rights Reserved. -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Guild Hall</title>
+  <meta name="description" content="The Guild Hall — community discussion space for all guild members. Talk, share ideas, and form groups like true adventurers.">
+  <link rel="icon" href="data:image/png;base64,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">
+  <link rel="stylesheet" href="css/globals.css">
+  <style>
+    .hall-layout { display:grid; grid-template-columns:220px 1fr; gap:0; height:calc(100vh - 80px); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; background:var(--surface); }
+    @media(max-width:768px) { .hall-layout { grid-template-columns:1fr; height:auto; } .channel-sidebar { display:none; } .channel-sidebar.mobile-open { display:flex; position:fixed; inset:0; z-index:9999; background:var(--surface); } }
+
+    /* Sidebar */
+    .channel-sidebar { background:var(--surface-2); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; }
+    .channel-sidebar h3 { padding:16px 14px 10px; font-size:0.85rem; color:var(--accent); text-transform:uppercase; letter-spacing:1px; }
+    .channel-list { list-style:none; padding:0 8px; flex:1; }
+    .channel-list li { padding:8px 12px; border-radius:var(--radius-sm); cursor:pointer; font-size:0.88rem; color:var(--text-dim); display:flex; align-items:center; gap:8px; transition:all 0.12s; margin-bottom:2px; }
+    .channel-list li:hover { background:rgba(212,175,55,0.06); color:var(--text); }
+    .channel-list li.active { background:var(--accent-glow); color:var(--accent); font-weight:600; }
+    .channel-list li .ch-icon { font-size:0.9rem; opacity:0.7; }
+    .channel-list li.active .ch-icon { opacity:1; }
+    .channel-list li .unread-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:auto; }
+
+    /* Chat area */
+    .chat-area { display:flex; flex-direction:column; }
+    .chat-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--surface); }
+    .chat-header h4 { color:var(--text); font-size:1rem; }
+    .chat-header .ch-desc { font-size:0.75rem; color:var(--text-dim); }
+    .chat-header .mobile-menu-btn { display:none; background:none; border:none; color:var(--text); font-size:1.2rem; cursor:pointer; }
+    @media(max-width:768px) { .chat-header .mobile-menu-btn { display:block; } }
+
+    .chat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; min-height:300px; max-height:calc(100vh - 240px); }
+    @media(max-width:768px) { .chat-messages { max-height:60vh; } }
+
+    .msg { display:flex; gap:10px; padding:6px 0; }
+    .msg-avatar { width:34px; height:34px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:0.85rem; color:var(--accent); flex-shrink:0; font-weight:700; }
+    .msg-body { flex:1; min-width:0; }
+    .msg-header { display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
+    .msg-author { font-weight:600; font-size:0.88rem; color:var(--text); }
+    .msg-time { font-size:0.68rem; color:var(--text-dim); }
+    .msg-content { font-size:0.88rem; color:var(--text-dim); line-height:1.5; word-break:break-word; }
+    .msg-content.pinned { border-left:2px solid var(--accent); padding-left:8px; }
+    .msg-actions { display:none; gap:4px; margin-top:4px; }
+    .msg:hover .msg-actions { display:flex; }
+    .msg-actions button { background:none; border:none; color:var(--text-dim); font-size:0.7rem; cursor:pointer; padding:2px 6px; border-radius:4px; }
+    .msg-actions button:hover { color:var(--accent); background:rgba(212,175,55,0.08); }
+
+    .pinned-banner { background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.15); border-radius:var(--radius-sm); padding:8px 14px; margin-bottom:12px; font-size:0.8rem; color:var(--accent); display:flex; align-items:center; gap:8px; }
+    .pinned-banner .pin-text { flex:1; color:var(--text-dim); }
+    .pinned-banner .pin-author { font-weight:600; }
+
+    /* Input */
+    .chat-input-area { padding:12px 16px; border-top:1px solid var(--border); background:var(--surface); }
+    .chat-input-form { display:flex; gap:8px; }
+    .chat-input-form input { flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-size:0.9rem; outline:none; }
+    .chat-input-form input:focus { border-color:var(--accent); }
+    .chat-input-form button { padding:10px 18px; }
+
+    .chat-notice { text-align:center; padding:30px; color:var(--text-dim); font-size:0.85rem; }
+    .system-msg { text-align:center; font-size:0.75rem; color:var(--text-dim); padding:6px 0; opacity:0.7; }
+    .deleted-msg { font-style:italic; color:var(--text-dim); opacity:0.5; font-size:0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h2 style="color:var(--accent); font-size:1.4rem;">🏰 Guild Hall</h2>
+      <div style="display:flex;gap:8px;">
+        <a href="quest-board.html" class="btn btn-ghost btn-sm">← Quest Board</a>
+      </div>
+    </div>
+
+    <div class="hall-layout">
+      <!-- Channel Sidebar -->
+      <div class="channel-sidebar" id="channelSidebar">
+        <h3>Channels</h3>
+        <ul class="channel-list" id="channelList">
+          <li class="active" data-channel="general"><span class="ch-icon">#</span> general</li>
+        </ul>
+        <div style="padding:10px 12px; border-top:1px solid var(--border); font-size:0.7rem; color:var(--text-dim);">
+          💬 Chat with fellow guild members
+        </div>
+      </div>
+
+      <!-- Chat Area -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <div>
+            <h4 id="chatChannelName"># general</h4>
+            <div class="ch-desc" id="chatChannelDesc">General discussion for all guild members</div>
+          </div>
+          <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-notice">Loading messages...</div>
+        </div>
+
+        <div class="chat-input-area">
+          <form class="chat-input-form" onsubmit="event.preventDefault(); sendMessage()">
+            <input type="text" id="messageInput" placeholder="Type a message..." maxlength="2000" autocomplete="off">
+            <button type="submit" class="btn btn-primary">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script>
+    let currentUser = null;
+    let currentProfile = null;
+    let channels = [];
+    let activeChannelId = null;
+    let messages = [];
+    let isAdmin = false;
+    let messageSubscription = null;
+
+    // Init
+    (async function init() {
+      const user = await window.requireAuth();
+      if (!user) return;
+      currentUser = user;
+      currentProfile = await window.getUserProfile(user.id);
+      isAdmin = currentProfile?.is_admin || false;
+
+      await loadChannels();
+      if (channels.length > 0) {
+        await selectChannel(channels[0].id);
+      }
+      subscribeToMessages();
+    })();
+
+    async function loadChannels() {
+      const { data } = await window.sb.from('guild_channels').select('*').eq('is_deleted', false).order('created_at');
+      channels = data || [];
+      renderChannelList();
+    }
+
+    function renderChannelList() {
+      const list = document.getElementById('channelList');
+      list.innerHTML = channels.map(ch => {
+        const icon = ch.channel_type === 'announcement' ? '📢' : '#';
+        const active = ch.id === activeChannelId ? 'active' : '';
+        return `<li class="${active}" data-channel="${ch.id}" onclick="selectChannel('${ch.id}')"><span class="ch-icon">${icon}</span> ${escapeHtml(ch.name)}</li>`;
+      }).join('');
+    }
+
+    async function selectChannel(channelId) {
+      activeChannelId = channelId;
+      const ch = channels.find(c => c.id === channelId);
+      if (ch) {
+        document.getElementById('chatChannelName').textContent = (ch.channel_type === 'announcement' ? '📢 ' : '# ') + ch.name;
+        document.getElementById('chatChannelDesc').textContent = ch.description || '';
+      }
+      renderChannelList();
+      await loadMessages();
+      // Close mobile sidebar
+      document.getElementById('channelSidebar').classList.remove('mobile-open');
+    }
+
+    async function loadMessages() {
+      const container = document.getElementById('chatMessages');
+      container.innerHTML = '<div class="chat-notice">Loading...</div>';
+
+      const { data } = await window.sb
+        .from('guild_messages')
+        .select('*, author:user_profiles!guild_messages_user_id_fkey(username, display_name, is_admin)')
+        .eq('channel_id', activeChannelId)
+        .order('created_at', { ascending: true })
+        .limit(200);
+
+      messages = data || [];
+      renderMessages();
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('chatMessages');
+      if (messages.length === 0) {
+        container.innerHTML = '<div class="chat-notice">No messages yet. Say hello! 👋</div>';
+        return;
+      }
+
+      // Find pinned messages
+      const pinned = messages.filter(m => m.is_pinned && !m.is_deleted);
+
+      let html = '';
+
+      // Pinned banner
+      if (pinned.length > 0) {
+        const last = pinned[pinned.length - 1];
+        const pName = last.author?.display_name || last.author?.username || 'Member';
+        html += `<div class="pinned-banner">
+          <span>📌</span>
+          <span class="pin-text"><span class="pin-author">${escapeHtml(pName)}:</span> ${escapeHtml(last.content.substring(0, 120))}${last.content.length > 120 ? '...' : ''}</span>
+          ${pinned.length > 1 ? `<span style="font-size:0.7rem">+${pinned.length - 1} more</span>` : ''}
+        </div>`;
+      }
+
+      html += messages.map(m => {
+        if (m.is_deleted) {
+          return `<div class="system-msg">🗑️ Message deleted by moderator</div>`;
+        }
+        const name = m.author?.display_name || m.author?.username || 'Member';
+        const initial = name.charAt(0).toUpperCase();
+        const time = timeAgo(m.created_at);
+        const isOwn = m.user_id === currentUser?.id;
+        const authorIsAdmin = m.author?.is_admin;
+        const nameColor = authorIsAdmin ? 'color:var(--accent)' : '';
+
+        return `
+          <div class="msg" data-id="${m.id}">
+            <div class="msg-avatar">${initial}</div>
+            <div class="msg-body">
+              <div class="msg-header">
+                <span class="msg-author" style="${nameColor}">${escapeHtml(name)}${authorIsAdmin ? ' 🛡️' : ''}</span>
+                <span class="msg-time">${time}</span>
+              </div>
+              <div class="msg-content ${m.is_pinned ? 'pinned' : ''}">${escapeHtml(m.content)}</div>
+              <div class="msg-actions">
+                ${isAdmin ? `<button onclick="togglePin('${m.id}', ${!m.is_pinned})">${m.is_pinned ? '📌 Unpin' : '📌 Pin'}</button>` : ''}
+                ${isAdmin && !isOwn ? `<button onclick="deleteMessage('${m.id}')">🗑️ Delete</button>` : ''}
+                ${isOwn ? `<button onclick="deleteOwnMessage('${m.id}')">🗑️ Delete</button>` : ''}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    // Send message
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const content = input.value.trim();
+      if (!content) return;
+      input.value = '';
+
+      const { error } = await window.sb.rpc('send_guild_message', {
+        p_channel_id: activeChannelId,
+        p_content: content
+      });
+
+      if (error) {
+        alert('Failed to send: ' + error.message);
+        input.value = content;
+        return;
+      }
+
+      // Message will appear via subscription
+      await loadMessages();
+      const container = document.getElementById('chatMessages');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Realtime subscription
+    function subscribeToMessages() {
+      if (messageSubscription) messageSubscription.unsubscribe();
+      messageSubscription = window.sb
+        .channel('guild-hall-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'guild_messages' }, payload => {
+          if (payload.new.channel_id === activeChannelId) {
+            loadMessages();
+          }
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'guild_messages' }, payload => {
+          if (payload.new.channel_id === activeChannelId) {
+            loadMessages();
+          }
+        })
+        .subscribe();
+    }
+
+    // Admin actions
+    window.togglePin = async function (messageId, pin) {
+      const { error } = await window.sb.rpc('admin_toggle_pin_message', { p_message_id: messageId, p_pin: pin });
+      if (error) { alert(error.message); return; }
+      await loadMessages();
+    };
+
+    window.deleteMessage = async function (messageId) {
+      if (!confirm('Delete this message? The user will receive a warning.')) return;
+      const reason = prompt('Reason for deletion (optional):');
+      const { error } = await window.sb.rpc('admin_delete_guild_message', { p_message_id: messageId, p_reason: reason || null });
+      if (error) { alert(error.message); return; }
+      await loadMessages();
+    };
+
+    window.deleteOwnMessage = async function (messageId) {
+      if (!confirm('Delete your message?')) return;
+      // Users can soft-delete their own by updating content
+      const { error } = await window.sb.from('guild_messages').update({ is_deleted: true }).eq('id', messageId).eq('user_id', currentUser.id);
+      if (error) { alert(error.message); return; }
+      await loadMessages();
+    };
+
+    // Mobile sidebar toggle
+    window.toggleMobileSidebar = function () {
+      document.getElementById('channelSidebar').classList.toggle('mobile-open');
+    };
+
+    // Auto-refresh every 15 seconds as fallback
+    setInterval(async () => {
+      if (activeChannelId) {
+        await loadMessages();
+        const container = document.getElementById('chatMessages');
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 15000);
+  </script>
+  <script src="site-nav.js"></script>
+</body>
+</html>

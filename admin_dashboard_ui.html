@@ -20,274 +20,542 @@
       --warning: #f59e0b;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      padding: 40px 20px;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 12px; }
     .header h1 { color: var(--accent); font-size: 1.8rem; }
     .header a { color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
     .header a:hover { color: var(--accent); }
-    .stats-bar {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 24px;
-      min-width: 180px;
-    }
-    .stat-card .label {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-    }
-    .stat-card .value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--accent);
-    }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 30px;
-      margin-bottom: 24px;
-    }
-    .card h3 {
-      color: var(--accent);
-      margin-bottom: 8px;
-      font-size: 1.2rem;
-    }
-    .card .hint {
-      color: var(--text-dim);
-      font-size: 0.85rem;
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-    .purchase-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      font-size: 0.9rem;
-    }
-    .purchase-table th, .purchase-table td {
-      padding: 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-    }
-    .purchase-table th { 
-      color: var(--accent); 
-      text-transform: uppercase; 
-      font-size: 0.75rem; 
-      letter-spacing: 1px;
-      background: var(--surface-2);
-    }
-    .purchase-table tr:hover {
-      background: rgba(212, 175, 55, 0.03);
-    }
-    .btn {
-      padding: 8px 14px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      border-radius: 6px;
-      margin-right: 6px;
-      font-size: 0.8rem;
-      transition: all 0.2s;
-    }
+    .stats-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; min-width: 140px; }
+    .stat-card .label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .stat-card .value { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .card h3 { color: var(--accent); margin-bottom: 6px; font-size: 1.1rem; }
+    .card .hint { color: var(--text-dim); font-size: 0.82rem; margin-bottom: 14px; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--accent); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; background: var(--surface-2); }
+    tr:hover { background: rgba(212,175,55,0.03); }
+    .btn { padding: 7px 12px; border: none; cursor: pointer; font-weight: 600; border-radius: 6px; font-size: 0.75rem; transition: all 0.2s; }
     .btn:hover { transform: translateY(-1px); }
     .btn-approve { background: var(--success); color: #fff; }
     .btn-approve:hover { background: #059669; }
     .btn-reject { background: transparent; color: var(--error); border: 1px solid var(--error); }
-    .btn-reject:hover { background: rgba(239, 68, 68, 0.1); }
+    .btn-reject:hover { background: rgba(239,68,68,0.1); }
+    .btn-warn { background: var(--warning); color: #000; }
+    .btn-warn:hover { background: #d97706; }
+    .btn-view { background: transparent; color: #60a5fa; border: 1px solid #60a5fa; }
+    .btn-view:hover { background: rgba(96,165,250,0.1); }
     .btn-refresh { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
     .btn-refresh:hover { background: var(--border); }
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .badge-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-    .badge-verified { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-    .badge-rejected { background: rgba(239, 68, 68, 0.15); color: var(--error); }
-    .payment-note-cell {
-      font-family: 'Courier New', monospace;
-      background: rgba(212, 175, 55, 0.08);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: var(--accent);
-      word-break: break-all;
-    }
-    .utr-cell {
-      font-family: 'Courier New', monospace;
-      font-size: 0.8rem;
-      color: var(--text-dim);
-    }
-    .no-utr {
-      color: var(--warning);
-      font-size: 0.8rem;
-      font-style: italic;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-dim);
-    }
-    .empty-state-icon {
-      font-size: 2rem;
-      margin-bottom: 12px;
-    }
-    .section-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-    .tab-btn {
-      padding: 10px 20px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-    .tab-btn.active {
-      background: var(--accent);
-      color: #000;
-      border-color: var(--accent);
-    }
-    .tab-btn:hover:not(.active) {
-      color: var(--text);
-    }
+    .btn-danger { background: var(--error); color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; }
+    .badge-pending { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .badge-verified { background: rgba(16,185,129,0.15); color: var(--success); }
+    .badge-rejected { background: rgba(239,68,68,0.15); color: var(--error); }
+    .badge-info { background: rgba(96,165,250,0.15); color: #60a5fa; }
+    .badge-warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .badge-final { background: rgba(239,68,68,0.15); color: var(--error); }
+    .empty-state { text-align: center; padding: 30px; color: var(--text-dim); }
+    .section-tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+    .tab-btn { padding: 9px 16px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; transition: all 0.2s; }
+    .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+    .inline-form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .inline-form input, .inline-form select { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.82rem; }
+    .inline-form input:focus, .inline-form select:focus { outline: none; border-color: var(--accent); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 500px; width: 100%; }
+    .modal-box h4 { color: var(--accent); margin-bottom: 12px; }
+    .modal-box label { font-size: 0.8rem; color: var(--text-dim); display: block; margin-bottom: 4px; margin-top: 10px; }
+    .modal-box input, .modal-box select, .modal-box textarea { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-size: 0.85rem; }
+    .modal-box textarea { min-height: 80px; resize: vertical; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
     @media (max-width: 768px) {
-      .purchase-table th, .purchase-table td {
-        padding: 10px 8px;
-        font-size: 0.8rem;
-      }
-      .btn { padding: 6px 10px; font-size: 0.75rem; }
-      .stats-bar { flex-direction: column; }
-      .stat-card { width: 100%; }
+      th, td { padding: 8px 6px; font-size: 0.78rem; }
+      .btn { padding: 5px 8px; font-size: 0.7rem; }
+      .stats-bar { gap: 8px; }
+      .stat-card { min-width: 120px; padding: 12px 14px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="header">
-      <h1>🛡️ Ledger Verification Center</h1>
-      <div>
-        <a href="quest-board.html" style="margin-right: 20px;">Quest Board</a>
-        <a href="profile.html">Profile</a>
-      </div>
-    </div>
-
-    <div class="stats-bar">
-      <div class="stat-card">
-        <div class="label">Pending</div>
-        <div class="value" id="pendingCount">-</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Verified Today</div>
-        <div class="value" id="verifiedTodayCount">-</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Total Verified</div>
-        <div class="value" id="totalVerifiedCount">-</div>
-      </div>
-    </div>
-
-    <div class="section-tabs">
-      <button class="tab-btn active" onclick="switchTab('pending')">⏳ Pending Verification</button>
-      <button class="tab-btn" onclick="switchTab('history')">📜 Verified History</button>
-    </div>
-
-    <div id="pendingTab" class="tab-content active">
-      <div class="card">
-        <h3>Pending Verification Queue</h3>
-        <p class="hint">
-          💡 <strong>How to verify:</strong> Check your UPI app (GPay/PhonePe/Paytm) for a payment matching 
-          the <strong>Payment Note</strong> and amount. The UTR is optional — if no UTR was provided, match by payment note + amount + time.
-        </p>
-        <button class="btn btn-refresh" onclick="loadPendingPurchases()" style="margin-bottom: 16px;">🔄 Refresh</button>
-        <table class="purchase-table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Amount</th>
-              <th>Payment Note / UTR</th>
-              <th>Time</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="adminQueueBody">
-            <tr>
-              <td colspan="5" class="empty-state">
-                <div class="empty-state-icon">⏳</div>
-                Loading queued entries...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="historyTab" class="tab-content">
-      <div class="card">
-        <h3>Verified & Rejected History</h3>
-        <p class="hint">Last 50 verified or rejected transactions.</p>
-        <button class="btn btn-refresh" onclick="loadVerifiedPurchases()" style="margin-bottom: 16px;">🔄 Refresh</button>
-        <table class="purchase-table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Amount</th>
-              <th>Payment Note</th>
-              <th>Time</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="verifiedQueueBody">
-            <tr>
-              <td colspan="5" class="empty-state">
-                <div class="empty-state-icon">📜</div>
-                No history yet.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+  <!-- Warning Modal -->
+  <div id="warningModal" class="modal-overlay">
+    <div class="modal-box">
+      <h4>⚠️ Send Warning</h4>
+      <label>User ID</label>
+      <input type="text" id="warnUserId" readonly>
+      <label>Reason</label>
+      <textarea id="warnReason" placeholder="Explain why this user is being warned..."></textarea>
+      <label>Severity</label>
+      <select id="warnSeverity">
+        <option value="info">ℹ️ Info</option>
+        <option value="warning" selected>⚠️ Warning</option>
+        <option value="final">🚨 Final Warning</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn btn-refresh" onclick="closeWarningModal()">Cancel</button>
+        <button class="btn btn-warn" onclick="submitWarning()">Send Warning</button>
       </div>
     </div>
   </div>
 
-  <script src="admin-dashboard.js"></script>
+  <!-- Delete Reason Modal -->
+  <div id="deleteReasonModal" class="modal-overlay">
+    <div class="modal-box">
+      <h4>🗑️ Delete Content</h4>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:10px;">Are you sure you want to delete this? Optionally provide a reason (sent as warning to the owner).</p>
+      <label>Reason (optional)</label>
+      <textarea id="deleteReason" placeholder="Reason for deletion..."></textarea>
+      <input type="hidden" id="deleteTargetType">
+      <input type="hidden" id="deleteTargetId">
+      <div class="modal-actions">
+        <button class="btn btn-refresh" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>🛡️ Admin Center</h1>
+      <div>
+        <a href="guild-hall.html" style="margin-right:16px;">🏰 Guild Hall</a>
+        <a href="quest-board.html" style="margin-right:16px;">⚔️ Quest Board</a>
+        <a href="profile.html">👤 Profile</a>
+      </div>
+    </div>
+
+    <div id="dashboardAlert" style="display:none;"></div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card"><div class="label">Users</div><div class="value" id="statUsers">-</div></div>
+      <div class="stat-card"><div class="label">Active Quests</div><div class="value" id="statQuests">-</div></div>
+      <div class="stat-card"><div class="label">Wishes</div><div class="value" id="statWishes">-</div></div>
+      <div class="stat-card"><div class="label">Pending Coins</div><div class="value" id="statPending">-</div></div>
+      <div class="stat-card"><div class="label">Guild Messages</div><div class="value" id="statMessages">-</div></div>
+      <div class="stat-card"><div class="label">Warnings Given</div><div class="value" id="statWarnings">-</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="section-tabs">
+      <button class="tab-btn active" onclick="switchTab('quests')">⚔️ Quests</button>
+      <button class="tab-btn" onclick="switchTab('wishes')">✨ Wishes</button>
+      <button class="tab-btn" onclick="switchTab('coins')">💰 Coin Purchases</button>
+      <button class="tab-btn" onclick="switchTab('users')">👥 Users</button>
+      <button class="tab-btn" onclick="switchTab('guild')">🏰 Guild Hall</button>
+      <button class="tab-btn" onclick="switchTab('warnings')">⚠️ Warnings</button>
+    </div>
+
+    <!-- Quests Tab -->
+    <div id="panel-quests" class="tab-content active">
+      <div class="card">
+        <h3>All Quests</h3>
+        <p class="hint">View, manage, and remove quests. Removing a quest refunds locked coins to the poster.</p>
+        <button class="btn btn-refresh" onclick="fetchQuests()" style="margin-bottom:12px;">🔄 Refresh</button>
+        <table>
+          <thead><tr><th>Title</th><th>Poster</th><th>Reward</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="questsTableBody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Wishes Tab -->
+    <div id="panel-wishes" class="tab-content">
+      <div class="card">
+        <h3>All Wishes</h3>
+        <p class="hint">Manage community wishes. Remove inappropriate wishes.</p>
+        <button class="btn btn-refresh" onclick="fetchWishes()" style="margin-bottom:12px;">🔄 Refresh</button>
+        <table>
+          <thead><tr><th>Title</th><th>Creator</th><th>Type</th><th>Votes</th><th>Backers</th><th>Actions</th></tr></thead>
+          <tbody id="wishesTableBody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Coin Purchases Tab -->
+    <div id="panel-coins" class="tab-content">
+      <div class="card">
+        <h3>Pending Coin Purchases</h3>
+        <p class="hint">Verify UPI payments and credit Fairy Coins.</p>
+        <button class="btn btn-refresh" onclick="fetchPendingCoins()" style="margin-bottom:12px;">🔄 Refresh</button>
+        <table>
+          <thead><tr><th>User</th><th>Amount</th><th>UTR / Note</th><th>Time</th><th>Actions</th></tr></thead>
+          <tbody id="coinsTableBody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="panel-users" class="tab-content">
+      <div class="card">
+        <h3>User Management</h3>
+        <p class="hint">View users, check warnings, suspend accounts.</p>
+        <div class="inline-form" style="margin-bottom:14px;">
+          <input type="text" id="userSearchInput" placeholder="Search by username..." style="flex:1;">
+          <button class="btn btn-refresh" onclick="fetchUsers()">Search</button>
+          <button class="btn btn-refresh" onclick="fetchUsers(true)">Show All</button>
+        </div>
+        <table>
+          <thead><tr><th>User</th><th>Username</th><th>Reputation</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="usersTableBody"><tr><td colspan="6" class="empty-state">Search or click "Show All"</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Guild Hall Tab -->
+    <div id="panel-guild" class="tab-content">
+      <div class="card">
+        <h3>Guild Hall Messages</h3>
+        <p class="hint">Monitor and moderate guild hall discussions. Delete inappropriate messages.</p>
+        <div class="inline-form" style="margin-bottom:14px;">
+          <select id="guildChannelFilter"><option value="">All Channels</option></select>
+          <button class="btn btn-refresh" onclick="fetchGuildMessages()">Load Messages</button>
+        </div>
+        <table>
+          <thead><tr><th>Author</th><th>Channel</th><th>Message</th><th>Time</th><th>Actions</th></tr></thead>
+          <tbody id="guildTableBody"><tr><td colspan="5" class="empty-state">Select a channel and load messages</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Warnings Tab -->
+    <div id="panel-warnings" class="tab-content">
+      <div class="card">
+        <h3>Warning History</h3>
+        <p class="hint">All warnings issued to users. Search by user ID.</p>
+        <div class="inline-form" style="margin-bottom:14px;">
+          <input type="text" id="warningSearchInput" placeholder="User ID to search warnings for..." style="flex:1;">
+          <button class="btn btn-refresh" onclick="fetchWarnings()">Search</button>
+        </div>
+        <table>
+          <thead><tr><th>User</th><th>Reason</th><th>Severity</th><th>Issued By</><th>Time</th></tr></thead>
+          <tbody id="warningsTableBody"><tr><td colspan="5" class="empty-state">Enter a User ID to search</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/supabase-client.js"></script>
+  <script>
+    let activeTab = 'quests';
+    let guildChannels = [];
+
+    // Alert
+    function showGlobalAlert(msg, type) {
+      const el = document.getElementById('dashboardAlert');
+      el.style.display = 'block';
+      el.style.padding = '12px 16px';
+      el.style.borderRadius = '8px';
+      el.style.marginBottom = '16px';
+      el.style.fontSize = '0.85rem';
+      el.style.background = type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)';
+      el.style.color = type === 'error' ? '#ef4444' : '#10b981';
+      el.style.border = '1px solid ' + (type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)');
+      el.textContent = msg;
+      setTimeout(() => el.style.display = 'none', 5000);
+    }
+
+    // Auth check
+    async function checkAdmin() {
+      const { data: { user } } = await window.sb.auth.getUser();
+      if (!user) { window.location.href = 'auth.html'; return; }
+      const profile = await window.getUserProfile(user.id);
+      if (!profile?.is_admin) {
+        showGlobalAlert('Access Denied.', 'error');
+        setTimeout(() => window.location.href = 'quest-board.html', 2000);
+        return;
+      }
+      loadStats();
+      fetchQuests();
+      loadGuildChannels();
+    }
+
+    // Stats
+    async function loadStats() {
+      try {
+        const { data } = await window.sb.rpc('admin_get_stats');
+        if (data) {
+          const s = data;
+          document.getElementById('statUsers').textContent = s.total_users;
+          document.getElementById('statQuests').textContent = s.active_quests;
+          document.getElementById('statWishes').textContent = s.total_wishes;
+          document.getElementById('statPending').textContent = s.pending_purchases;
+          document.getElementById('statMessages').textContent = s.total_guild_messages;
+          document.getElementById('statWarnings').textContent = s.total_warnings;
+        }
+      } catch (e) { console.warn('Stats error:', e); }
+    }
+
+    // Tab switching
+    function switchTab(tabId) {
+      activeTab = tabId;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('panel-' + tabId).classList.add('active');
+      if (tabId === 'quests') fetchQuests();
+      if (tabId === 'wishes') fetchWishes();
+      if (tabId === 'coins') fetchPendingCoins();
+    }
+
+    // ── QUESTS ──
+    async function fetchQuests() {
+      const tbody = document.getElementById('questsTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
+      const { data } = await window.sb.from('quests').select('id, title, coin_amount, upi_amount, payment_type, status, created_at, is_deleted, poster:user_profiles!quests_poster_id_fkey(username, display_name)').order('created_at', { ascending: false }).limit(100);
+      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No quests found.</td></tr>'; return; }
+      tbody.innerHTML = data.map(q => {
+        const poster = q.poster?.display_name || q.poster?.username || 'Unknown';
+        const reward = q.payment_type === 'coins' ? q.coin_amount + ' FC' : q.payment_type === 'upi' ? '₹' + q.upi_amount : 'Free';
+        const statusBadge = q.is_deleted ? 'badge-rejected' : q.status === 'open' ? 'badge-pending' : 'badge-verified';
+        return `<tr>
+          <td style="font-weight:600">${escapeHtml(q.title)}</td>
+          <td>${escapeHtml(poster)}</td>
+          <td style="color:var(--accent);font-weight:600">${reward}</td>
+          <td><span class="badge ${statusBadge}">${q.is_deleted ? 'deleted' : q.status}</span></td>
+          <td>${new Date(q.created_at).toLocaleDateString()}</td>
+          <td>
+            <a href="quest-detail.html?id=${q.id}" class="btn btn-view" style="margin-right:4px;">View</a>
+            ${!q.is_deleted ? `<button class="btn btn-danger" onclick="openDeleteModal('quest','${q.id}')">Remove</button>` : ''}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── WISHES ──
+    async function fetchWishes() {
+      const tbody = document.getElementById('wishesTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
+      const { data } = await window.sb.from('wishes').select('id, title, wish_type, coin_amount, upi_amount, status, is_deleted, total_coin_backing, total_upi_backing, backer_count, creator:user_profiles!wishes_creator_id_fkey(username, display_name)').order('created_at', { ascending: false }).limit(100);
+      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No wishes found.</td></tr>'; return; }
+
+      // Get vote counts
+      const enriched = await Promise.all(data.map(async w => {
+        const { data: count } = await window.sb.rpc('get_wish_votes', { p_wish_id: w.id });
+        w.votesCount = count || 0;
+        return w;
+      }));
+
+      tbody.innerHTML = enriched.map(w => {
+        const creator = w.creator?.display_name || w.creator?.username || 'Unknown';
+        const typeBadge = w.wish_type === 'coins' ? `🪙 ${w.coin_amount} FC` : w.wish_type === 'upi' ? `₹${w.upi_amount}` : '🎁 Free';
+        const statusBadge = w.is_deleted ? 'badge-rejected' : 'badge-verified';
+        return `<tr>
+          <td style="font-weight:600">${escapeHtml(w.title)}</td>
+          <td>${escapeHtml(creator)}</td>
+          <td>${typeBadge}</td>
+          <td style="color:var(--accent)">${w.votesCount}</td>
+          <td>${w.backer_count > 0 ? `🪙${w.total_coin_backing} FC / ₹${w.total_upi_backing} (${w.backer_count})` : '—'}</td>
+          <td>
+            ${!w.is_deleted ? `<button class="btn btn-danger" onclick="openDeleteModal('wish','${w.id}')">Remove</button>` : '<span class="badge badge-rejected">deleted</span>'}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── COIN PURCHASES ──
+    async function fetchPendingCoins() {
+      const tbody = document.getElementById('coinsTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
+      const { data } = await window.sb.from('coin_purchases').select('id, coin_amount, upi_transaction_ref, payment_note, status, created_at, user_id, user:user_profiles!coin_purchases_user_id_fkey(username, display_name)').eq('status', 'pending').order('created_at', { ascending: false });
+      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No pending purchases.</td></tr>'; return; }
+      tbody.innerHTML = data.map(tx => {
+        const name = tx.user?.display_name || tx.user?.username || 'Unknown';
+        return `<tr>
+          <td style="font-weight:600">${escapeHtml(name)}</td>
+          <td style="color:var(--accent);font-weight:600">${tx.coin_amount} FC</td>
+          <td style="font-family:monospace;font-size:0.8rem">${escapeHtml(tx.upi_transaction_ref || tx.payment_note || 'N/A')}</td>
+          <td>${new Date(tx.created_at).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-approve" onclick="approveCoins('${tx.id}')">✅ Approve</button>
+            <button class="btn btn-reject" onclick="rejectCoins('${tx.id}')">❌ Deny</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function approveCoins(id) {
+      const { error } = await window.sb.rpc('approve_coin_purchase', { p_purchase_id: id });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert('Purchase approved and coins credited!');
+      fetchPendingCoins();
+      loadStats();
+    }
+    async function rejectCoins(id) {
+      if (!confirm('Deny this purchase?')) return;
+      const { error } = await window.sb.rpc('reject_coin_purchase', { p_purchase_id: id });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert('Purchase denied.');
+      fetchPendingCoins();
+      loadStats();
+    }
+
+    // ── USERS ──
+    async function fetchUsers(showAll) {
+      const tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
+      let query = window.sb.from('user_profiles').select('user_id, username, display_name, reputation_score, is_suspended, is_admin, created_at');
+      if (!showAll) {
+        const search = document.getElementById('userSearchInput').value.trim();
+        if (search) query = query.ilike('username', '%' + search + '%');
+        else { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Enter a username to search</td></tr>'; return; }
+      }
+      const { data } = await query.order('created_at', { ascending: false }).limit(50);
+      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No users found.</td></tr>'; return; }
+      tbody.innerHTML = data.map(u => {
+        const name = u.display_name || u.username || 'Unknown';
+        const rep = u.reputation_score ? (u.reputation_score / 10).toFixed(1) : '0.0';
+        const status = u.is_suspended ? '🚨 Suspended' : u.is_admin ? '🛡️ Admin' : '✅ Active';
+        return `<tr>
+          <td style="font-weight:600">${escapeHtml(name)}</td>
+          <td>@${escapeHtml(u.username || '—')}</td>
+          <td style="color:var(--accent)">${rep} ⭐</td>
+          <td>${new Date(u.created_at).toLocaleDateString()}</td>
+          <td>${status}</td>
+          <td>
+            <button class="btn btn-view" onclick="openWarningModal('${u.user_id}')" style="margin-right:4px">⚠️ Warn</button>
+            ${u.is_suspended ? `<button class="btn btn-approve" onclick="toggleSuspend('${u.user_id}', false)">Unsuspend</button>` : `<button class="btn btn-danger" onclick="toggleSuspend('${u.user_id}', true)">Suspend</button>`}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function toggleSuspend(userId, suspend) {
+      if (!confirm(suspend ? 'Suspend this user? They will be blocked from posting.' : 'Unsuspend this user?')) return;
+      const { error } = await window.sb.rpc('admin_toggle_suspend', { p_user_id: userId, p_suspend: suspend });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert(suspend ? 'User suspended.' : 'User unsuspended.');
+      fetchUsers(true);
+    }
+
+    // ── GUILD HALL ──
+    async function loadGuildChannels() {
+      const { data } = await window.sb.from('guild_channels').select('*').eq('is_deleted', false);
+      guildChannels = data || [];
+      const sel = document.getElementById('guildChannelFilter');
+      sel.innerHTML = '<option value="">All Channels</option>' + guildChannels.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    async function fetchGuildMessages() {
+      const tbody = document.getElementById('guildTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
+      const channelId = document.getElementById('guildChannelFilter').value;
+      let query = window.sb.from('guild_messages').select('id, content, is_deleted, is_pinned, created_at, user_id, author:user_profiles!guild_messages_user_id_fkey(username, display_name), channel:guild_channels!guild_messages_channel_id_fkey(name)').order('created_at', { ascending: false }).limit(100);
+      if (channelId) query = query.eq('channel_id', channelId);
+      const { data } = await query;
+      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No messages found.</td></tr>'; return; }
+      tbody.innerHTML = data.map(m => {
+        const author = m.author?.display_name || m.author?.username || 'Unknown';
+        const channel = m.channel?.name || 'unknown';
+        const status = m.is_deleted ? '🗑️ Deleted' : m.is_pinned ? '📌 Pinned' : '✅';
+        return `<tr>
+          <td style="font-weight:600">${escapeHtml(author)}</td>
+          <td>#${escapeHtml(channel)}</td>
+          <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.is_deleted ? '<i style="color:var(--text-dim)">[deleted]</i>' : escapeHtml(m.content)}</td>
+          <td>${new Date(m.created_at).toLocaleString()}</td>
+          <td>
+            ${!m.is_deleted ? `
+              <button class="btn btn-view" onclick="togglePin('${m.id}', ${!m.is_pinned})" style="margin-right:4px">${m.is_pinned ? '📌 Unpin' : '📌 Pin'}</button>
+              <button class="btn btn-danger" onclick="openDeleteModal('message','${m.id}')">🗑️</button>
+            ` : '—'}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function togglePin(msgId, pin) {
+      const { error } = await window.sb.rpc('admin_toggle_pin_message', { p_message_id: msgId, p_pin: pin });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert(pin ? 'Message pinned!' : 'Message unpinned.');
+      fetchGuildMessages();
+    }
+
+    // ── WARNINGS ──
+    function openWarningModal(userId) {
+      document.getElementById('warnUserId').value = userId;
+      document.getElementById('warnReason').value = '';
+      document.getElementById('warnSeverity').value = 'warning';
+      document.getElementById('warningModal').classList.add('show');
+    }
+    function closeWarningModal() { document.getElementById('warningModal').classList.remove('show'); }
+    async function submitWarning() {
+      const userId = document.getElementById('warnUserId').value;
+      const reason = document.getElementById('warnReason').value.trim();
+      const severity = document.getElementById('warnSeverity').value;
+      if (!reason) { alert('Please provide a reason.'); return; }
+      const { error } = await window.sb.rpc('admin_send_warning', { p_user_id: userId, p_reason: reason, p_severity: severity });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert('Warning sent!');
+      closeWarningModal();
+      loadStats();
+    }
+
+    async function fetchWarnings() {
+      const tbody = document.getElementById('warningsTableBody');
+      const userId = document.getElementById('warningSearchInput').value.trim();
+      if (!userId) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Enter a User ID</td></tr>'; return; }
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
+      const { data } = await window.sb.rpc('admin_get_user_warnings', { p_user_id: userId });
+      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No warnings for this user.</td></tr>'; return; }
+      tbody.innerHTML = data.map(w => {
+        const badge = w.severity === 'final' ? 'badge-final' : w.severity === 'warning' ? 'badge-warning' : 'badge-info';
+        return `<tr>
+          <td style="font-size:0.8rem;font-family:monospace">${userId.substring(0, 8)}...</td>
+          <td>${escapeHtml(w.reason)}</td>
+          <td><span class="badge ${badge}">${w.severity}</span></td>
+          <td>${escapeHtml(w.admin_name)}</td>
+          <td>${new Date(w.created_at).toLocaleString()}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── DELETE MODAL ──
+    function openDeleteModal(type, id) {
+      document.getElementById('deleteTargetType').value = type;
+      document.getElementById('deleteTargetId').value = id;
+      document.getElementById('deleteReason').value = '';
+      document.getElementById('deleteReasonModal').classList.add('show');
+    }
+    function closeDeleteModal() { document.getElementById('deleteReasonModal').classList.remove('show'); }
+    async function confirmDelete() {
+      const type = document.getElementById('deleteTargetType').value;
+      const id = document.getElementById('deleteTargetId').value;
+      const reason = document.getElementById('deleteReason').value.trim() || null;
+
+      let error;
+      if (type === 'quest') {
+        const r = await window.sb.rpc('admin_delete_quest', { p_quest_id: id, p_reason: reason });
+        error = r.error;
+      } else if (type === 'wish') {
+        const r = await window.sb.rpc('admin_delete_wish', { p_wish_id: id, p_reason: reason });
+        error = r.error;
+      } else if (type === 'message') {
+        const r = await window.sb.rpc('admin_delete_guild_message', { p_message_id: id, p_reason: reason });
+        error = r.error;
+      }
+
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert('Content removed successfully.');
+      closeDeleteModal();
+      if (type === 'quest') fetchQuests();
+      if (type === 'wish') fetchWishes();
+      if (type === 'message') fetchGuildMessages();
+      loadStats();
+    }
+
+    // Init
+    window.addEventListener('load', () => setTimeout(checkAdmin, 200));
+  </script>
   <script src="site-nav.js"></script>
 </body>
 </html>
