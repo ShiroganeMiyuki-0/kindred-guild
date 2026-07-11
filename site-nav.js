@@ -298,9 +298,74 @@
         navElement.className = 'glass-nav sticky top-0 z-50 w-full transition-all duration-300';
         navElement.innerHTML = buildNavbarHTML(user, isAdmin);
 
+        injectPageNav(user);
         setupEventHandlers(user);
         adjustFlexBody();
         if (user) loadNotificationCount();
+    }
+
+    // Inject a consistent page-level nav bar under the floating nav on every page
+    function injectPageNav(user) {
+        const pageNavLinks = [
+            { name: 'Quest Board', icon: '⚔️', file: 'quest-board.html' },
+            { name: 'Guild Hall', icon: '🏰', file: 'guild-hall.html' },
+            { name: 'Wishes', icon: '✨', file: 'fairy-wishes.html' },
+            { name: 'Leaderboard', icon: '🏆', file: 'leaderboard.html' },
+            { name: 'Workers', icon: '🛡️', file: 'worker-post.html' },
+            { name: 'Activity', icon: '📰', file: 'activity.html' }
+        ];
+
+        const currentFile = window.location.pathname.split('/').pop() || 'index.html';
+
+        // Skip on index.html (landing page has its own CTA)
+        if (currentFile === '' || currentFile === 'index.html') return;
+
+        // Check if this page already has our injected nav
+        if (document.querySelector('.page-nav-bar')) return;
+
+        // Build the nav pill links
+        function buildNavPills() {
+            return pageNavLinks.map(item => {
+                const isActive = currentFile === item.file;
+                const baseStyle = 'padding:6px 14px;font-size:0.8rem;font-weight:600;border:1px solid;border-radius:20px;text-decoration:none;white-space:nowrap;transition:all 0.15s;cursor:pointer;';
+                const activeStyle = isActive
+                    ? 'background:var(--accent-glow);color:var(--accent);border-color:var(--accent);'
+                    : 'color:var(--text-dim);border-color:var(--border);';
+                return `<a href="${getPath(item.file)}" class="page-nav-pill" style="${baseStyle}${activeStyle}">${item.icon} ${item.name}</a>`;
+            }).join('');
+        }
+
+        // Add hover CSS once
+        if (!document.getElementById('page-nav-styles')) {
+            const style = document.createElement('style');
+            style.id = 'page-nav-styles';
+            style.textContent = `
+                .page-nav-pill:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+                .page-nav-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:10px 0; margin-bottom:16px; border-bottom:1px solid var(--border); }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const navHtml = buildNavPills();
+
+        // Strategy 1: Find existing .page-header — add nav pills as a new row below it
+        const existingHeader = document.querySelector('.page-header');
+        if (existingHeader) {
+            const navRow = document.createElement('div');
+            navRow.className = 'page-nav-bar';
+            navRow.innerHTML = navHtml;
+            existingHeader.parentNode.insertBefore(navRow, existingHeader.nextSibling);
+            return;
+        }
+
+        // Strategy 2: No page header — inject into .container at the top
+        const container = document.querySelector('.container');
+        if (container) {
+            const navRow = document.createElement('div');
+            navRow.className = 'page-nav-bar';
+            navRow.innerHTML = navHtml;
+            container.insertBefore(navRow, container.firstChild);
+        }
     }
 
     function adjustFlexBody() {
