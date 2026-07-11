@@ -60,3 +60,5 @@ htmlcov/
 *.lz
 *.lzo
 ```screenshot-*.png
+screenshot-*.png
+auth-page.png
