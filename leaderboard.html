@@ -47,6 +47,39 @@
     @media(max-width:768px) { .lb-stats { gap:10px; } .lb-stat-val { font-size:0.85rem; } }
     .medal { font-size:1.1rem; }
     .empty-state { text-align:center; padding:40px; color:var(--text-dim); }
+
+    /* Guildmaster showcase */
+    .guildmaster-showcase {
+      background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(139,92,246,0.06));
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .guildmaster-showcase::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .gm-header { display:flex; align-items:center; gap:18px; margin-bottom:18px; flex-wrap:wrap; position:relative; }
+    .gm-avatar { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, var(--accent), #b8941e); display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:800; color:#000; border:3px solid var(--accent); box-shadow:0 0 20px rgba(212,175,55,0.3); overflow:hidden; }
+    .gm-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+    .gm-info h3 { color:var(--accent); font-size:1.2rem; margin-bottom:2px; }
+    .gm-badge { display:inline-flex; align-items:center; gap:4px; background:linear-gradient(135deg, var(--accent), #b8941e); color:#000; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+    .gm-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; position:relative; }
+    .gm-actions .btn { font-size:0.8rem; padding:8px 16px; }
+    .gm-desc { color:var(--text-dim); font-size:0.85rem; line-height:1.5; margin-bottom:16px; max-width:600px; position:relative; }
+    .gm-stats-row { display:flex; gap:20px; flex-wrap:wrap; padding-top:14px; border-top:1px solid rgba(212,175,55,0.15); position:relative; }
+    .gm-stat { text-align:center; }
+    .gm-stat-val { font-size:1.1rem; font-weight:700; color:var(--accent); }
+    .gm-stat-label { font-size:0.65rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; }
   </style>
   <link rel="manifest" href="manifest.json">
 </head>
@@ -56,6 +89,30 @@
       <h2>🏆 Leaderboard</h2>
       <div style="display:flex;gap:8px;">
         <a href="quest-board.html" class="btn btn-ghost btn-sm">← Quest Board</a>
+      </div>
+    </div>
+
+    <!-- Guildmaster Showcase -->
+    <div class="guildmaster-showcase" id="guildmasterShowcase">
+      <div class="gm-header">
+        <div class="gm-avatar" id="gmAvatar">⚔️</div>
+        <div class="gm-info">
+          <h3 id="gmName">Guildmaster</h3>
+          <div><span class="gm-badge">👑 Guildmaster</span></div>
+        </div>
+      </div>
+      <p class="gm-desc">The Guildmaster oversees the guild, ensures fair play, and supports the community. Reach out for help, support the guild, or grab some Fairy Coins!</p>
+      <div class="gm-actions">
+        <button class="btn btn-primary btn-sm" onclick="messageGuildmaster()">💬 Message Guildmaster</button>
+        <a href="donation.html" class="btn btn-outline btn-sm">❤️ Support the Guild</a>
+        <a href="coin_purchase_ui.html" class="btn btn-outline btn-sm">🪙 Buy Fairy Coins</a>
+        <a href="trust-and-safety.html" class="btn btn-ghost btn-sm">📜 Guild Charter</a>
+      </div>
+      <div class="gm-stats-row">
+        <div class="gm-stat"><div class="gm-stat-val" id="gmTotalMembers">—</div><div class="gm-stat-label">Members</div></div>
+        <div class="gm-stat"><div class="gm-stat-val" id="gmTotalQuests">—</div><div class="gm-stat-label">Quests Posted</div></div>
+        <div class="gm-stat"><div class="gm-stat-val" id="gmTotalCompleted">—</div><div class="gm-stat-label">Completed</div></div>
+        <div class="gm-stat"><div class="gm-stat-val" id="gmTotalCoins">—</div><div class="gm-stat-label">Coins in Circulation</div></div>
       </div>
     </div>
 
@@ -80,8 +137,65 @@
 
     (async function init() {
       await window.requireAuth();
+      await loadGuildmasterInfo();
       await loadLeaderboard();
     })();
+
+    async function loadGuildmasterInfo() {
+      try {
+        // Fetch guildmaster profile (admin user)
+        const { data: gmProfile } = await window.sb
+          .from('user_profiles')
+          .select('username, display_name, avatar_url, user_id')
+          .eq('is_admin', true)
+          .limit(1)
+          .single();
+
+        if (gmProfile) {
+          const gmName = gmProfile.display_name || gmProfile.username || 'Guildmaster';
+          document.getElementById('gmName').textContent = gmName;
+          if (gmProfile.avatar_url) {
+            document.getElementById('gmAvatar').innerHTML = '<img src="' + gmProfile.avatar_url + '" alt="Guildmaster">';
+          } else {
+            document.getElementById('gmAvatar').textContent = gmName.charAt(0).toUpperCase();
+          }
+          // Store for DM
+          window._guildmasterUserId = gmProfile.user_id;
+        }
+
+        // Fetch platform stats
+        const [membersRes, questsRes, completedRes, coinsRes] = await Promise.all([
+          window.sb.from('user_profiles').select('user_id', { count: 'exact', head: true }).eq('is_suspended', false),
+          window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('is_deleted', false),
+          window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+          window.sb.from('coin_transactions').select('amount')
+        ]);
+
+        document.getElementById('gmTotalMembers').textContent = membersRes.count || '0';
+        document.getElementById('gmTotalQuests').textContent = questsRes.count || '0';
+        document.getElementById('gmTotalCompleted').textContent = completedRes.count || '0';
+
+        const totalCoins = (coinsRes.data || []).reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
+        document.getElementById('gmTotalCoins').textContent = totalCoins > 1000 ? Math.floor(totalCoins / 1000) + 'K+' : totalCoins;
+      } catch (err) {
+        console.log('Could not load guildmaster info:', err);
+      }
+    }
+
+    window.messageGuildmaster = async function() {
+      try {
+        if (window._guildmasterUserId) {
+          const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: window._guildmasterUserId });
+          if (!error && convId) {
+            window.location.href = 'dm.html';
+            return;
+          }
+        }
+        window.location.href = 'dm.html';
+      } catch(e) {
+        window.location.href = 'dm.html';
+      }
+    };
 
     async function loadLeaderboard() {
       const { data, error } = await window.sb.rpc('get_leaderboard', { p_limit: 50 });
@@ -142,7 +256,7 @@
       let html = '';
 
       // Regular members section
-      html += '<div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-left:4px;">Guild Members</div>';
+      html += '<div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-left:4px;">⚔️ Guild Members Rankings</div>';
       html += members.map((u, i) => {
         const rank = i + 1;
         const isTop3 = rank <= 3;

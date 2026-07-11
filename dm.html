@@ -52,6 +52,14 @@
     .invite-modal-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; max-width:420px; width:100%; }
     .user-search-result { padding:10px 12px; cursor:pointer; display:flex; gap:10px; align-items:center; border-radius:var(--radius-sm); transition:all 0.12s; }
     .user-search-result:hover { background:var(--accent-glow); }
+
+    /* Group creation */
+    .group-create-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; }
+    .group-create-overlay.show { display:flex; }
+    .group-create-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; max-width:480px; width:100%; }
+    .group-create-box h3 { color:var(--accent); margin-bottom:16px; }
+    .member-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; background:var(--accent-glow); border:1px solid var(--accent); border-radius:20px; font-size:0.75rem; color:var(--accent); margin:2px; }
+    .member-chip button { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:0.8rem; padding:0 2px; }
   </style>
   <link rel="manifest" href="manifest.json">
 </head>
@@ -70,6 +78,10 @@
       <div class="dm-sidebar" id="dmSidebar">
         <div class="dm-sidebar-header">
           <h3>Messages</h3>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-outline btn-xs" onclick="showNewGroup()" title="Create Group">👥+</button>
+            <button class="btn btn-outline btn-xs" onclick="showNewChat()" title="New Chat">✏️</button>
+          </div>
         </div>
         <div style="padding:10px 12px;border-bottom:1px solid var(--border);">
           <input type="text" id="sidebarSearch" placeholder="🔍 Search people to message..." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;" oninput="searchUsers()">
@@ -88,6 +100,52 @@
             <p>Select a conversation or start a new one</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Chat Modal -->
+  <div class="group-create-overlay" id="newChatModal">
+    <div class="group-create-box">
+      <h3>💬 Start New Chat</h3>
+      <input type="text" id="userSearchInput" placeholder="Search by username..." oninput="searchNewChatUsers()">
+      <div id="userSearchResults" style="max-height:250px;overflow-y:auto;margin-top:8px;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+        <button class="btn btn-ghost" onclick="hideNewChat()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Group Modal -->
+  <div class="group-create-overlay" id="newGroupModal">
+    <div class="group-create-box">
+      <h3>👥 Create Group</h3>
+      <div class="form-group">
+        <label>Group Name</label>
+        <input type="text" id="newGroupName" placeholder="e.g. Study Group, Project Team..." maxlength="50">
+      </div>
+      <div class="form-group">
+        <label>Add Members</label>
+        <input type="text" id="groupMemberSearch" placeholder="Search by username..." oninput="searchGroupMembers()">
+        <div id="groupMemberResults" style="max-height:200px;overflow-y:auto;margin-top:8px;"></div>
+      </div>
+      <div id="groupSelectedMembers" style="margin-bottom:12px;"></div>
+      <div id="createGroupMsg" style="display:none;margin-bottom:12px;font-size:0.85rem;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="hideNewGroup()">Cancel</button>
+        <button class="btn btn-primary" onclick="createGroupFromDm()">Create Group</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invite to Group Modal -->
+  <div class="group-create-overlay" id="inviteModal">
+    <div class="group-create-box">
+      <h3>👥 Add Member to Group</h3>
+      <input type="text" id="inviteSearchInput" placeholder="Search by username..." oninput="searchInviteUsers()">
+      <div id="inviteSearchResults" style="max-height:250px;overflow-y:auto;margin-top:8px;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+        <button class="btn btn-ghost" onclick="hideInvite()">Done</button>
       </div>
     </div>
   </div>
@@ -268,17 +326,7 @@
         .subscribe();
     }
 
-    // New chat
-    window.showNewChat = function () {
-      document.getElementById('newChatModal').classList.add('show');
-      document.getElementById('userSearchInput').value = '';
-      document.getElementById('userSearchResults').innerHTML = '';
-      document.getElementById('userSearchInput').focus();
-    };
-    window.hideNewChat = function () {
-      document.getElementById('newChatModal').classList.remove('show');
-    };
-
+    // searchUsers is used by sidebar search
     window.searchUsers = function () {
       clearTimeout(searchTimeout);
       const searchContainer = document.getElementById('sidebarSearchResults');
@@ -330,6 +378,155 @@
 
     window.toggleDmSidebar = function () {
       document.getElementById('dmSidebar').classList.toggle('mobile-open');
+    };
+
+    // ── New Chat Modal ──
+    let _newChatSearchTimeout = null;
+    window.showNewChat = function() {
+      document.getElementById('newChatModal').classList.add('show');
+      document.getElementById('userSearchInput').value = '';
+      document.getElementById('userSearchResults').innerHTML = '';
+      document.getElementById('userSearchInput').focus();
+    };
+    window.hideNewChat = function() {
+      document.getElementById('newChatModal').classList.remove('show');
+    };
+    window.searchNewChatUsers = function() {
+      clearTimeout(_newChatSearchTimeout);
+      _newChatSearchTimeout = setTimeout(async () => {
+        const term = document.getElementById('userSearchInput').value.trim();
+        if (term.length < 2) { document.getElementById('userSearchResults').innerHTML = ''; return; }
+        const { data } = await window.sb.from('user_profiles')
+          .select('user_id, username, display_name')
+          .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
+          .neq('user_id', currentUser.id).limit(8);
+        const results = data || [];
+        document.getElementById('userSearchResults').innerHTML = results.length === 0
+          ? '<div style="padding:12px;color:var(--text-dim);text-align:center;font-size:0.85rem;">No users found</div>'
+          : results.map(u => {
+              const name = u.display_name || u.username;
+              return `<div class="user-search-result" onclick="startNewChatWith('${u.user_id}')">
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-size:0.85rem;">${name.charAt(0).toUpperCase()}</div>
+                <div><div style="font-weight:600;font-size:0.88rem;">${escapeHtml(name)}</div><div style="font-size:0.75rem;color:var(--text-dim);">@${escapeHtml(u.username)}</div></div>
+              </div>`;
+            }).join('');
+      }, 300);
+    };
+    window.startNewChatWith = async function(userId) {
+      try {
+        const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: userId });
+        if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
+        hideNewChat();
+        await loadConversations();
+        openConversation(convId);
+      } catch (err) { window.showToast('Messaging not available.', 'warning'); }
+    };
+
+    // ── Create Group from DM page ──
+    let _groupMemberIds = [];
+    let _groupMemberNames = {};
+    window.showNewGroup = function() {
+      document.getElementById('newGroupModal').classList.add('show');
+      document.getElementById('newGroupName').value = '';
+      document.getElementById('groupMemberSearch').value = '';
+      document.getElementById('groupMemberResults').innerHTML = '';
+      _groupMemberIds = [];
+      _groupMemberNames = {};
+      renderGroupSelectedMembers();
+      document.getElementById('newGroupName').focus();
+    };
+    window.hideNewGroup = function() {
+      document.getElementById('newGroupModal').classList.remove('show');
+    };
+    window.searchGroupMembers = async function() {
+      const term = document.getElementById('groupMemberSearch').value.trim();
+      if (term.length < 2) { document.getElementById('groupMemberResults').innerHTML = ''; return; }
+      const { data } = await window.sb.from('user_profiles')
+        .select('user_id, username, display_name')
+        .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
+        .neq('user_id', currentUser.id).limit(8);
+      const results = data || [];
+      document.getElementById('groupMemberResults').innerHTML = results.map(u => {
+        const name = u.display_name || u.username;
+        const sel = _groupMemberIds.includes(u.user_id);
+        return `<div class="user-search-result ${sel ? 'selected' : ''}" onclick="toggleGroupMember('${u.user_id}','${escapeHtml(name)}')">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-size:0.8rem;">${name.charAt(0).toUpperCase()}</div>
+          <div><div style="font-weight:600;font-size:0.85rem;">${escapeHtml(name)}</div><div style="font-size:0.7rem;color:var(--text-dim);">@${escapeHtml(u.username)}</div></div>
+          ${sel ? '<span style="margin-left:auto;color:var(--accent);">✓</span>' : ''}
+        </div>`;
+      }).join('');
+    };
+    window.toggleGroupMember = function(userId, name) {
+      const idx = _groupMemberIds.indexOf(userId);
+      if (idx >= 0) { _groupMemberIds.splice(idx, 1); delete _groupMemberNames[userId]; }
+      else { _groupMemberIds.push(userId); _groupMemberNames[userId] = name; }
+      renderGroupSelectedMembers();
+      searchGroupMembers();
+    };
+    function renderGroupSelectedMembers() {
+      const c = document.getElementById('groupSelectedMembers');
+      if (_groupMemberIds.length === 0) { c.innerHTML = ''; return; }
+      c.innerHTML = '<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px;">Selected:</div>' + _groupMemberIds.map(id => {
+        const name = _groupMemberNames[id] || 'Member';
+        return `<span class="member-chip">${escapeHtml(name)} <button onclick="toggleGroupMember('${id}','${escapeHtml(name)}')">×</button></span>`;
+      }).join('');
+    }
+    window.createGroupFromDm = async function() {
+      const name = document.getElementById('newGroupName').value.trim();
+      const msgEl = document.getElementById('createGroupMsg');
+      if (!name) { msgEl.textContent = 'Enter a group name.'; msgEl.style.display = 'block'; msgEl.style.color = 'var(--error)'; return; }
+      if (_groupMemberIds.length === 0) { msgEl.textContent = 'Add at least one member.'; msgEl.style.display = 'block'; msgEl.style.color = 'var(--error)'; return; }
+      try {
+        const { data: convId, error } = await window.sb.rpc('create_group_conversation', { p_name: name, p_member_ids: _groupMemberIds });
+        if (error) {
+          // Fallback
+          const { data: conv, error: e2 } = await window.sb.from('dm_conversations').insert({ name, is_group: true, created_by: currentUser.id }).select('id').single();
+          if (e2) { msgEl.textContent = 'Failed: ' + e2.message; msgEl.style.display = 'block'; msgEl.style.color = 'var(--error)'; return; }
+          const all = [...new Set([currentUser.id, ..._groupMemberIds])];
+          await window.sb.from('dm_participants').insert(all.map(uid => ({ conversation_id: conv.id, user_id: uid, role: uid === currentUser.id ? 'admin' : 'member' })));
+        }
+        msgEl.textContent = '✅ Group created!'; msgEl.style.display = 'block'; msgEl.style.color = 'var(--success)';
+        setTimeout(async () => { hideNewGroup(); await loadConversations(); }, 1000);
+      } catch (err) { msgEl.textContent = 'Failed: ' + err.message; msgEl.style.display = 'block'; msgEl.style.color = 'var(--error)'; }
+    };
+
+    // ── Invite to Group ──
+    window.showInvite = function() {
+      if (!activeConvId) return;
+      document.getElementById('inviteModal').classList.add('show');
+      document.getElementById('inviteSearchInput').value = '';
+      document.getElementById('inviteSearchResults').innerHTML = '';
+      document.getElementById('inviteSearchInput').focus();
+    };
+    window.hideInvite = function() {
+      document.getElementById('inviteModal').classList.remove('show');
+    };
+    window.searchInviteUsers = async function() {
+      const term = document.getElementById('inviteSearchInput').value.trim();
+      if (term.length < 2) { document.getElementById('inviteSearchResults').innerHTML = ''; return; }
+      const { data } = await window.sb.from('user_profiles')
+        .select('user_id, username, display_name')
+        .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
+        .neq('user_id', currentUser.id).limit(8);
+      const results = data || [];
+      document.getElementById('inviteSearchResults').innerHTML = results.length === 0
+        ? '<div style="padding:12px;color:var(--text-dim);text-align:center;">No users found</div>'
+        : results.map(u => {
+            const name = u.display_name || u.username;
+            return `<div class="user-search-result" onclick="addUserToGroup('${u.user_id}','${escapeHtml(name)}')">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-size:0.8rem;">${name.charAt(0).toUpperCase()}</div>
+              <div><div style="font-weight:600;font-size:0.85rem;">${escapeHtml(name)}</div><div style="font-size:0.7rem;color:var(--text-dim);">@${escapeHtml(u.username)}</div></div>
+              <span style="margin-left:auto;color:var(--accent);font-size:0.8rem;">+ Add</span>
+            </div>`;
+          }).join('');
+    };
+    window.addUserToGroup = async function(userId, name) {
+      if (!activeConvId) return;
+      try {
+        const { error } = await window.sb.from('dm_participants').insert({ conversation_id: activeConvId, user_id: userId, role: 'member' });
+        if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
+        window.showToast(name + ' added to group!', 'success');
+      } catch (err) { window.showToast('Failed to add member.', 'error'); }
     };
   </script>
   <script src="site-nav.js"></script>

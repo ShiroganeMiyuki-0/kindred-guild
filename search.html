@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Copyright (c) 2026 Kindred Guild. All Rights Reserved. -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Find People</title>
+  <meta name="description" content="Search for guild members, view their profiles, and connect.">
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAKKElEQVR4nIVXeXBW1RX/nXvfe9++QL4sJJKQsKcOi61LrUtHWq1r65Dg0rF26oKIBbFibWe0+E+30aloqzWMpdQ1wbZa/3BcK7TqKFRAAgiSEAOF5MtCvv1t957+8YX4EaXeN2/ueXfOPb/fPe+ce+8hnLpRVxfEsmVQ49+1N10x9bK5DcbFsZCxKCC4wROWZpA22TVdxUcLtv6od0C99tiLhVeA0hEA6OqCXLYMGgB/IcgpwIUQ0FoDU6aYp6+6KnnHtKR5te1RzeEh5v60Lg5ltJspsQeA40GyUglhNVZTqLFGiKDFoyM5/6WOV/K/7z9W/FAQoBkCgP5SAu3tkJs3QwEIrmyrvW9+U3j50aNO1Vu7vLHuft/OFzkI4oAQMCVBAoBmKKXhg8kOB8lpbTSsJQvNKac1WJmD/3X+tL7z2C8A5CpsfzGBCYVAYNb91ySfCxjm17re8Y59dNAxpeR4wCRLUHnaZH+WDTGYAcdjz1OUbZ1hOdecZ9aD1J6HX8pde/x4oXsyiQkC7YB8AVCp6vDC5d+Jv5YepdQzb9uDnqdTAYtMBoH51P/sRGOAiUAEhuuxD0HD110QrGqqRfHptwuX9fTn3q0kccKeEALaNAPNd7cl3z9wBInNW0oZwxTV4ZCAUsw0oXtyV4lcKTAAKQi2o+G6evjKc4ORRS3C73g99/WhdGHPfQzxAKAFytFOWiN4V1vyb0NjomrzFjuzaF6wetFsIJu1YYiy40FlGuMdaOIpj1UKhhDI5R3Mn8E48/RQ6uV37cKnaQSXXxz9u2bE15V5kjiRajdfVXN/LGAueuZtOx2wqNqULpbfdK2aPaeVi3YJUsoJUEySTqYDSEkoOTamN7bw7ctvUCHLh2WJ1PNbnRFBxuyVS2t/RQTd1QUh2tuhZ9TH5p4xN/qjrve8Y66nqwMBgW17Xfzmie30w+9f7aeSMdiOgiBiInD5DwNKl18e9w4RWBCx42rEwgHcfGO7/+imnbT1wyKCQQFiXfPMVvdYa0vk2jPmJb7a3g5NAPDz71d3EJu3/LKzOBwNIaWZ2BBEhZKNVDKGM2fHnY/6cubgmC8EEQzJsEyBgFVese0yPE/DV4BiIBWXvLgl7uw8lA8eHcogGg7C18yCmHIljK75XnhqPOZvfuDP6WUC0WiqfqrR9sYuLyclJ7nsRlIaiIRDGMk66B0qmOfOj4v500VhyVnGjvraIKqSki2LYFqEqqTkaTVBXHSmtWteo8icPSdOfcNFa2C0hGg0BKXLocNMsAxOvLHLG6uOGZfX1QWbxI0XWFf4SkzZ86lfCppkMI+HMQFaA0FT8lDGp76h3Nh9K87a6cqGaft7RzA4qpEe9ZAe9TAwqnCgbxQZN1W/buU3dg9mcyMDx30KWpK1+ixjGGDLIHngiO/aDoWXnhNdKlobjEv708z5og6cCPLKHBOCkMlqSia5/8lXBmefv+RHdXNmz+R8PoNgwOBgQHKpmEfjafV8yVW3VXe8nG6Nxbg/X1AkqDJXy54lIjiuDvUe06qlTl4iYiG56NMhZYMQqAQ+ITFAUjI+7pML/v3evppNG/+gV65c7c2bN5+OZ2w6nnGpqWkGrbnrHq/zuSf1m1s+nLrzgFwsRXnu5C2DAZBAoC+tS+GgWGAYgqcPj7ErBCI8Gb1CJGhOJuM42NNDHR2PmW3LfnCwd/uDL1lSqfpFN1/x1FMb5+/evRt1tVVMWk3GLX+NA0gBYyij86aQdYYyAm7WLjqSEMfnZowzJoLjMpHUiMfjvG9/L/due/Aft16/+FvH0tnEBzse7dr+4cjsKcmkoZUi8ORtsgIdgCSInM2KLDMjAPrCc7qySQFkCwpSECyToDVgWkodTWcTI2N2zDQ8DZQ3IEMKlBwNIb7MKsAQWkhlB2MBCmiefFZP5sWwHQHSJZ7Z3EDTF9xz+fadhzsPHz7aYU2/65LTW2cZnp1nzxfgzy3p5AHN4GiAJLnOFMPXdCSVoAal4RMg+YT+JC+ahoGR0SxmzWygO1bd6W3cuLH1PztGWgHw6a1P023LV7hP/PFRc+++g0gk4vB9/5QcfA0/lRCmp5EWBVvvaqwRATCcSq0TEjNDSolcIY/6+mm84va7veefedLcufM/XJUMoWpKiD7+eC9v6HjUvGX5Kq+lpYWz2SyklGDmydjlaNBwmqopXHJ0t9h/RL3aVCNEOCjsz/Qn4CGlRD6fR11ttb577T3ehg1PmDt2dFPTadXkeD5cV2Fa7VTqOdhLj6x/2Fy1+k6vublR5XJlEpW2yuthWKYozayXsi/tvSae/WfxZcvkbGujEXA89scPNIABKSUKhTzq6qbxvWvXFDue+IPct28PmVYMvqcQtAQMo7xlGmYUfX299Mj6h4w7V99RnNHcwmUSRqULyPNZz6qXRiTI9t8+8F4QxWJxYOC4/+KShWbCU5QlMBhgIQSyuRxq6+p47dqfeo9v2BTZu3efTCQSUNpHJq8Qi0gkohK5ooLSPmKxGHp7+8Tv1j8eXb1qjdfc3MyZ7BikFOM3JYbjU2bJQnPKcF69dvhwtkcwg158p/BgU1Ng+CvNlu14rIUgsp0iWpqbee3an/kdGx4z93TvpkQiCc/zQAQopVEsaTiOhudrEAG+XZxqLeH1q9/yPzxqp/4c+fM5UKxACGIPJ+5pcEszZsVyry6rfhrIkBs3gyxu7ewu/tg8enyBVIMaeUjEonwbSvuoL9s2mh0d++mRDIJ3/cmApMIKBQVsgUFQZgIOKV8xGJx9PT20OOPPWLccusKpFIpVp4HX4v0dedb9Z/0F//+bnfuvc5OSAJAzCAihO+7oXZ7f5paNr1ezFQlgylpWBgZGUY0EoVSavy6dYoTozLaxzMnXygglUoBWmFwJDt6zYXR8PxGHlq3aXAxM44TAQIAryNAEPIbXi9c3ViD0pXnhCIjY/ZwLptBJByGr9SEYfBEB554ymOfCYCvFMLhEHKZMQwOZ0e/fUbEmjcd9OzW0lIijKwrc9cCAB4A9NI2yIGB/L5ntxQuXTyLvBuWhBOKjQHHVUpQZX6OI/Gkd4JS2RGCGJ6ntKuNwWu+GQmf10rGX98tXnngUHZbWxvkA+NV0hcWJjU1kQUrL4t2am3M6/yXe/Tjfi9oGRy3DDKIPl+UnLTJMMP1Wbk+ZZvrzeJ151sN4aDq2/RW4dpP+nLvX3ghjC1b4FfOOalVFA3xNctqfz2zMXJ9zyE78eYud3T/EeU5rg6RQEAKmIIgCIBiaKXhs4ZtmaI0u14aFy00q+Y0BwuHh+zO3z597F4AQ19amlU0IQhaMzB/RuzsG5aE7pwaMy7LFyl+aFD7fYO6OJTRXrbEigHEAiRrksJoqhHh5jphxsIoZIv+qy/8u7B+2778ViKgjSE342Tw/0cA+Fx5Hpi5uj323Rkp+e1wUCwwiOpgWVmANLlO0mOkS67u7h9Sr294xX4pl8vtB768PP8fL0ImrmlBjJAAAAAASUVORK5CYII=">
+  <link rel="stylesheet" href="css/globals.css">
+  <link rel="stylesheet" href="css/layout-fix.css">
+  <style>
+    .search-container { max-width:700px; margin:0 auto; }
+    .search-box { display:flex; gap:10px; margin-bottom:24px; }
+    .search-box input { flex:1; font-size:1rem; padding:14px 18px; }
+    .search-box button { padding:14px 24px; white-space:nowrap; }
+
+    .user-card {
+      display:flex; align-items:center; gap:16px; padding:16px 20px;
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      margin-bottom:10px; transition:all 0.15s; cursor:pointer;
+    }
+    .user-card:hover { border-color:var(--accent); transform:translateX(4px); }
+    .user-avatar {
+      width:48px; height:48px; border-radius:50%; background:var(--surface-2);
+      display:flex; align-items:center; justify-content:center; font-weight:700;
+      color:var(--accent); font-size:1.1rem; border:2px solid var(--border); flex-shrink:0; overflow:hidden;
+    }
+    .user-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .user-info { flex:1; min-width:0; }
+    .user-name { font-weight:600; font-size:1rem; color:var(--text); }
+    .user-username { font-size:0.8rem; color:var(--text-dim); }
+    .user-meta { font-size:0.75rem; color:var(--text-dim); margin-top:4px; display:flex; gap:12px; flex-wrap:wrap; }
+    .user-meta span { display:inline-flex; align-items:center; gap:4px; }
+    .user-actions { display:flex; gap:6px; flex-shrink:0; }
+
+    .section-title {
+      font-size:0.75rem; font-weight:700; color:var(--text-dim);
+      text-transform:uppercase; letter-spacing:1.5px; margin:24px 0 12px; padding-left:4px;
+    }
+
+    .trending-tags { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+    .trending-tag {
+      padding:6px 14px; font-size:0.8rem; background:var(--surface);
+      border:1px solid var(--border); border-radius:20px; color:var(--text-dim); cursor:pointer;
+      transition:all 0.15s;
+    }
+    .trending-tag:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-glow); }
+
+    .empty-search { text-align:center; padding:60px 20px; color:var(--text-dim); }
+    .empty-search .icon { font-size:3rem; margin-bottom:12px; }
+
+    @media(max-width:768px) {
+      .search-box { flex-direction:column; }
+      .user-card { flex-wrap:wrap; }
+      .user-actions { width:100%; justify-content:flex-end; }
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h2 style="color:var(--accent); font-size:1.4rem;">🔍 Find People</h2>
+      <div style="display:flex;gap:8px;">
+        <a href="friends.html" class="btn btn-ghost btn-sm">👥 Friends & Groups</a>
+        <a href="dm.html" class="btn btn-ghost btn-sm">💬 Messages</a>
+      </div>
+    </div>
+
+    <div class="search-container">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by username or display name..." autofocus autocomplete="off" onkeydown="if(event.key==='Enter')searchPeople()">
+        <button class="btn btn-primary" onclick="searchPeople()">🔍 Search</button>
+      </div>
+
+      <div id="trendingSection">
+        <div class="section-title">🔥 Active Members</div>
+        <div id="activeMembers"><div style="color:var(--text-dim);padding:10px;">Loading...</div></div>
+      </div>
+
+      <div id="searchResults" style="display:none;">
+        <div class="section-title" id="resultsTitle">Search Results</div>
+        <div id="resultsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script>
+    let currentUser = null;
+
+    (async function init() {
+      const user = await window.requireAuth();
+      if (!user) return;
+      currentUser = user;
+      await loadActiveMembers();
+    })();
+
+    async function loadActiveMembers() {
+      const { data } = await window.sb
+        .from('user_profiles')
+        .select('user_id, username, display_name, avatar_url, reputation_score, is_verified, is_admin, rank')
+        .eq('is_suspended', false)
+        .order('reputation_score', { ascending: false })
+        .limit(12);
+
+      const members = (data || []).filter(u => u.user_id !== currentUser.id);
+      const container = document.getElementById('activeMembers');
+
+      if (members.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-dim);padding:10px;">No other members yet.</div>';
+        return;
+      }
+
+      container.innerHTML = members.map(u => renderUserCard(u)).join('');
+    }
+
+    async function searchPeople() {
+      const term = document.getElementById('searchInput').value.trim();
+      if (term.length < 2) {
+        document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('trendingSection').style.display = '';
+        return;
+      }
+
+      document.getElementById('trendingSection').style.display = 'none';
+      document.getElementById('searchResults').style.display = '';
+
+      const { data } = await window.sb
+        .from('user_profiles')
+        .select('user_id, username, display_name, avatar_url, reputation_score, is_verified, is_admin, rank, created_at')
+        .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
+        .neq('user_id', currentUser.id)
+        .limit(20);
+
+      const results = data || [];
+      document.getElementById('resultsTitle').textContent = `Search Results (${results.length})`;
+
+      if (results.length === 0) {
+        document.getElementById('resultsList').innerHTML = '<div class="empty-search"><div class="icon">🔍</div><p>No members found matching "' + escapeHtml(term) + '"</p></div>';
+        return;
+      }
+
+      document.getElementById('resultsList').innerHTML = results.map(u => renderUserCard(u)).join('');
+    }
+
+    function renderUserCard(u) {
+      const name = u.display_name || u.username || 'Member';
+      const initial = name.charAt(0).toUpperCase();
+      const rep = u.reputation_score ? (u.reputation_score / 10).toFixed(1) : '0.0';
+      const verified = u.is_verified ? ' <span title="Verified" style="color:#10b981;">✅</span>' : '';
+      const admin = u.is_admin ? ' <span title="Guildmaster" style="color:var(--accent);">👑</span>' : '';
+      const rank = u.rank ? '<span class="rank-badge rank-' + u.rank + '" style="font-size:0.65rem;padding:2px 6px;margin-left:4px;">' + u.rank + '</span>' : '';
+      const avatarHtml = u.avatar_url
+        ? '<div class="user-avatar"><img src="' + u.avatar_url + '" alt=""></div>'
+        : '<div class="user-avatar">' + initial + '</div>';
+
+      return `
+        <div class="user-card" onclick="window.location.href='profile.html?username=${escapeHtml(u.username)}'">
+          ${avatarHtml}
+          <div class="user-info">
+            <div class="user-name">${escapeHtml(name)}${verified}${admin}${rank}</div>
+            <div class="user-username">@${escapeHtml(u.username || '—')}</div>
+            <div class="user-meta">
+              <span>⭐ ${rep} rep</span>
+              ${u.is_verified ? '<span style="color:#10b981;">✅ Verified</span>' : ''}
+            </div>
+          </div>
+          <div class="user-actions">
+            <button class="btn btn-outline btn-xs" onclick="event.stopPropagation();startDm('${u.user_id}')">💬 DM</button>
+            <a href="profile.html?username=${escapeHtml(u.username)}" class="btn btn-ghost btn-xs" onclick="event.stopPropagation();">View</a>
+          </div>
+        </div>`;
+    }
+
+    window.startDm = async function(userId) {
+      try {
+        const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: userId });
+        if (error) {
+          if (error.message && error.message.includes('does not exist')) {
+            window.showToast('Messaging system not set up yet.', 'warning');
+          } else {
+            window.showToast('Failed: ' + error.message, 'error');
+          }
+          return;
+        }
+        window.location.href = 'dm.html';
+      } catch (err) {
+        window.showToast('Messaging not available.', 'warning');
+      }
+    };
+
+    // Live search as you type
+    let searchDebounce = null;
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(searchPeople, 400);
+    });
+  </script>
+  <script src="site-nav.js"></script>
+</body>
+</html>
