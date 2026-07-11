@@ -89,7 +89,7 @@ async function loadQuests() {
     .select(`
       id, title, description, payment_type, coin_amount, upi_amount,
       status, deadline, created_at, poster_id, worker_id, tags, min_rank,
-      poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score, is_verified)
+      poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score, is_verified, is_admin)
     `);
 
   if (currentView === 'open') {
@@ -190,6 +190,7 @@ function renderQuests() {
     const tagsHtml = quest.tags?.length ? `<div class="card-tags">${quest.tags.map(t => `<span class="card-tag" onclick="event.stopPropagation();toggleTagFilter('${t}')">${t}</span>`).join('')}</div>` : '';
 
     const rankBadge = quest.min_rank ? `<span class="rank-requirement">🏆 Min Rank: <span class="rank-badge rank-${quest.min_rank}" style="width:20px;height:20px;font-size:0.65rem;">${quest.min_rank}</span></span>` : '';
+    const posterBadge = quest.poster?.is_admin ? '<span style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:2px 6px;border-radius:4px;font-weight:900;font-size:0.6rem;margin-left:4px;">👑 GM</span>' : '';
 
     let actionBtn = '';
     if (quest.status === 'open') {
@@ -215,7 +216,7 @@ function renderQuests() {
           <span class="status-badge status-${quest.status}">${quest.status}</span>
           <button class="bookmark-btn" onclick="event.stopPropagation();toggleBookmark('${quest.id}')" title="${isBookmarked ? 'Remove bookmark' : 'Bookmark this quest'}" style="float:right;background:none;border:none;cursor:pointer;font-size:1.2rem;${isBookmarked ? 'color:var(--accent)' : 'color:var(--text-dim)'}">${isBookmarked ? '🔖' : '📑'}</button>
           <h3>${escapeHtml(quest.title)}</h3>
-          <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a>${posterVerified} ⭐ ${rep}</div>
+          <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a>${posterBadge}${posterVerified} ⭐ ${rep}</div>
           <div class="description">${escapeHtml(quest.description)}</div>
           ${tagsHtml}
           ${rankBadge}

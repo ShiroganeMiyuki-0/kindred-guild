@@ -78,9 +78,11 @@ function renderProfileOverview() {
     const nameEl = document.getElementById('profileDisplayName');
     nameEl.innerHTML = escapeHtml(p.display_name || p.username) + ' <span title="Verified Worker" style="color:#10b981;font-size:1.2rem;">✅</span>';
   }
-  // Show rank badge
-  if (p.rank) {
-    const repEl = document.getElementById('profileRepScore');
+  // Show rank badge (Guild Master for admins, rank for others)
+  const repEl = document.getElementById('profileRepScore');
+  if (p.is_admin) {
+    repEl.innerHTML = `<span style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:4px 12px;border-radius:6px;font-weight:900;font-size:0.85rem;margin-right:6px;">👑 Guild Master</span> ${score} / 5.0`;
+  } else if (p.rank) {
     repEl.innerHTML = `<span class="rank-badge rank-${p.rank}" style="margin-right:6px;">${p.rank}</span> ${score} / 5.0`;
   }
   if (p.avatar_url) document.getElementById('profileAvatar').src = p.avatar_url;

@@ -81,7 +81,7 @@ window.handleSubmitWorkerPost = async function () {
 async function loadWorkerPosts() {
   const { data, error } = await window.sb
     .from('worker_posts')
-    .select('id, title, description, tags, preferred_payment, min_reward, created_at, user_id, user:user_profiles!worker_posts_user_id_fkey(username, display_name, reputation_score, is_verified, rank)')
+    .select('id, title, description, tags, preferred_payment, min_reward, created_at, user_id, user:user_profiles!worker_posts_user_id_fkey(username, display_name, reputation_score, is_verified, rank, is_admin)')
     .eq('is_deleted', false)
     .order('created_at', { ascending: false });
 
@@ -114,7 +114,7 @@ function renderWorkerPosts() {
         <div>
           <span class="badge badge-coins">${payBadge}</span>
           <h3 style="margin:8px 0 4px">${escapeHtml(post.title)}</h3>
-          <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">${post.user?.rank ? '<span class="rank-badge rank-' + post.user.rank + '" style="width:18px;height:18px;font-size:0.6rem;margin-right:4px;">' + post.user.rank + '</span>' : ''}by <a href="profile.html?username=${post.user?.username}">${escapeHtml(name)}</a>${verified} ⭐ ${rep}</div>
+          <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">${post.user?.is_admin ? '<span style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:2px 6px;border-radius:4px;font-weight:900;font-size:0.6rem;margin-right:4px;">👑 GM</span>' : (post.user?.rank ? '<span class="rank-badge rank-' + post.user.rank + '" style="width:18px;height:18px;font-size:0.6rem;margin-right:4px;">' + post.user.rank + '</span>' : '')}by <a href="profile.html?username=${post.user?.username}">${escapeHtml(name)}</a>${verified} ⭐ ${rep}</div>
           <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:12px">${escapeHtml(post.description)}</div>
           ${tagsHtml}
         </div>
