@@ -397,6 +397,12 @@
         // Skip on terms/privacy pages themselves
         const currentFile = window.location.pathname.split('/').pop() || '';
         if (currentFile === 'terms-of-service.html' || currentFile === 'privacy-policy.html') return;
+        // Skip if the modal is already showing (renderNavContainer can run more than
+        // once per page load, e.g. once on initial auth check and again from
+        // onAuthStateChange — without this guard that creates a second overlay with
+        // duplicate element IDs, and the visible checkbox ends up with no listener
+        // wired to it, so the "Enter the Guild" button never enables).
+        if (document.getElementById('terms-agreement-overlay')) return;
 
         const overlay = document.createElement('div');
         overlay.id = 'terms-agreement-overlay';
