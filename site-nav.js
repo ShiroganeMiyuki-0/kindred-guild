@@ -260,8 +260,8 @@
                             ${actionPanelHtml}
                         </div>
 
-                        <!-- Hamburger for secondary nav items (desktop + tablet) -->
-                        <div class="relative" id="more-menu-wrapper">
+                        <!-- Hamburger for secondary nav items (desktop + tablet only) -->
+                        <div class="relative hidden md:block" id="more-menu-wrapper">
                             <button type="button" id="more-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-haspopup="true" aria-expanded="false" title="More pages">
                                 <i class="fa-solid fa-bars text-lg" id="more-menu-icon"></i>
                             </button>
