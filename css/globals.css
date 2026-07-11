@@ -195,7 +195,11 @@ textarea { min-height: 100px; resize: vertical; }
 }
 
 /* ---- Hidden utility ---- */
-.hidden { display: none !important; }
+/* NOTE: no !important — Tailwind's responsive utilities (e.g. md:flex, md:inline)
+   must be able to override .hidden at their breakpoints. Using !important here
+   was silently hiding the desktop nav links and the "KINDRED GUILD" brand text
+   on every page. Standard Tailwind .hidden has no !important for the same reason. */
+.hidden { display: none; }
 
 /* ============================================
    MOBILE RESPONSIVE

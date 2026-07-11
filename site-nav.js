@@ -60,7 +60,22 @@
             background: rgba(251, 191, 36, 0.1);
             border-left: 4px solid #fbbf24;
         }
-        
+
+        /* Center the brand logo in the navbar on mobile/tablet.
+           The bar is position:relative; the brand is pulled out of flow
+           and absolutely centered, so it sits visually in the middle
+           regardless of the hamburger on the right. On desktop (md+) the
+           brand returns to normal left-aligned flow. */
+        @media (max-width: 767px) {
+            #site-nav .nav-brand {
+                position: absolute !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                margin-right: 0 !important;
+            }
+        }
+
         body.site-nav-flex-adjusted {
             display: flex !important;
             flex-direction: column !important;
@@ -239,13 +254,13 @@
 
         return `
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-14">
+                <div class="relative flex justify-between items-center h-14">
                     <!-- Left: Brand + Primary Nav -->
                     <div class="flex items-center flex-1">
-                        <div class="flex-shrink-0 flex items-center mr-6">
+                        <div class="nav-brand flex-shrink-0 flex items-center md:mr-6">
                             <a href="${getPath('index.html')}" class="flex items-center gap-2 group">
                                 <img src="${getPath('logo.png')}" alt="Kindred Guild" width="36" height="36" class="h-9 w-9 rounded-xl object-cover ring-2 ring-amber-500/30 group-hover:ring-amber-500 transition-all duration-300 group-hover:scale-105">
-                                <span class="text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none hidden sm:inline">KINDRED GUILD</span>
+                                <span class="text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none hidden md:inline">KINDRED GUILD</span>
                             </a>
                         </div>
                         <nav class="hidden md:flex md:items-center md:gap-1">
