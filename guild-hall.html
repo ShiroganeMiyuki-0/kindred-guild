@@ -167,6 +167,8 @@
     let messages = [];
     let isAdmin = false;
     let messageSubscription = null;
+    let lastMessageTime = 0;
+    const MESSAGE_COOLDOWN_MS = 2000; // 2 second cooldown between messages
 
     // Init
     (async function init() {
@@ -248,7 +250,7 @@
       if (!isAdmin) return;
       if (!confirm('Delete this channel? Messages will be hidden but not permanently deleted.')) return;
       const { error } = await window.sb.from('guild_channels').update({ is_deleted: true }).eq('id', channelId);
-      if (error) { alert('Failed: ' + error.message); return; }
+      if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
       await loadChannels();
       if (channels.length > 0) await selectChannel(channels[0].id);
     };
@@ -358,7 +360,17 @@
       const input = document.getElementById('messageInput');
       const content = input.value.trim();
       if (!content) return;
+
+      // Rate limiting
+      const now = Date.now();
+      if (now - lastMessageTime < MESSAGE_COOLDOWN_MS) {
+        const remaining = Math.ceil((MESSAGE_COOLDOWN_MS - (now - lastMessageTime)) / 1000);
+        window.showToast(`Wait ${remaining}s before sending another message.`, 'warning');
+        return;
+      }
+
       input.value = '';
+      lastMessageTime = now;
 
       const { error } = await window.sb.rpc('send_guild_message', {
         p_channel_id: activeChannelId,
@@ -366,7 +378,7 @@
       });
 
       if (error) {
-        alert('Failed to send: ' + error.message);
+        window.showToast('Failed to send: ' + error.message, 'error');
         input.value = content;
         return;
       }
@@ -398,7 +410,7 @@
     // Admin actions
     window.togglePin = async function (messageId, pin) {
       const { error } = await window.sb.rpc('admin_toggle_pin_message', { p_message_id: messageId, p_pin: pin });
-      if (error) { alert(error.message); return; }
+      if (error) { window.showToast(error.message, 'error'); return; }
       await loadMessages();
     };
 
@@ -406,7 +418,7 @@
       if (!confirm('Delete this message? The user will receive a warning.')) return;
       const reason = prompt('Reason for deletion (optional):');
       const { error } = await window.sb.rpc('admin_delete_guild_message', { p_message_id: messageId, p_reason: reason || null });
-      if (error) { alert(error.message); return; }
+      if (error) { window.showToast(error.message, 'error'); return; }
       await loadMessages();
     };
 
@@ -414,7 +426,7 @@
       if (!confirm('Delete your message?')) return;
       // Users can soft-delete their own by updating content
       const { error } = await window.sb.from('guild_messages').update({ is_deleted: true }).eq('id', messageId).eq('user_id', currentUser.id);
-      if (error) { alert(error.message); return; }
+      if (error) { window.showToast(error.message, 'error'); return; }
       await loadMessages();
     };
 

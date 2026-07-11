@@ -31,7 +31,8 @@ const searchInput = document.getElementById('searchInput');
     adminLink.href = 'admin_dashboard_ui.html';
     adminLink.className = 'btn btn-ghost btn-sm';
     adminLink.textContent = '🛡️ Admin';
-    document.querySelector('.page-header .actions').prepend(adminLink);
+    const actionsEl = document.querySelector('.page-header .actions');
+    if (actionsEl) actionsEl.prepend(adminLink);
   }
 
   const { data: balance } = await window.sb.rpc('get_coin_balance', { p_user_id: user.id });
@@ -278,12 +279,12 @@ window.acceptQuest = async function (questId) {
     });
 
     if (error) {
-      alert('Failed: ' + error.message);
+      window.showToast('Failed: ' + error.message, 'error');
       return;
     }
 
     if (result && !result.success) {
-      alert(result.error || 'Could not accept quest');
+      window.showToast(result.error || 'Could not accept quest', 'error');
       return;
     }
 
@@ -291,7 +292,7 @@ window.acceptQuest = async function (questId) {
     if (quest.poster_id) window.sendNotification('quest_pending', quest.poster_id, questId);
 
     if (result?.status === 'pending_acceptance') {
-      alert('Application sent! The poster will review your request.');
+      window.showToast('Application sent! The poster will review your request.', 'success');
     } else {
       window.location.href = 'quest-detail.html?id=' + questId;
     }
@@ -317,10 +318,10 @@ window.approveWorker = async function (questId, approved) {
     p_approved: approved
   });
 
-  if (error) { alert('Failed: ' + error.message); return; }
-  if (result && !result.success) { alert(result.error); return; }
+  if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
+  if (result && !result.success) { window.showToast(result.error, 'error'); return; }
 
-  alert(approved ? 'Worker approved! They have been notified.' : 'Worker rejected. Quest is open again.');
+  window.showToast(approved ? 'Worker approved! They have been notified.' : 'Worker rejected. Quest is open again.', approved ? 'success' : 'info');
   loadQuests();
 };
 
@@ -332,10 +333,10 @@ window.dropQuest = async function (questId) {
     p_worker_id: currentUser.id
   });
 
-  if (error) { alert('Failed: ' + error.message); return; }
-  if (result && !result.success) { alert(result.error); return; }
+  if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
+  if (result && !result.success) { window.showToast(result.error, 'error'); return; }
 
-  alert('Quest dropped. It is now open for other workers.');
+  window.showToast('Quest dropped. It is now open for other workers.', 'info');
   loadQuests();
 };
 
@@ -346,7 +347,7 @@ window.logout = async function () {
 
 window.toggleBookmark = async function (questId) {
   const { data: added, error } = await window.sb.rpc('toggle_quest_bookmark', { p_quest_id: questId });
-  if (error) { alert('Failed: ' + error.message); return; }
+  if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
   if (added) {
     bookmarkedIds.push(questId);
   } else {

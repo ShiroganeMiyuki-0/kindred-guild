@@ -86,15 +86,25 @@
     async function loadLeaderboard() {
       const { data, error } = await window.sb.rpc('get_leaderboard', { p_limit: 50 });
       if (error) {
-        // Fallback: query user_profiles directly
-        const { data: users } = await window.sb.from('user_profiles').select('user_id, username, display_name, reputation_score, avatar_url, created_at, rank, is_admin').eq('is_suspended', false).order('reputation_score', { ascending: false }).limit(50);
-        leaderboardData = (users || []).map((u, i) => ({
-          ...u,
-          quests_completed: 0,
-          quests_posted: 0,
-          wishes_backed: 0,
-          guild_messages: 0,
-          total_earned: 0
+        // Fallback: query user_profiles and aggregate stats from related tables
+        const { data: users } = await window.sb.from('user_profiles').select('user_id, username, display_name, reputation_score, avatar_url, created_at, rank, is_admin, is_verified').eq('is_suspended', false).order('reputation_score', { ascending: false }).limit(50);
+        
+        // Fetch stats for each user in parallel
+        leaderboardData = await Promise.all((users || []).map(async (u) => {
+          const [completedRes, postedRes, earnedRes] = await Promise.all([
+            window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('worker_id', u.user_id).eq('status', 'approved'),
+            window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('poster_id', u.user_id).eq('is_deleted', false),
+            window.sb.from('coin_transactions').select('amount').eq('user_id', u.user_id).eq('type', 'earned')
+          ]);
+          const totalEarned = (earnedRes.data || []).reduce((sum, t) => sum + (t.amount || 0), 0);
+          return {
+            ...u,
+            quests_completed: completedRes.count || 0,
+            quests_posted: postedRes.count || 0,
+            wishes_backed: 0,
+            guild_messages: 0,
+            total_earned: totalEarned
+          };
         }));
       } else {
         leaderboardData = data || [];
