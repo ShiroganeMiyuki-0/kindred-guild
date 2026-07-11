@@ -308,7 +308,6 @@
         navElement.innerHTML = buildNavbarHTML(user, isAdmin);
 
         injectPageNav(user);
-        showTermsAgreement();
         setupEventHandlers(user);
         adjustFlexBody();
         if (user) loadNotificationCount();
