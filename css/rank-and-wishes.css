@@ -1,0 +1,313 @@
+/* ============================================
+   KINDRED GUILD — Rank Badges & Wish Granted
+   ============================================ */
+
+/* ── RANK BADGES ─────────────────────────────── */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.rank-S {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: #000;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  animation: rank-glow-s 2s ease-in-out infinite;
+}
+
+.rank-A {
+  background: linear-gradient(135deg, #c084fc, #818cf8);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.3);
+}
+
+.rank-B {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  color: #fff;
+}
+
+.rank-C {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: #000;
+}
+
+.rank-D {
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+
+@keyframes rank-glow-s {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+}
+
+/* Rank label text */
+.rank-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+/* ── MIN RANK REQUIREMENT ────────────────────── */
+.rank-requirement {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: var(--accent-glow);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ── WISH GRANTED BANNER ─────────────────────── */
+.wish-granted-banner {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border: 2px solid #d4af37;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.wish-granted-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 50%);
+  animation: wish-granted-glow 4s ease-in-out infinite;
+}
+
+@keyframes wish-granted-glow {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg); }
+}
+
+.wish-granted-banner .banner-content {
+  position: relative;
+  z-index: 1;
+}
+
+.wish-granted-banner .banner-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.wish-granted-banner .banner-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #d4af37;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.wish-granted-banner .banner-wish-title {
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.wish-granted-banner .banner-description {
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.wish-granted-banner .banner-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.wish-granted-banner .banner-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.wish-granted-banner .banner-stat .stat-icon {
+  font-size: 1.2rem;
+}
+
+.wish-granted-banner .banner-stat .stat-value {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.wish-granted-banner .banner-stat .stat-label {
+  color: var(--text-dim);
+}
+
+/* Confetti animation */
+.wish-granted-banner .confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confetti-fall 3s ease-in-out infinite;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100px) rotate(720deg); opacity: 0; }
+}
+
+.confetti:nth-child(1) { left: 10%; background: #ffd700; animation-delay: 0s; }
+.confetti:nth-child(2) { left: 30%; background: #ff6b6b; animation-delay: 0.5s; }
+.confetti:nth-child(3) { left: 50%; background: #4ecdc4; animation-delay: 1s; }
+.confetti:nth-child(4) { left: 70%; background: #a855f7; animation-delay: 1.5s; }
+.confetti:nth-child(5) { left: 90%; background: #f97316; animation-delay: 2s; }
+
+/* ── PENDING ACCEPTANCE STATUS ───────────────── */
+.status-pending_acceptance {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+/* Pending acceptance card highlight */
+.quest-card.pending {
+  border-color: rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+}
+
+/* ── APPROVE/REJECT BUTTONS ──────────────────── */
+.approve-reject-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.approve-reject-actions .btn-approve {
+  background: var(--success);
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.approve-reject-actions .btn-approve:hover {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.approve-reject-actions .btn-reject {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.approve-reject-actions .btn-reject:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── WORKER DROP BUTTON ──────────────────────── */
+.btn-drop {
+  background: transparent;
+  color: var(--warning);
+  border: 1px solid var(--warning);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-drop:hover {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+/* ── RANK SELECTOR IN QUEST POST ─────────────── */
+.rank-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rank-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.rank-option:hover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.rank-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+.rank-option .rank-badge {
+  width: 22px;
+  height: 22px;
+  font-size: 0.7rem;
+}
+
+/* ── MOBILE RESPONSIVE ───────────────────────── */
+@media (max-width: 768px) {
+  .wish-granted-banner {
+    padding: 24px 20px;
+  }
+  
+  .wish-granted-banner .banner-title {
+    font-size: 1.2rem;
+  }
+  
+  .wish-granted-banner .banner-stats {
+    gap: 16px;
+  }
+  
+  .approve-reject-actions {
+    flex-direction: column;
+  }
+  
+  .approve-reject-actions .btn-approve,
+  .approve-reject-actions .btn-reject {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .rank-selector {
+    gap: 6px;
+  }
+  
+  .rank-option {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+}

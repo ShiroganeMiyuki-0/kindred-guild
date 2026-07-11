@@ -128,7 +128,24 @@ function renderQuestUI() {
   if (countdownInterval) clearInterval(countdownInterval);
 
   // State routing
-  if (q.status === 'accepted') {
+  if (q.status === 'pending_acceptance') {
+    if (isPoster) {
+      // Show approve/reject buttons for poster
+      const actionPanel = document.getElementById('cancelContainer');
+      actionPanel.style.display = 'block';
+      actionPanel.innerHTML = `
+        <h3 style="color:var(--accent);margin-bottom:12px;">👤 Worker Application</h3>
+        <p style="color:var(--text-dim);margin-bottom:16px;">A worker wants to accept your quest. Review their profile and approve or reject.</p>
+        <div class="approve-reject-actions">
+          <button class="btn-approve" onclick="approveWorkerDetail(true)">✅ Approve Worker</button>
+          <button class="btn-reject" onclick="approveWorkerDetail(false)">❌ Reject Worker</button>
+        </div>`;
+    } else if (isWorker) {
+      showAlert('Your application is pending. The poster will review it soon.', 'info');
+    } else {
+      showAlert('This quest has a pending worker application.', 'info');
+    }
+  } else if (q.status === 'accepted') {
     if (isWorker) {
       document.getElementById('workerProofPanel').style.display = 'block';
       document.getElementById('abandonContainer').style.display = 'block';
@@ -312,6 +329,22 @@ window.triggerDisputeResolution = async function (action) {
   if (error) { showAlert('Failed: ' + error.message, 'error'); return; }
   await window.sb.from('quest_comments').insert({ quest_id: currentQuest.id, user_id: currentUser.id, content: `🤝 Dispute resolved: ${action}` });
   showAlert('Dispute resolved!', 'success');
+  setTimeout(() => refreshQuestData(), 1500);
+};
+
+window.approveWorkerDetail = async function (approved) {
+  if (!confirm(approved ? 'Approve this worker?' : 'Reject this worker?')) return;
+
+  const { data: result, error } = await window.sb.rpc('poster_approve_worker', {
+    p_quest_id: currentQuest.id,
+    p_poster_id: currentUser.id,
+    p_approved: approved
+  });
+
+  if (error) { showAlert('Failed: ' + error.message, 'error'); return; }
+  if (result && !result.success) { showAlert(result.error, 'error'); return; }
+
+  showAlert(approved ? 'Worker approved!' : 'Worker rejected.', 'success');
   setTimeout(() => refreshQuestData(), 1500);
 };
 

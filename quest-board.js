@@ -88,14 +88,14 @@ async function loadQuests() {
     .from('quests')
     .select(`
       id, title, description, payment_type, coin_amount, upi_amount,
-      status, deadline, created_at, poster_id, worker_id, tags,
+      status, deadline, created_at, poster_id, worker_id, tags, min_rank,
       poster:user_profiles!quests_poster_id_fkey(username, display_name, reputation_score, is_verified)
     `);
 
   if (currentView === 'open') {
     query = query.eq('status', 'open').eq('is_deleted', false);
   } else if (currentView === 'my_active') {
-    query = query.in('status', ['accepted', 'submitted', 'disputed']);
+    query = query.in('status', ['pending_acceptance', 'accepted', 'submitted', 'disputed']);
   } else if (currentView === 'my_posted') {
     query = query.eq('poster_id', currentUser.id).eq('is_deleted', false);
   } else if (currentView === 'my_completed') {
@@ -189,11 +189,19 @@ function renderQuests() {
 
     const tagsHtml = quest.tags?.length ? `<div class="card-tags">${quest.tags.map(t => `<span class="card-tag" onclick="event.stopPropagation();toggleTagFilter('${t}')">${t}</span>`).join('')}</div>` : '';
 
+    const rankBadge = quest.min_rank ? `<span class="rank-requirement">🏆 Min Rank: <span class="rank-badge rank-${quest.min_rank}" style="width:20px;height:20px;font-size:0.65rem;">${quest.min_rank}</span></span>` : '';
+
     let actionBtn = '';
     if (quest.status === 'open') {
       actionBtn = isOwn
         ? `<a href="quest-edit.html?id=${quest.id}" class="action-btn own">✏️ Edit / Cancel</a>`
         : `<button class="action-btn" onclick="acceptQuest('${quest.id}')">Accept This Task</button>`;
+    } else if (quest.status === 'pending_acceptance' && isOwn) {
+      actionBtn = `<div class="approve-reject-actions"><button class="btn-approve" onclick="approveWorker('${quest.id}', true)">✅ Approve</button><button class="btn-reject" onclick="approveWorker('${quest.id}', false)">❌ Reject</button></div>`;
+    } else if (quest.status === 'pending_acceptance') {
+      actionBtn = `<span class="action-btn" style="opacity:0.6;cursor:default">⏳ Awaiting Approval</span>`;
+    } else if (quest.status === 'accepted' && quest.worker_id === currentUser?.id) {
+      actionBtn = `<a href="quest-detail.html?id=${quest.id}" class="action-btn">View Details</a><button class="btn-drop" onclick="dropQuest('${quest.id}')" style="margin-top:6px;">🚪 Drop Quest</button>`;
     } else {
       actionBtn = `<a href="quest-detail.html?id=${quest.id}" class="action-btn">View Details (${quest.status})</a>`;
     }
@@ -210,6 +218,7 @@ function renderQuests() {
           <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a>${posterVerified} ⭐ ${rep}</div>
           <div class="description">${escapeHtml(quest.description)}</div>
           ${tagsHtml}
+          ${rankBadge}
         </div>
         <div>
           <div class="meta">
@@ -233,19 +242,31 @@ window.acceptQuest = async function (questId) {
       return;
     }
 
-    const { error } = await window.sb
-      .from('quests')
-      .update({ worker_id: currentUser.id, status: 'accepted' })
-      .eq('id', questId)
-      .eq('status', 'open');
+    // Use the new RPC that handles rank checking
+    const { data: result, error } = await window.sb.rpc('worker_accept_quest', {
+      p_quest_id: questId,
+      p_worker_id: currentUser.id
+    });
 
     if (error) {
       alert('Failed: ' + error.message);
       return;
     }
-    // Notify poster that quest was accepted
-    if (quest.poster_id) window.sendNotification('quest_accepted', quest.poster_id, questId);
-    window.location.href = 'quest-detail.html?id=' + questId;
+
+    if (result && !result.success) {
+      alert(result.error || 'Could not accept quest');
+      return;
+    }
+
+    // Notify poster
+    if (quest.poster_id) window.sendNotification('quest_pending', quest.poster_id, questId);
+
+    if (result?.status === 'pending_acceptance') {
+      alert('Application sent! The poster will review your request.');
+    } else {
+      window.location.href = 'quest-detail.html?id=' + questId;
+    }
+    loadQuests();
   };
 
   if (quest.payment_type === 'free') {
@@ -253,8 +274,40 @@ window.acceptQuest = async function (questId) {
   } else if (quest.payment_type === 'upi') {
     showGuildModal('upi-warning', doAccept, () => {});
   } else {
-    if (confirm('Accept this task? The reward will be locked for you.')) doAccept();
+    if (confirm('Apply for this task? The poster will review your application.')) doAccept();
   }
+};
+
+window.approveWorker = async function (questId, approved) {
+  const action = approved ? 'approve' : 'reject';
+  if (!confirm(approved ? 'Approve this worker? They will begin working on your quest.' : 'Reject this worker? The quest will be open for others to accept.')) return;
+
+  const { data: result, error } = await window.sb.rpc('poster_approve_worker', {
+    p_quest_id: questId,
+    p_poster_id: currentUser.id,
+    p_approved: approved
+  });
+
+  if (error) { alert('Failed: ' + error.message); return; }
+  if (result && !result.success) { alert(result.error); return; }
+
+  alert(approved ? 'Worker approved! They have been notified.' : 'Worker rejected. Quest is open again.');
+  loadQuests();
+};
+
+window.dropQuest = async function (questId) {
+  if (!confirm('Drop this quest? It will be open for other workers to accept.')) return;
+
+  const { data: result, error } = await window.sb.rpc('worker_drop_quest', {
+    p_quest_id: questId,
+    p_worker_id: currentUser.id
+  });
+
+  if (error) { alert('Failed: ' + error.message); return; }
+  if (result && !result.success) { alert(result.error); return; }
+
+  alert('Quest dropped. It is now open for other workers.');
+  loadQuests();
 };
 
 window.logout = async function () {

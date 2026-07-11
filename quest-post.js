@@ -9,6 +9,7 @@ let currentUser = null;
 let coinBalance = 0;
 let selectedType = 'coins';
 let pendingFormData = null;
+let selectedMinRank = null;
 
 const titleInput = document.getElementById('title');
 const descInput = document.getElementById('description');
@@ -22,6 +23,12 @@ const messageEl = document.getElementById('message');
 const commissionCoinsEl = document.getElementById('commissionCoins');
 const commissionUpiEl = document.getElementById('commissionUpi');
 const upiModal = document.getElementById('upiModal');
+
+window.selectRank = function(rank) {
+  selectedMinRank = rank || null;
+  document.querySelectorAll('.rank-option').forEach(el => el.classList.remove('selected'));
+  document.querySelector('.rank-option[data-rank="' + rank + '"]').classList.add('selected');
+};
 
 // Quest templates
 const QUEST_TEMPLATES = {
@@ -214,8 +221,12 @@ async function postQuest({ title, description, deadlineDate, coinAmount, upiAmou
       return;
     }
 
-    if (tags?.length) {
-      await window.sb.from('quests').update({ tags }).eq('id', questId);
+    // Update tags and min_rank
+    const updates = {};
+    if (tags?.length) updates.tags = tags;
+    if (selectedMinRank) updates.min_rank = selectedMinRank;
+    if (Object.keys(updates).length > 0) {
+      await window.sb.from('quests').update(updates).eq('id', questId);
     }
 
     showMessage('Task posted! Redirecting...', 'success');

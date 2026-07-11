@@ -78,6 +78,11 @@ function renderProfileOverview() {
     const nameEl = document.getElementById('profileDisplayName');
     nameEl.innerHTML = escapeHtml(p.display_name || p.username) + ' <span title="Verified Worker" style="color:#10b981;font-size:1.2rem;">✅</span>';
   }
+  // Show rank badge
+  if (p.rank) {
+    const repEl = document.getElementById('profileRepScore');
+    repEl.innerHTML = `<span class="rank-badge rank-${p.rank}" style="margin-right:6px;">${p.rank}</span> ${score} / 5.0`;
+  }
   if (p.avatar_url) document.getElementById('profileAvatar').src = p.avatar_url;
   if (p.is_suspended) document.getElementById('suspensionNotice').style.display = 'block';
   loadProfileStats();
