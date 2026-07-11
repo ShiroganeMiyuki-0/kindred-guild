@@ -84,8 +84,11 @@
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
+        { name: 'Guild Charter', icon: 'fa-scroll', file: 'trust-and-safety.html' },
         { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
-        { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
+        { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' },
+        { name: 'Terms', icon: 'fa-file-contract', file: 'terms-of-service.html' },
+        { name: 'Privacy', icon: 'fa-shield-halved', file: 'privacy-policy.html' }
     ];
 
     const privateMenuItems = [
@@ -96,9 +99,12 @@
         { name: 'Be a Worker', icon: 'fa-hammer', file: 'worker-post.html' },
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
+        { name: 'Guild Charter', icon: 'fa-scroll', file: 'trust-and-safety.html' },
         { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
         { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
-        { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
+        { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' },
+        { name: 'Terms', icon: 'fa-file-contract', file: 'terms-of-service.html' },
+        { name: 'Privacy', icon: 'fa-shield-halved', file: 'privacy-policy.html' }
     ];
 
     function isItemActive(file) {
@@ -299,6 +305,7 @@
         navElement.innerHTML = buildNavbarHTML(user, isAdmin);
 
         injectPageNav(user);
+        showTermsAgreement();
         setupEventHandlers(user);
         adjustFlexBody();
         if (user) loadNotificationCount();
@@ -312,7 +319,9 @@
             { name: 'Wishes', icon: '✨', file: 'fairy-wishes.html' },
             { name: 'Leaderboard', icon: '🏆', file: 'leaderboard.html' },
             { name: 'Workers', icon: '🛡️', file: 'worker-post.html' },
-            { name: 'Activity', icon: '📰', file: 'activity.html' }
+            { name: 'Activity', icon: '📰', file: 'activity.html' },
+            { name: 'Charter', icon: '📜', file: 'trust-and-safety.html' },
+            { name: 'Support', icon: '❤️', file: 'donation.html' }
         ];
 
         const currentFile = window.location.pathname.split('/').pop() || 'index.html';
@@ -373,6 +382,71 @@
         if (bodyStyle.display === 'flex' && bodyStyle.flexDirection !== 'column') {
             document.body.classList.add('site-nav-flex-adjusted');
         }
+    }
+
+    // Show Terms & Conditions agreement modal for first-time visitors
+    function showTermsAgreement() {
+        // Skip if already accepted
+        if (localStorage.getItem('kg_terms_accepted')) return;
+        // Skip on terms/privacy pages themselves
+        const currentFile = window.location.pathname.split('/').pop() || '';
+        if (currentFile === 'terms-of-service.html' || currentFile === 'privacy-policy.html') return;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'terms-agreement-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+        overlay.innerHTML = `
+            <div style="background:var(--surface,#14141e);border:1px solid var(--border,#262636);border-radius:16px;max-width:480px;width:100%;padding:32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                <div style="font-size:3rem;margin-bottom:12px;">⚔️</div>
+                <h2 style="color:var(--accent,#d4af37);font-size:1.4rem;margin-bottom:8px;">Welcome to Kindred Guild</h2>
+                <p style="color:var(--text-dim,#9494a8);font-size:0.9rem;line-height:1.6;margin-bottom:20px;">
+                    By entering the Guild, you agree to follow our rules and respect your fellow members.
+                    Please review our Terms and Privacy Policy.
+                </p>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;text-align:left;">
+                    <a href="terms-of-service.html" target="_blank" style="color:var(--accent,#d4af37);font-size:0.85rem;display:flex;align-items:center;gap:8px;text-decoration:none;">
+                        📜 Terms of Service
+                    </a>
+                    <a href="privacy-policy.html" target="_blank" style="color:var(--accent,#d4af37);font-size:0.85rem;display:flex;align-items:center;gap:8px;text-decoration:none;">
+                        🔒 Privacy Policy
+                    </a>
+                    <a href="trust-and-safety.html" target="_blank" style="color:var(--accent,#d4af37);font-size:0.85rem;display:flex;align-items:center;gap:8px;text-decoration:none;">
+                        🏛️ Guild Charter
+                    </a>
+                </div>
+                <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin-bottom:20px;text-align:left;">
+                    <input type="checkbox" id="terms-checkbox" style="margin-top:3px;accent-color:var(--accent,#d4af37);">
+                    <span style="color:var(--text-dim,#9494a8);font-size:0.82rem;line-height:1.4;">
+                        I have read and agree to the Terms of Service, Privacy Policy, and Guild Charter.
+                        I understand that violation of these rules may result in account suspension.
+                    </span>
+                </label>
+                <button id="terms-accept-btn" disabled style="
+                    width:100%;padding:14px;background:var(--accent,#d4af37);color:#000;border:none;
+                    border-radius:10px;font-size:1rem;font-weight:700;cursor:not-allowed;opacity:0.5;
+                    transition:all 0.2s;
+                ">Enter the Guild</button>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        const checkbox = document.getElementById('terms-checkbox');
+        const acceptBtn = document.getElementById('terms-accept-btn');
+
+        checkbox.addEventListener('change', () => {
+            acceptBtn.disabled = !checkbox.checked;
+            acceptBtn.style.opacity = checkbox.checked ? '1' : '0.5';
+            acceptBtn.style.cursor = checkbox.checked ? 'pointer' : 'not-allowed';
+        });
+
+        acceptBtn.addEventListener('click', () => {
+            if (!checkbox.checked) return;
+            localStorage.setItem('kg_terms_accepted', 'true');
+            localStorage.setItem('kg_terms_accepted_at', new Date().toISOString());
+            overlay.remove();
+        });
     }
 
     function setupEventHandlers(user) {
