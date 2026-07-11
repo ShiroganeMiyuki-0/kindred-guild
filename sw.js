@@ -3,10 +3,12 @@ const CACHE_NAME = 'kindred-guild-v1';
 const STATIC_ASSETS = [
   '/',
   '/css/globals.css',
+  '/css/layout-fix.css',
   '/js/supabase-client.js',
   '/manifest.json',
   '/logo-192.png',
-  '/logo.png'
+  '/logo.png',
+  '/site-nav.js'
 ];
 
 self.addEventListener('install', event => {
