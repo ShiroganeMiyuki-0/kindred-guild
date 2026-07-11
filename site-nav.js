@@ -7,6 +7,7 @@
  */
 
 (function () {
+    console.log('[Kindred Guild] site-nav.js executing...');
     // 1. DYNAMIC PATH CALCULATION
     // This solves relative path broken issues on deep-nested pages (e.g., docs/ or subdirectories)
     const pathParts = window.location.pathname.split('/').filter(part => part !== '');
