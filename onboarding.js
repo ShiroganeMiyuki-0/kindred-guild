@@ -94,10 +94,10 @@
     const style = document.createElement('style');
     style.id = 'kg-advanced-onboard-styles';
     style.textContent = `
-      .kg-onboard-vignette { position:fixed;top:0;left:0;width:100vw;height:100vh;background:radial-gradient(circle,rgba(14,14,22,0.2) 40%,rgba(8,8,12,0.65) 100%);z-index:9998;pointer-events:none!important;transition:opacity 0.4s ease; }
-      .kg-onboard-spotlight { position:relative!important;z-index:9999!important;outline:2px solid #d4af37!important;box-shadow:0 0 20px rgba(212,175,55,0.5),inset 0 0 10px rgba(212,175,55,0.2)!important;border-radius:8px;animation:kg-spotlight-glow 2.5s infinite ease-in-out;pointer-events:auto!important; }
+      .kg-onboard-vignette { position:fixed;top:0;left:0;width:100vw;height:100vh;background:radial-gradient(circle,rgba(14,14,22,0.2) 40%,rgba(8,8,12,0.65) 100%);z-index:1000;pointer-events:none!important;transition:opacity 0.4s ease; }
+      .kg-onboard-spotlight { position:relative!important;z-index:1001!important;outline:2px solid #d4af37!important;box-shadow:0 0 20px rgba(212,175,55,0.5),inset 0 0 10px rgba(212,175,55,0.2)!important;border-radius:8px;animation:kg-spotlight-glow 2.5s infinite ease-in-out;pointer-events:auto!important; }
       @keyframes kg-spotlight-glow { 0%{box-shadow:0 0 15px rgba(212,175,55,0.4)} 50%{box-shadow:0 0 25px rgba(212,175,55,0.7)} 100%{box-shadow:0 0 15px rgba(212,175,55,0.4)} }
-      .kg-onboard-card { position:fixed;z-index:10000;background:#14141f;border:1px solid #d4af37;border-radius:12px;padding:18px 22px;width:320px;max-width:calc(100vw - 24px);box-shadow:0 12px 30px rgba(0,0,0,0.7);color:#f0f0f5;font-family:system-ui,-apple-system,sans-serif;transition:top 0.3s cubic-bezier(0.16,1,0.3,1),left 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:auto!important; }
+      .kg-onboard-card { position:fixed;z-index:1002;background:#14141f;border:1px solid #d4af37;border-radius:12px;padding:18px 22px;width:320px;max-width:calc(100vw - 24px);box-shadow:0 12px 30px rgba(0,0,0,0.7);color:#f0f0f5;font-family:system-ui,-apple-system,sans-serif;transition:top 0.3s cubic-bezier(0.16,1,0.3,1),left 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:auto!important; }
       .kg-onboard-card h4 { margin:0 0 8px 0;font-size:1.1rem;color:#e5c158;border-bottom:1px solid rgba(212,175,55,0.15);padding-bottom:6px;font-weight:700; }
       .kg-onboard-card p { margin:0 0 16px 0;font-size:0.92rem;line-height:1.5;color:#ccd0df; }
       .kg-onboard-footer { display:flex;justify-content:space-between;align-items:center; }

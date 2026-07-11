@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="css/layout-fix.css">
   <style>
     .hall-layout { display:grid; grid-template-columns:220px 1fr; gap:0; height:calc(100vh - 80px); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; background:var(--surface); }
-    @media(max-width:768px) { .hall-layout { grid-template-columns:1fr; height:auto; } .channel-sidebar { display:none; } .channel-sidebar.mobile-open { display:flex; position:fixed; inset:0; z-index:9999; background:var(--surface); } }
+    @media(max-width:768px) { .hall-layout { grid-template-columns:1fr; height:auto; } .channel-sidebar { display:none; } .channel-sidebar.mobile-open { display:flex; position:fixed; inset:0; z-index:100; background:var(--surface); } }
 
     /* Sidebar */
     .channel-sidebar { background:var(--surface-2); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; }
