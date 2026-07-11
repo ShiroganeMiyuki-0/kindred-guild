@@ -109,7 +109,7 @@
       let amount = donationAmountSelect.value;
       if (amount === 'custom') {
         amount = customAmountInput.value;
-        if (!amount || amount < 10) { alert('Minimum ₹10'); return; }
+        if (!amount || amount < 10) { window.showToast('Minimum ₹10', 'warning'); return; }
       }
       statusAlert.className = 'message success';
       statusAlert.textContent = `✓ Thank you! We've recorded your ₹${amount} donation.`;

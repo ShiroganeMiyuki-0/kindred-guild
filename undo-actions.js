@@ -70,7 +70,7 @@ window.undoAction = async function (actionId, actionType) {
   if (!confirm('Undo this action?')) return;
 
   const action = actionHistory.find(a => a.id === actionId);
-  if (!action) { alert('Action not found.'); return; }
+  if (!action) { window.showToast('Action not found.', 'error'); return; }
 
   try {
     if (actionType === 'quest_deleted' && action.quest_id) {
@@ -82,9 +82,9 @@ window.undoAction = async function (actionId, actionType) {
         title: action.old_data.title, description: action.old_data.description,
         tags: action.old_data.tags, coin_amount: action.old_data.coin_amount, upi_amount: action.old_data.upi_amount
       }).eq('id', action.quest_id);
-    } else { alert('This action cannot be undone.'); return; }
+    } else { window.showToast('This action cannot be undone.', 'warning'); return; }
 
-    alert('Undone!');
+    window.showToast('Action undone successfully!', 'success');
     loadActionHistory();
-  } catch (err) { alert('Failed: ' + err.message); }
+  } catch (err) { window.showToast('Failed: ' + err.message, 'error'); }
 };
