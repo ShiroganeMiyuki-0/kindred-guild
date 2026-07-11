@@ -94,6 +94,10 @@
         <ul class="channel-list" id="channelList">
           <li class="active" data-channel="general"><span class="ch-icon">#</span> general</li>
         </ul>
+        <!-- Create Channel (admins only, shown via JS) -->
+        <div id="createChannelSection" style="display:none;padding:10px 12px;border-top:1px solid var(--border);">
+          <button onclick="showCreateChannel()" style="width:100%;padding:8px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--accent);font-size:0.8rem;cursor:pointer;transition:all 0.15s;" onmouseover="this.borderColor='var(--accent)'" onmouseout="this.borderColor='var(--border)'">+ Create Channel</button>
+        </div>
         <div style="padding:10px 12px; border-top:1px solid var(--border); font-size:0.7rem; color:var(--text-dim);">
           💬 Chat with fellow guild members
         </div>
@@ -126,6 +130,33 @@
     </div>
   </div>
 
+  <!-- Create Channel Modal -->
+  <div id="createChannelModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:400px;width:100%;">
+      <h3 style="color:var(--accent);margin-bottom:16px;">🏰 Create Channel</h3>
+      <div class="form-group">
+        <label>Channel Name</label>
+        <input type="text" id="newChannelName" placeholder="e.g. project-ideas" maxlength="50" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="newChannelDesc" placeholder="What's this channel for?" maxlength="200" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>Channel Type</label>
+        <select id="newChannelType" style="width:100%">
+          <option value="text">💬 Text Channel</option>
+          <option value="announcement">📢 Announcement Channel</option>
+        </select>
+      </div>
+      <div id="createChannelMsg" style="display:none;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="hideCreateChannel()">Cancel</button>
+        <button class="btn btn-primary" onclick="createChannel()">Create</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
   <script>
@@ -145,12 +176,82 @@
       currentProfile = await window.getUserProfile(user.id);
       isAdmin = currentProfile?.is_admin || false;
 
+      // Show create channel button for admins
+      if (isAdmin) {
+        document.getElementById('createChannelSection').style.display = 'block';
+      }
+
       await loadChannels();
       if (channels.length > 0) {
         await selectChannel(channels[0].id);
       }
       subscribeToMessages();
     })();
+
+    // Create Channel functions
+    window.showCreateChannel = function () {
+      document.getElementById('createChannelModal').style.display = 'flex';
+      document.getElementById('newChannelName').value = '';
+      document.getElementById('newChannelDesc').value = '';
+      document.getElementById('newChannelType').value = 'text';
+      document.getElementById('createChannelMsg').style.display = 'none';
+      document.getElementById('newChannelName').focus();
+    };
+
+    window.hideCreateChannel = function () {
+      document.getElementById('createChannelModal').style.display = 'none';
+    };
+
+    window.createChannel = async function () {
+      const name = document.getElementById('newChannelName').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+      const desc = document.getElementById('newChannelDesc').value.trim();
+      const type = document.getElementById('newChannelType').value;
+      const msgEl = document.getElementById('createChannelMsg');
+
+      if (!name || name.length < 2) {
+        msgEl.textContent = 'Channel name must be at least 2 characters.';
+        msgEl.style.display = 'block';
+        msgEl.style.color = 'var(--error)';
+        return;
+      }
+
+      // Check duplicate
+      if (channels.some(c => c.name === name)) {
+        msgEl.textContent = 'A channel with that name already exists.';
+        msgEl.style.display = 'block';
+        msgEl.style.color = 'var(--error)';
+        return;
+      }
+
+      const { data, error } = await window.sb.from('guild_channels').insert({
+        name: name,
+        description: desc || null,
+        channel_type: type,
+        created_by: currentUser.id,
+        is_deleted: false
+      }).select().single();
+
+      if (error) {
+        msgEl.textContent = 'Failed: ' + error.message;
+        msgEl.style.display = 'block';
+        msgEl.style.color = 'var(--error)';
+        return;
+      }
+
+      hideCreateChannel();
+      await loadChannels();
+      if (data) await selectChannel(data.id);
+    };
+
+    // Delete channel (admin only)
+    window.deleteChannel = async function (channelId) {
+      if (!isAdmin) return;
+      if (!confirm('Delete this channel? Messages will be hidden but not permanently deleted.')) return;
+      const { error } = await window.sb.from('guild_channels').update({ is_deleted: true }).eq('id', channelId);
+      if (error) { alert('Failed: ' + error.message); return; }
+      await loadChannels();
+      if (channels.length > 0) await selectChannel(channels[0].id);
+    };
 
     async function loadChannels() {
       const { data } = await window.sb.from('guild_channels').select('*').eq('is_deleted', false).order('created_at');
@@ -163,7 +264,8 @@
       list.innerHTML = channels.map(ch => {
         const icon = ch.channel_type === 'announcement' ? '📢' : '#';
         const active = ch.id === activeChannelId ? 'active' : '';
-        return `<li class="${active}" data-channel="${ch.id}" onclick="selectChannel('${ch.id}')"><span class="ch-icon">${icon}</span> ${escapeHtml(ch.name)}</li>`;
+        const deleteBtn = isAdmin ? `<button onclick="event.stopPropagation();deleteChannel('${ch.id}')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.7rem;padding:2px 4px;margin-left:auto;" title="Delete channel">✕</button>` : '';
+        return `<li class="${active}" data-channel="${ch.id}" onclick="selectChannel('${ch.id}')"><span class="ch-icon">${icon}</span> ${escapeHtml(ch.name)}${deleteBtn}</li>`;
       }).join('');
     }
 
