@@ -47,44 +47,46 @@ ALTER TABLE dm_conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dm_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dm_messages ENABLE ROW LEVEL SECURITY;
 
--- Users can see conversations they're part of
-CREATE POLICY "Users can view their conversations" ON dm_conversations
-  FOR SELECT USING (
-    id IN (SELECT conversation_id FROM dm_participants WHERE user_id = auth.uid())
+-- Helper function to check participant membership (avoids RLS recursion)
+CREATE OR REPLACE FUNCTION is_dm_participant(p_conversation_id UUID, p_user_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM dm_participants
+    WHERE conversation_id = p_conversation_id AND user_id = p_user_id
   );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Users can see conversations they're part of
+CREATE POLICY "dm_conv_select" ON dm_conversations
+  FOR SELECT USING (is_dm_participant(id, auth.uid()));
 
 -- Users can create conversations
-CREATE POLICY "Users can create conversations" ON dm_conversations
+CREATE POLICY "dm_conv_insert" ON dm_conversations
   FOR INSERT WITH CHECK (created_by = auth.uid());
 
 -- Users can see participants of their conversations
-CREATE POLICY "Users can view participants" ON dm_participants
-  FOR SELECT USING (
-    conversation_id IN (SELECT conversation_id FROM dm_participants WHERE user_id = auth.uid())
-  );
+CREATE POLICY "dm_part_select" ON dm_participants
+  FOR SELECT USING (is_dm_participant(conversation_id, auth.uid()));
 
 -- Users can add participants to conversations they're in
-CREATE POLICY "Users can add participants" ON dm_participants
+CREATE POLICY "dm_part_insert" ON dm_participants
   FOR INSERT WITH CHECK (
-    conversation_id IN (SELECT conversation_id FROM dm_participants WHERE user_id = auth.uid())
-    OR created_by = auth.uid()
+    is_dm_participant(conversation_id, auth.uid())
+    OR user_id = auth.uid()
   );
 
 -- Users can see messages in their conversations
-CREATE POLICY "Users can view messages" ON dm_messages
-  FOR SELECT USING (
-    conversation_id IN (SELECT conversation_id FROM dm_participants WHERE user_id = auth.uid())
-  );
+CREATE POLICY "dm_msg_select" ON dm_messages
+  FOR SELECT USING (is_dm_participant(conversation_id, auth.uid()));
 
 -- Users can send messages to their conversations
-CREATE POLICY "Users can send messages" ON dm_messages
+CREATE POLICY "dm_msg_insert" ON dm_messages
   FOR INSERT WITH CHECK (
-    user_id = auth.uid() AND
-    conversation_id IN (SELECT conversation_id FROM dm_participants WHERE user_id = auth.uid())
+    user_id = auth.uid() AND is_dm_participant(conversation_id, auth.uid())
   );
 
 -- Users can soft-delete their own messages
-CREATE POLICY "Users can delete own messages" ON dm_messages
+CREATE POLICY "dm_msg_update" ON dm_messages
   FOR UPDATE USING (user_id = auth.uid());
 
 -- Enable realtime
