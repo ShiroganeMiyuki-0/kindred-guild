@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS dm_participants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   conversation_id UUID REFERENCES dm_conversations(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT DEFAULT 'member',  -- 'admin' or 'member'
   joined_at TIMESTAMPTZ DEFAULT now(),
   last_read_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(conversation_id, user_id)
@@ -37,6 +38,9 @@ CREATE TABLE IF NOT EXISTS dm_messages (
 CREATE INDEX IF NOT EXISTS idx_dm_participants_user ON dm_participants(user_id);
 CREATE INDEX IF NOT EXISTS idx_dm_participants_conv ON dm_participants(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_dm_messages_conv ON dm_messages(conversation_id, created_at);
+
+-- Add role column if upgrading from older version
+ALTER TABLE dm_participants ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'member';
 
 -- RLS Policies
 ALTER TABLE dm_conversations ENABLE ROW LEVEL SECURITY;
@@ -156,7 +160,8 @@ RETURNS TABLE (
   other_display_name TEXT,
   last_message TEXT,
   last_message_at TIMESTAMPTZ,
-  unread_count BIGINT
+  unread_count BIGINT,
+  member_count BIGINT
 ) AS $$
 BEGIN
   RETURN QUERY
@@ -169,10 +174,11 @@ BEGIN
     p.display_name,
     last_m.content,
     last_m.created_at,
-    COALESCE(unread.cnt, 0)
+    COALESCE(unread.cnt, 0),
+    (SELECT COUNT(*) FROM dm_participants WHERE conversation_id = c.id)
   FROM dm_conversations c
   JOIN dm_participants my_p ON my_p.conversation_id = c.id AND my_p.user_id = auth.uid()
-  LEFT JOIN dm_participants other_p ON other_p.conversation_id = c.id AND other_p.user_id != auth.uid()
+  LEFT JOIN dm_participants other_p ON other_p.conversation_id = c.id AND other_p.user_id != auth.uid() AND c.is_group = FALSE
   LEFT JOIN user_profiles p ON p.user_id = other_p.user_id
   LEFT JOIN LATERAL (
     SELECT content, created_at FROM dm_messages
@@ -187,5 +193,35 @@ BEGIN
       AND user_id != auth.uid()
   ) unread ON TRUE
   ORDER BY COALESCE(last_m.created_at, c.created_at) DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RPC: Create group conversation
+CREATE OR REPLACE FUNCTION create_group_conversation(p_name TEXT, p_member_ids UUID[])
+RETURNS UUID AS $$
+DECLARE
+  new_id UUID;
+  member_id UUID;
+BEGIN
+  -- Create the group conversation
+  INSERT INTO dm_conversations (name, is_group, created_by)
+  VALUES (p_name, TRUE, auth.uid())
+  RETURNING id INTO new_id;
+
+  -- Add creator as admin
+  INSERT INTO dm_participants (conversation_id, user_id, role)
+  VALUES (new_id, auth.uid(), 'admin');
+
+  -- Add other members
+  FOREACH member_id IN ARRAY p_member_ids
+  LOOP
+    IF member_id != auth.uid() THEN
+      INSERT INTO dm_participants (conversation_id, user_id, role)
+      VALUES (new_id, member_id, 'member')
+      ON CONFLICT (conversation_id, user_id) DO NOTHING;
+    END IF;
+  END LOOP;
+
+  RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
