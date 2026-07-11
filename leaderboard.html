@@ -129,54 +129,17 @@
         active: (a, b) => (b.quests_completed + b.wishes_backed + b.guild_messages) - (a.quests_completed + a.wishes_backed + a.guild_messages)
       };
 
-      // Separate Guildmaster (admins) from regular members
-      const guildmasters = sorted.filter(u => u.is_admin);
+      // Separate Guildmaster (admins) from regular members — admins don't appear on leaderboard
       const members = sorted.filter(u => !u.is_admin).sort(sortFns[currentSort] || sortFns.reputation);
 
       const container = document.getElementById('leaderboardList');
-      if (sorted.length === 0) {
+      if (members.length === 0) {
         container.innerHTML = '<div class="empty-state">No guild members yet.</div>';
         return;
       }
 
       const medals = ['🥇', '🥈', '🥉'];
       let html = '';
-
-      // Guildmaster — separate entity, not ranked
-      if (guildmasters.length > 0) {
-        html += `
-          <div style="
-            background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,140,0,0.04));
-            border: 2px solid rgba(255,215,0,0.3);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 24px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-          ">
-            <div style="position:absolute;top:-30px;right:-30px;font-size:8rem;opacity:0.04;pointer-events:none;">👑</div>
-            <div style="font-size:0.7rem;font-weight:700;color:#ffd700;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">👑 Guildmaster</div>`;
-        guildmasters.forEach(u => {
-          const name = u.display_name || u.username || 'Guildmaster';
-          const initial = name.charAt(0).toUpperCase();
-          html += `
-            <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
-              <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#ff8c00);display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#000;font-weight:900;border:3px solid #ffd700;box-shadow:0 0 20px rgba(255,215,0,0.3);">${initial}</div>
-              <div style="text-align:left;">
-                <a href="profile.html?username=${escapeHtml(u.username)}" style="color:#ffd700;font-size:1.2rem;font-weight:800;text-decoration:none;">${escapeHtml(name)}</a>
-                <div style="color:var(--text-dim);font-size:0.8rem;">@${escapeHtml(u.username || '—')}</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-              <a href="donation.html" class="btn btn-ghost btn-xs" style="border-color:rgba(255,215,0,0.3);color:#ffd700;">❤️ Support</a>
-              <a href="coin_purchase_ui.html" class="btn btn-ghost btn-xs" style="border-color:rgba(255,215,0,0.3);color:#ffd700;">💰 Buy Coins</a>
-              <a href="profile.html?username=${escapeHtml(u.username)}" class="btn btn-ghost btn-xs" style="border-color:rgba(255,215,0,0.3);color:#ffd700;">👤 Profile</a>
-            </div>
-          </div>`;
-        });
-        html += '</div>';
-      }
 
       // Regular members section
       html += '<div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-left:4px;">Guild Members</div>';

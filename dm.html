@@ -69,9 +69,12 @@
       <!-- Conversations sidebar -->
       <div class="dm-sidebar" id="dmSidebar">
         <div class="dm-sidebar-header">
-          <h3>Conversations</h3>
-          <button onclick="showNewChat()" style="background:none;border:1px solid var(--accent);color:var(--accent);padding:4px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:0.8rem;font-weight:600;">+ New</button>
+          <h3>Messages</h3>
         </div>
+        <div style="padding:10px 12px;border-bottom:1px solid var(--border);">
+          <input type="text" id="sidebarSearch" placeholder="🔍 Search people to message..." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;" oninput="searchUsers()">
+        </div>
+        <div id="sidebarSearchResults" style="border-bottom:1px solid var(--border);max-height:300px;overflow-y:auto;"></div>
         <ul class="conv-list" id="convList">
           <li style="padding:20px;text-align:center;color:var(--text-dim);font-size:0.85rem;">Loading...</li>
         </ul>
@@ -85,30 +88,6 @@
             <p>Select a conversation or start a new one</p>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- New Chat Modal -->
-  <div class="invite-modal" id="newChatModal">
-    <div class="invite-modal-box">
-      <h3 style="color:var(--accent);margin-bottom:16px;">💬 New Message</h3>
-      <input type="text" id="userSearchInput" placeholder="Search by username..." style="width:100%;margin-bottom:12px;" oninput="searchUsers()">
-      <div id="userSearchResults" style="max-height:250px;overflow-y:auto;"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-        <button class="btn btn-ghost" onclick="hideNewChat()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Invite to Group Modal -->
-  <div class="invite-modal" id="inviteModal">
-    <div class="invite-modal-box">
-      <h3 style="color:var(--accent);margin-bottom:16px;">👥 Add Members</h3>
-      <input type="text" id="inviteSearchInput" placeholder="Search by username..." style="width:100%;margin-bottom:12px;" oninput="searchInviteUsers()">
-      <div id="inviteSearchResults" style="max-height:250px;overflow-y:auto;"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-        <button class="btn btn-ghost" onclick="hideInvite()">Close</button>
       </div>
     </div>
   </div>
@@ -131,14 +110,20 @@
     })();
 
     async function loadConversations() {
-      const { data, error } = await window.sb.rpc('get_my_conversations');
-      if (error) {
-        console.error('Failed to load conversations:', error);
-        conversations = [];
-      } else {
+      try {
+        const { data, error } = await window.sb.rpc('get_my_conversations');
+        if (error) {
+          // DM tables probably don't exist yet
+          conversations = [];
+          document.getElementById('convList').innerHTML = '<li style="padding:16px;text-align:center;"><div style="color:var(--accent);font-weight:600;margin-bottom:8px;">⚠️ DMs Not Set Up Yet</div><div style="color:var(--text-dim);font-size:0.8rem;line-height:1.5;">The messaging system needs database tables. Ask the admin to run the SQL migration.</div></li>';
+          return;
+        }
         conversations = data || [];
+        renderConvList();
+      } catch (err) {
+        conversations = [];
+        document.getElementById('convList').innerHTML = '<li style="padding:16px;text-align:center;color:var(--text-dim);font-size:0.85rem;">Could not load conversations.</li>';
       }
-      renderConvList();
     }
 
     function renderConvList() {
@@ -174,6 +159,12 @@
     async function openConversation(convId) {
       activeConvId = convId;
       activeConv = conversations.find(c => c.conversation_id === convId);
+
+      // Clear search
+      const searchInput = document.getElementById('sidebarSearch');
+      if (searchInput) searchInput.value = '';
+      const searchResults = document.getElementById('sidebarSearchResults');
+      if (searchResults) searchResults.innerHTML = '';
 
       // Mark as read
       await window.sb.from('dm_participants').update({ last_read_at: new Date().toISOString() }).eq('conversation_id', convId).eq('user_id', currentUser.id);
@@ -290,22 +281,27 @@
 
     window.searchUsers = function () {
       clearTimeout(searchTimeout);
+      const searchContainer = document.getElementById('sidebarSearchResults');
       searchTimeout = setTimeout(async () => {
-        const term = document.getElementById('userSearchInput').value.trim();
-        if (term.length < 2) { document.getElementById('userSearchResults').innerHTML = ''; return; }
+        const term = document.getElementById('sidebarSearch').value.trim();
+        if (term.length < 2) {
+          if (searchContainer) searchContainer.innerHTML = '';
+          return;
+        }
 
         const { data } = await window.sb.from('user_profiles')
           .select('user_id, username, display_name')
           .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
           .neq('user_id', currentUser.id)
-          .limit(10);
+          .limit(8);
 
         const results = data || [];
-        document.getElementById('userSearchResults').innerHTML = results.length === 0
-          ? '<div style="padding:12px;color:var(--text-dim);text-align:center;">No users found</div>'
+        if (!searchContainer) return;
+        searchContainer.innerHTML = results.length === 0
+          ? '<div style="padding:12px;color:var(--text-dim);text-align:center;font-size:0.85rem;">No users found</div>'
           : results.map(u => `
-            <div class="user-search-result" onclick="startDm('${u.user_id}', '${escapeHtml(u.username)}')">
-              <div class="conv-avatar" style="width:36px;height:36px;font-size:0.8rem;">${(u.display_name || u.username || '?').charAt(0).toUpperCase()}</div>
+            <div class="user-search-result" onclick="startDm('${u.user_id}', '${escapeHtml(u.username)}')" style="padding:10px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;border-radius:var(--radius-sm);transition:all 0.12s;">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-size:0.85rem;">${(u.display_name || u.username || '?').charAt(0).toUpperCase()}</div>
               <div>
                 <div style="font-weight:600;font-size:0.88rem;">${escapeHtml(u.display_name || u.username)}</div>
                 <div style="font-size:0.75rem;color:var(--text-dim);">@${escapeHtml(u.username)}</div>
@@ -315,63 +311,21 @@
     };
 
     window.startDm = async function (userId, username) {
-      hideNewChat();
-      const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: userId });
-      if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
-      await loadConversations();
-      openConversation(convId);
-    };
-
-    // Invite to group
-    window.showInvite = function () {
-      document.getElementById('inviteModal').classList.add('show');
-      document.getElementById('inviteSearchInput').value = '';
-      document.getElementById('inviteSearchResults').innerHTML = '';
-      document.getElementById('inviteSearchInput').focus();
-    };
-    window.hideInvite = function () {
-      document.getElementById('inviteModal').classList.remove('show');
-    };
-
-    window.searchInviteUsers = function () {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(async () => {
-        const term = document.getElementById('inviteSearchInput').value.trim();
-        if (term.length < 2) { document.getElementById('inviteSearchResults').innerHTML = ''; return; }
-
-        const { data } = await window.sb.from('user_profiles')
-          .select('user_id, username, display_name')
-          .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
-          .neq('user_id', currentUser.id)
-          .limit(10);
-
-        const results = data || [];
-        document.getElementById('inviteSearchResults').innerHTML = results.length === 0
-          ? '<div style="padding:12px;color:var(--text-dim);text-align:center;">No users found</div>'
-          : results.map(u => `
-            <div class="user-search-result" onclick="addMember('${u.user_id}')">
-              <div class="conv-avatar" style="width:36px;height:36px;font-size:0.8rem;">${(u.display_name || u.username || '?').charAt(0).toUpperCase()}</div>
-              <div>
-                <div style="font-weight:600;font-size:0.88rem;">${escapeHtml(u.display_name || u.username)}</div>
-                <div style="font-size:0.75rem;color:var(--text-dim);">@${escapeHtml(u.username)}</div>
-              </div>
-            </div>`).join('');
-      }, 300);
-    };
-
-    window.addMember = async function (userId) {
-      if (!activeConvId) return;
-      const { error } = await window.sb.from('dm_participants').insert({
-        conversation_id: activeConvId,
-        user_id: userId
-      });
-      if (error) {
-        if (error.code === '23505') window.showToast('User is already in this group.', 'warning');
-        else window.showToast('Failed: ' + error.message, 'error');
-        return;
+      try {
+        const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: userId });
+        if (error) {
+          if (error.message && error.message.includes('does not exist')) {
+            window.showToast('Messaging system not set up yet. Admin needs to run the SQL migration.', 'warning');
+          } else {
+            window.showToast('Failed: ' + error.message, 'error');
+          }
+          return;
+        }
+        await loadConversations();
+        openConversation(convId);
+      } catch (err) {
+        window.showToast('Messaging not available yet. Contact admin.', 'warning');
       }
-      window.showToast('Member added!', 'success');
-      hideInvite();
     };
 
     window.toggleDmSidebar = function () {

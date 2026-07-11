@@ -72,9 +72,20 @@ function getUsernameParam() { return getUrlParam('username'); }
       msgBtn.textContent = '💬 Message';
       msgBtn.onclick = async (e) => {
         e.preventDefault();
-        const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: profileUser.user_id });
-        if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
-        window.location.href = 'dm.html';
+        try {
+          const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: profileUser.user_id });
+          if (error) {
+            if (error.message && error.message.includes('does not exist')) {
+              window.showToast('Messaging system not set up yet.', 'warning');
+            } else {
+              window.showToast('Failed: ' + error.message, 'error');
+            }
+            return;
+          }
+          window.location.href = 'dm.html';
+        } catch (err) {
+          window.showToast('Messaging not available yet.', 'warning');
+        }
       };
       document.querySelector('.meta-details').appendChild(msgBtn);
     }
