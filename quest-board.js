@@ -64,6 +64,9 @@ window.resetFilters = function () {
   searchInput.value = '';
   filterType.value = 'all';
   sortBy.value = 'newest';
+  // Restore "Highest Pay" option visibility
+  const payOption = sortBy.querySelector('option[value="pay"]');
+  if (payOption) payOption.style.display = '';
   renderPresetTags();
   loadQuests();
 };
@@ -71,6 +74,21 @@ window.resetFilters = function () {
 window.handleSearch = function () {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => loadQuests(), 300);
+};
+
+window.onFilterTypeChange = function () {
+  const type = filterType.value;
+  const payOption = sortBy.querySelector('option[value="pay"]');
+  if (type === 'free') {
+    // "Highest Pay" makes no sense for free tasks — hide it and reset if selected
+    payOption.style.display = 'none';
+    if (sortBy.value === 'pay') {
+      sortBy.value = 'newest';
+    }
+  } else {
+    payOption.style.display = '';
+  }
+  loadQuests();
 };
 
 window.switchView = function (viewName) {
@@ -111,7 +129,8 @@ async function loadQuests() {
   const sort = sortBy.value;
   if (sort === 'newest') query = query.order('created_at', { ascending: false });
   else if (sort === 'deadline') query = query.order('deadline', { ascending: true });
-  else if (sort === 'pay') query = query.order('coin_amount', { ascending: false });
+  // For 'pay' sort: let server return default order, we sort client-side after
+  else if (sort === 'pay') query = query.order('created_at', { ascending: false });
 
   const { data, error } = await query;
 
@@ -121,6 +140,15 @@ async function loadQuests() {
   }
 
   quests = data || [];
+
+  // Client-side pay sort: compute effective amount across all payment types
+  if (sort === 'pay') {
+    quests.sort((a, b) => {
+      const aVal = a.payment_type === 'coins' ? (a.coin_amount || 0) : a.payment_type === 'upi' ? (a.upi_amount || 0) : 0;
+      const bVal = b.payment_type === 'coins' ? (b.coin_amount || 0) : b.payment_type === 'upi' ? (b.upi_amount || 0) : 0;
+      return bVal - aVal;
+    });
+  }
 
   if (currentView === 'my_active' || currentView === 'my_completed') {
     quests = quests.filter(q => q.worker_id === currentUser.id || q.poster_id === currentUser.id);
