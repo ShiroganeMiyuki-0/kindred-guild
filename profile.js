@@ -63,6 +63,21 @@ function getUsernameParam() { return getUrlParam('username'); }
     document.getElementById('privateBalanceDisplay').textContent = balance || 0;
   } else {
     document.getElementById('privateBalanceDisplay').parentElement.style.display = 'none';
+    // Add Message button for other users' profiles
+    if (currentUser) {
+      const msgBtn = document.createElement('a');
+      msgBtn.href = '#';
+      msgBtn.className = 'btn btn-primary btn-sm';
+      msgBtn.style.marginTop = '8px';
+      msgBtn.textContent = '💬 Message';
+      msgBtn.onclick = async (e) => {
+        e.preventDefault();
+        const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: profileUser.user_id });
+        if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
+        window.location.href = 'dm.html';
+      };
+      document.querySelector('.meta-details').appendChild(msgBtn);
+    }
   }
 
   loadUserQuestsHistory();

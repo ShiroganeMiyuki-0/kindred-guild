@@ -94,6 +94,7 @@
     const privateMenuItems = [
         { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html', primary: true },
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
+        { name: 'Messages', icon: 'fa-envelope', file: 'dm.html', primary: true },
         { name: 'Post Quest', icon: 'fa-circle-plus', file: 'quest-post.html', primary: true },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
         { name: 'Be a Worker', icon: 'fa-hammer', file: 'worker-post.html' },
@@ -316,6 +317,7 @@
         const pageNavLinks = [
             { name: 'Quest Board', icon: '⚔️', file: 'quest-board.html' },
             { name: 'Guild Hall', icon: '🏰', file: 'guild-hall.html' },
+            { name: 'Messages', icon: '💬', file: 'dm.html' },
             { name: 'Wishes', icon: '✨', file: 'fairy-wishes.html' },
             { name: 'Leaderboard', icon: '🏆', file: 'leaderboard.html' },
             { name: 'Workers', icon: '🛡️', file: 'worker-post.html' },
