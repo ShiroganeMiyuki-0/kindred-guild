@@ -9,19 +9,16 @@
 (function () {
     console.log('[Kindred Guild] site-nav.js executing...');
     // 1. DYNAMIC PATH CALCULATION
-    // This solves relative path broken issues on deep-nested pages (e.g., docs/ or subdirectories)
     const pathParts = window.location.pathname.split('/').filter(part => part !== '');
     const isFileAtEnd = pathParts.length > 0 && pathParts[pathParts.length - 1].includes('.');
     const folderCount = pathParts.length - (isFileAtEnd ? 1 : 0);
     const rootPrefix = '../'.repeat(folderCount) || './';
 
-    // Helper to format absolute paths cleanly
     function getPath(filename) {
         return `${rootPrefix}${filename}`;
     }
 
     // 2. SELF-HEALING TAILWIND & FONTAWESOME INJECTION
-    // Ensures that icons and styling work automatically on every single page
     if (!document.querySelector('link[href*="font-awesome"]')) {
         const faLink = document.createElement('link');
         faLink.rel = 'stylesheet';
@@ -29,8 +26,6 @@
         document.head.appendChild(faLink);
     }
 
-    // Check if Tailwind is missing, and if so, load it with CSS Preflight DISABLED.
-    // This allows our Tailwind navbar to style beautifully without stripping borders/margins from custom inputs!
     if (!window.tailwind && !document.querySelector('script[src*="tailwindcss"]') && !document.querySelector('link[href*="tailwind"]')) {
         const configScript = document.createElement('script');
         configScript.innerHTML = `
@@ -48,7 +43,6 @@
         document.head.appendChild(twScript);
     }
 
-    // Add CSS transitions, glassmorphism, and self-healing body flex correction rules
     const navStyles = document.createElement('style');
     navStyles.innerHTML = `
         .glass-nav {
@@ -67,7 +61,6 @@
             border-left: 4px solid #fbbf24;
         }
         
-        /* Dynamic self-healing rules for centering flex pages (e.g., auth, coin purchase, username setup) */
         body.site-nav-flex-adjusted {
             display: flex !important;
             flex-direction: column !important;
@@ -84,11 +77,11 @@
 
 
     // 3. DEFINE MENU SCHEMES
-    // This allows us to conditionally render nav items depending on auth status
+    // Primary items = always visible on toolbar. Secondary items = inside ☰ hamburger dropdown.
     const publicMenuItems = [
-        { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html' },
+        { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html', primary: true },
+        { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
-        { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html' },
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
         { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
@@ -96,11 +89,11 @@
     ];
 
     const privateMenuItems = [
-        { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html' },
-        { name: 'Post Quest', icon: 'fa-circle-plus', file: 'quest-post.html' },
-        { name: 'Be a Worker', icon: 'fa-hammer', file: 'worker-post.html' },
+        { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html', primary: true },
+        { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
+        { name: 'Post Quest', icon: 'fa-circle-plus', file: 'quest-post.html', primary: true },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
-        { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html' },
+        { name: 'Be a Worker', icon: 'fa-hammer', file: 'worker-post.html' },
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
         { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
@@ -108,12 +101,10 @@
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' }
     ];
 
-    // Helper to check if a specific nav item is currently active
     function isItemActive(file) {
         const currentPath = window.location.pathname.toLowerCase();
         const baseFile = file.toLowerCase();
         
-        // Match exact filename, matched clean URL paths, or handle homepage default
         if (currentPath === '/' || currentPath.endsWith('index.html')) {
             return baseFile === 'index.html';
         }
@@ -122,76 +113,51 @@
 
 
     // 4. GENERATING THE NAV BAR STRUCTURE
+    // Primary items show inline on the toolbar. Everything else goes in a ☰ hamburger dropdown.
     function buildNavbarHTML(user, isAdmin = false) {
         const menuItems = user ? privateMenuItems : publicMenuItems;
-        
-        // Generate main list items for desktop navbar
-        const desktopLinks = menuItems.map(item => {
+        const primaryItems = menuItems.filter(i => i.primary);
+        const secondaryItems = menuItems.filter(i => !i.primary);
+
+        // Desktop: primary nav links (always visible)
+        const primaryLinks = primaryItems.map(item => {
             const activeClass = isItemActive(item.file) ? 'nav-item-active text-amber-400' : 'text-gray-300 hover:text-amber-300 hover:border-amber-300';
             return `
-                <a href="${getPath(item.file)}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition duration-150 ease-in-out gap-2 h-16 ${activeClass}">
+                <a href="${getPath(item.file)}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition duration-150 ease-in-out gap-2 h-14 ${activeClass}">
                     <i class="fa-solid ${item.icon} text-xs"></i>
                     <span>${item.name}</span>
                 </a>
             `;
         }).join('');
 
-        // Generate special links (Admin Dashboard)
+        // Admin link (inline if admin)
         let adminLinkHtml = '';
         if (isAdmin) {
             const adminActive = isItemActive('admin_dashboard_ui.html');
             adminLinkHtml = `
-                <a href="${getPath('admin_dashboard_ui.html')}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition duration-150 ease-in-out gap-2 h-16 ${adminActive ? 'nav-item-active text-rose-400' : 'text-rose-300 hover:text-rose-100'}">
+                <a href="${getPath('admin_dashboard_ui.html')}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium transition duration-150 ease-in-out gap-2 h-14 ${adminActive ? 'nav-item-active text-rose-400' : 'text-rose-300 hover:text-rose-100'}">
                     <i class="fa-solid fa-lock-open text-xs text-rose-400"></i>
-                    <span>Admin Panel</span>
+                    <span>Admin</span>
                 </a>
             `;
         }
 
-        // Generate dynamic Action Panel (Logout / Profile vs Login Buttons)
-        let actionPanelHtml = '';
-        if (user) {
-            const userEmail = user.email || 'Adventurer';
-            const initials = userEmail.substring(0, 2).toUpperCase();
-            const profileActive = isItemActive('profile.html');
-            
-            actionPanelHtml = `
-                <div class="flex items-center gap-4">
-                    <!-- Notification Bell -->
-                    <a href="${getPath('notifications.html')}" class="relative flex items-center text-gray-300 hover:text-amber-400 transition duration-150" title="Notifications">
-                        <i class="fa-solid fa-bell text-lg"></i>
-                        <span id="nav-notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
-                    </a>
-                    
-                    <!-- Profile Link -->
-                    <a href="${getPath('profile.html')}" class="flex items-center gap-2 group ${profileActive ? 'text-amber-400' : 'text-gray-300 hover:text-amber-400'} transition duration-150 ease-in-out">
-                        <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 shadow-md group-hover:scale-105 transition-transform duration-150">
-                            ${initials}
-                        </div>
-                        <span class="hidden md:inline-block text-xs font-semibold max-w-[120px] truncate">${userEmail.split('@')[0]}</span>
-                    </a>
-                    
-                    <!-- Logout button -->
-                    <button id="btn-logout" class="bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 hover:border-red-500/50 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition duration-150 shadow-sm inline-flex items-center gap-1.5 cursor-pointer">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        <span class="hidden sm:inline">Logout</span>
-                    </button>
-                </div>
-            `;
-        } else {
-            actionPanelHtml = `
-                <a href="${getPath('auth.html')}" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition duration-150 shadow-lg hover:shadow-amber-500/20 shadow-amber-500/10 inline-flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-xs"></i>
-                    <span>Join Guild / Login</span>
+        // Desktop: secondary items in hamburger dropdown
+        const secondaryLinksHtml = secondaryItems.map(item => {
+            const activeClass = isItemActive(item.file) ? 'text-amber-400 bg-amber-500/10 font-bold' : 'text-gray-300 hover:bg-slate-800 hover:text-amber-300';
+            return `
+                <a href="${getPath(item.file)}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition duration-150 rounded-md ${activeClass}">
+                    <i class="fa-solid ${item.icon} w-4 text-center text-xs"></i>
+                    <span>${item.name}</span>
                 </a>
             `;
-        }
+        }).join('');
 
-        // Mobile Links generator
+        // Mobile: all items listed
         const mobileLinks = menuItems.map(item => {
             const activeClass = isItemActive(item.file) ? 'nav-mobile-active text-amber-400 bg-amber-500/10 font-bold' : 'text-gray-300 hover:bg-slate-800 hover:text-amber-300';
             return `
-                <a href="${getPath(item.file)}" class="block pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out flex items-center gap-3 ${activeClass}">
+                <a href="${getPath(item.file)}" class="flex items-center gap-3 pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out ${activeClass}">
                     <i class="fa-solid ${item.icon} w-5 text-center text-sm"></i>
                     <span>${item.name}</span>
                 </a>
@@ -199,11 +165,43 @@
         }).join('');
 
         const mobileAdminLink = isAdmin ? `
-            <a href="${getPath('admin_dashboard_ui.html')}" class="block pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out flex items-center gap-3 text-rose-300 hover:bg-rose-950/20 hover:text-rose-200">
+            <a href="${getPath('admin_dashboard_ui.html')}" class="flex items-center gap-3 pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out text-rose-300 hover:bg-rose-950/20 hover:text-rose-200">
                 <i class="fa-solid fa-lock-open w-5 text-center text-sm text-rose-400"></i>
                 <span>Admin Panel</span>
             </a>
         ` : '';
+
+        // Action panel (profile/logout or join button)
+        let actionPanelHtml = '';
+        if (user) {
+            const userEmail = user.email || 'Adventurer';
+            const initials = userEmail.substring(0, 2).toUpperCase();
+            const profileActive = isItemActive('profile.html');
+            actionPanelHtml = `
+                <div class="flex items-center gap-3">
+                    <a href="${getPath('notifications.html')}" class="relative flex items-center text-gray-300 hover:text-amber-400 transition duration-150" title="Notifications">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                        <span id="nav-notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+                    </a>
+                    <a href="${getPath('profile.html')}" class="flex items-center gap-2 group ${profileActive ? 'text-amber-400' : 'text-gray-300 hover:text-amber-400'} transition duration-150">
+                        <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 shadow-md group-hover:scale-105 transition-transform duration-150">
+                            ${initials}
+                        </div>
+                        <span class="hidden md:inline-block text-xs font-semibold max-w-[100px] truncate">${userEmail.split('@')[0]}</span>
+                    </a>
+                    <button id="btn-logout" class="bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 hover:border-red-500/50 text-red-300 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-150 inline-flex items-center gap-1.5 cursor-pointer" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            actionPanelHtml = `
+                <a href="${getPath('auth.html')}" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition duration-150 shadow-lg hover:shadow-amber-500/20 shadow-amber-500/10 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-xs"></i>
+                    <span>Join Guild</span>
+                </a>
+            `;
+        }
 
         const mobileActionPanel = user ? `
             <div class="pt-4 pb-3 border-t border-slate-800">
@@ -213,11 +211,11 @@
                     </div>
                     <div>
                         <div class="text-sm font-bold text-white truncate max-w-[200px]">${user.email || 'Adventurer'}</div>
-                        <a href="${getPath('profile.html')}" class="text-xs text-amber-400 hover:underline">View Guild Profile</a>
+                        <a href="${getPath('profile.html')}" class="text-xs text-amber-400 hover:underline">View Profile</a>
                     </div>
                 </div>
                 <div class="mt-3 px-2">
-                    <button id="btn-logout-mobile" class="w-full text-left block px-3 py-2.5 rounded-md text-base font-medium text-red-400 hover:bg-red-950/20 hover:text-red-300 cursor-pointer">
+                    <button id="btn-logout-mobile" class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-base font-medium text-red-400 hover:bg-red-950/20 hover:text-red-300 cursor-pointer">
                         <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Sign Out
                     </button>
                 </div>
@@ -230,47 +228,53 @@
             </div>
         `;
 
-
         return `
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <!-- Left Section: Branding and Desktop Nav -->
+                <div class="flex justify-between h-14">
+                    <!-- Left: Brand + Primary Nav -->
                     <div class="flex items-center flex-1">
-                        <!-- Brand Identity -->
-                        <div class="flex-shrink-0 flex items-center mr-8">
+                        <div class="flex-shrink-0 flex items-center mr-6">
                             <a href="${getPath('index.html')}" class="flex items-center gap-2 group">
-                                <img src="${getPath('logo.png')}" alt="Kindred Guild" width="40" height="40" class="h-10 w-10 rounded-xl object-cover ring-2 ring-amber-500/30 group-hover:ring-amber-500 transition-all duration-300 group-hover:scale-105">
-                                <div class="flex flex-col">
-                                    <span class="text-lg font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none">KINDRED GUILD</span>
-                                    <span class="text-[10px] text-amber-500/60 font-medium tracking-widest uppercase mt-0.5">Adventure awaits</span>
-                                </div>
+                                <img src="${getPath('logo.png')}" alt="Kindred Guild" width="36" height="36" class="h-9 w-9 rounded-xl object-cover ring-2 ring-amber-500/30 group-hover:ring-amber-500 transition-all duration-300 group-hover:scale-105">
+                                <span class="text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none hidden sm:inline">KINDRED GUILD</span>
                             </a>
                         </div>
-                        
-                        <!-- Desktop Navigation Menu -->
-                        <nav class="hidden lg:flex lg:space-x-6">
-                            ${desktopLinks}
+                        <nav class="hidden md:flex md:items-center md:gap-1">
+                            ${primaryLinks}
                             ${adminLinkHtml}
                         </nav>
                     </div>
 
-                    <!-- Right Section: Desktop Profile & Logout OR Join Button -->
-                    <div class="hidden lg:flex lg:items-center lg:gap-4">
-                        ${actionPanelHtml}
-                    </div>
+                    <!-- Right: Hamburger + Actions -->
+                    <div class="flex items-center gap-2">
+                        <div class="hidden md:flex md:items-center md:gap-3">
+                            ${actionPanelHtml}
+                        </div>
 
-                    <!-- Mobile Hamburger Menu Button -->
-                    <div class="flex items-center lg:hidden">
-                        <button type="button" id="mobile-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-800 transition duration-150" aria-controls="mobile-menu" aria-expanded="false">
-                            <span class="sr-only">Open main menu</span>
-                            <i id="hamburger-icon" class="fa-solid fa-bars text-xl"></i>
-                        </button>
+                        <!-- Hamburger for secondary nav items (desktop + tablet) -->
+                        <div class="relative" id="more-menu-wrapper">
+                            <button type="button" id="more-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-haspopup="true" aria-expanded="false" title="More pages">
+                                <i class="fa-solid fa-bars text-lg" id="more-menu-icon"></i>
+                            </button>
+                            <div id="more-menu-dropdown" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black/50 py-2 z-[200] backdrop-blur-md">
+                                <div class="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">More Pages</div>
+                                ${secondaryLinksHtml}
+                            </div>
+                        </div>
+
+                        <!-- Mobile hamburger (shows all items) -->
+                        <div class="md:hidden flex items-center">
+                            <button type="button" id="mobile-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-controls="mobile-menu" aria-expanded="false">
+                                <span class="sr-only">Open menu</span>
+                                <i id="hamburger-icon" class="fa-solid fa-bars text-lg"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Dynamic Mobile Navigation Dropdown -->
-            <div class="hidden lg:hidden" id="mobile-menu">
+            <!-- Mobile dropdown (all items) -->
+            <div class="hidden md:hidden" id="mobile-menu">
                 <div class="pt-2 pb-3 space-y-1 bg-slate-950/95 border-b border-slate-800 backdrop-blur-md">
                     ${mobileLinks}
                     ${mobileAdminLink}
@@ -285,28 +289,20 @@
     function renderNavContainer(user, isAdmin = false) {
         let navElement = document.getElementById('site-nav');
         
-        // Auto-healing fallback: If page doesn't have <nav id="site-nav">, create and prepend it!
         if (!navElement) {
             navElement = document.createElement('nav');
             navElement.id = 'site-nav';
             document.body.prepend(navElement);
         }
 
-        // Apply clean glass styling container
         navElement.className = 'glass-nav sticky top-0 z-50 w-full transition-all duration-300';
         navElement.innerHTML = buildNavbarHTML(user, isAdmin);
 
-        // Bind interactive event listeners for responsiveness
         setupEventHandlers(user);
-
-        // Run self-healing layout checking routines
         adjustFlexBody();
-
-        // Load notification count for logged-in users
         if (user) loadNotificationCount();
     }
 
-    // Centering flex pages layout healing engine
     function adjustFlexBody() {
         const bodyStyle = window.getComputedStyle(document.body);
         if (bodyStyle.display === 'flex' && bodyStyle.flexDirection !== 'column') {
@@ -315,7 +311,7 @@
     }
 
     function setupEventHandlers(user) {
-        // Toggle mobile hamburger menu smoothly
+        // Mobile hamburger toggle
         const toggleBtn = document.getElementById('mobile-menu-toggle');
         const mobileMenu = document.getElementById('mobile-menu');
         const icon = document.getElementById('hamburger-icon');
@@ -337,14 +333,57 @@
             });
         }
 
-        // Handle Logout Button actions (both desktop and mobile formats)
+        // Desktop "More" hamburger dropdown toggle
+        const moreToggle = document.getElementById('more-menu-toggle');
+        const moreDropdown = document.getElementById('more-menu-dropdown');
+        const moreIcon = document.getElementById('more-menu-icon');
+
+        if (moreToggle && moreDropdown) {
+            moreToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = moreDropdown.classList.contains('hidden');
+                if (isHidden) {
+                    moreDropdown.classList.remove('hidden');
+                    moreIcon.classList.remove('fa-bars');
+                    moreIcon.classList.add('fa-xmark');
+                    moreToggle.setAttribute('aria-expanded', 'true');
+                } else {
+                    moreDropdown.classList.add('hidden');
+                    moreIcon.classList.remove('fa-xmark');
+                    moreIcon.classList.add('fa-bars');
+                    moreToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                const wrapper = document.getElementById('more-menu-wrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    moreDropdown.classList.add('hidden');
+                    moreIcon.classList.remove('fa-xmark');
+                    moreIcon.classList.add('fa-bars');
+                    moreToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Close dropdown when a link inside is clicked
+            moreDropdown.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    moreDropdown.classList.add('hidden');
+                    moreIcon.classList.remove('fa-xmark');
+                    moreIcon.classList.add('fa-bars');
+                    moreToggle.setAttribute('aria-expanded', 'false');
+                });
+            });
+        }
+
+        // Logout handlers
         const logoutHandler = async (e) => {
             e.preventDefault();
             if (window.sb || window.supabase) {
                 try {
                     const { error } = await (window.sb || window.supabase).auth.signOut();
                     if (error) throw error;
-                    // Force refresh back to main portal upon logging out
                     window.location.href = getPath('index.html');
                 } catch (err) {
                     console.error('Logout failed:', err.message);
@@ -366,7 +405,6 @@
     async function initNavigationState() {
         let supabaseClient = window.sb || window.supabase;
 
-        // If not loaded on window immediately, attempt to wait for 2 seconds
         if (!supabaseClient) {
             let retries = 0;
             supabaseClient = await new Promise((resolve) => {
@@ -376,7 +414,7 @@
                         resolve(window.sb || window.supabase);
                     }
                     retries++;
-                    if (retries > 40) { // Limit retry to 2 seconds
+                    if (retries > 40) {
                         clearInterval(interval);
                         resolve(null);
                     }
@@ -385,18 +423,15 @@
         }
 
         if (supabaseClient) {
-            // Retrieve session details
             const { data: { session } } = await supabaseClient.auth.getSession();
             const user = session ? session.user : null;
             let isAdmin = false;
 
             if (user) {
-                // Check local app metadata roles
                 const isMetaAdmin = user.app_metadata?.role === 'admin' || user.user_metadata?.role === 'admin';
                 if (isMetaAdmin) {
                     isAdmin = true;
                 } else {
-                    // Try to query profile role as fallback if DB table profile exists
                     try {
                         const cachedRole = sessionStorage.getItem(`user_role_${user.id}`);
                         if (cachedRole) {
@@ -415,16 +450,13 @@
                             }
                         }
                     } catch (e) {
-                        // Suppress profiles table error in case it's not present yet
                         console.log('Skipping profile database authorization check: Use app metadata default.');
                     }
                 }
             }
 
-            // Perform initial draw
             renderNavContainer(user, isAdmin);
 
-            // Establish real-time authentication listener so the nav-bar updates fluidly on state transition
             supabaseClient.auth.onAuthStateChange(async (event, currentSession) => {
                 const currentUser = currentSession ? currentSession.user : null;
                 let currentIsAdmin = false;
@@ -441,12 +473,10 @@
 
         } else {
             console.warn('Supabase client was not detected. Initializing Navigation in demo/static mode.');
-            // Fallback rendering in case database configuration is pending or local preview
             renderNavContainer(null, false);
         }
     }
 
-    // Load notification count for the bell icon
     async function loadNotificationCount() {
         try {
             if (!window.sb) return;
@@ -504,14 +534,12 @@
         });
     }
 
-    // Initialize nav loading sequence
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initNavigationState);
     } else {
         initNavigationState();
     }
 
-    // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js').catch(err => {
