@@ -170,7 +170,10 @@
       <div class="card">
         <h3>All Quests</h3>
         <p class="hint">View, manage, and remove quests. Removing a quest refunds locked coins to the poster.</p>
-        <button class="btn btn-refresh" onclick="fetchQuests()" style="margin-bottom:12px;">🔄 Refresh</button>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="btn btn-refresh" onclick="fetchQuests()">🔄 Refresh</button>
+          <input type="text" id="questSearchInput" placeholder="Search by title or poster..." oninput="renderQuestsTable()" style="flex:1;min-width:200px;">
+        </div>
         <table>
           <thead><tr><th>Title</th><th>Poster</th><th>Reward</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
           <tbody id="questsTableBody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
@@ -183,7 +186,10 @@
       <div class="card">
         <h3>All Wishes</h3>
         <p class="hint">Manage community wishes. Grant popular wishes or remove inappropriate ones.</p>
-        <button class="btn btn-refresh" onclick="fetchWishes()" style="margin-bottom:12px;">🔄 Refresh</button>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="btn btn-refresh" onclick="fetchWishes()">🔄 Refresh</button>
+          <input type="text" id="wishSearchInputAdmin" placeholder="Search by title or creator..." oninput="renderWishesTable()" style="flex:1;min-width:200px;">
+        </div>
         <table>
           <thead><tr><th>Title</th><th>Creator</th><th>Type</th><th>Status</th><th>Votes</th><th>Backers</th><th>Actions</th></tr></thead>
           <tbody id="wishesTableBody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
@@ -330,11 +336,30 @@
     }
 
     // ── QUESTS ──
+    let allQuestsData = [];
+
     async function fetchQuests() {
       const tbody = document.getElementById('questsTableBody');
       tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
       const { data } = await window.sb.from('quests').select('id, title, coin_amount, upi_amount, payment_type, status, created_at, is_deleted, poster:user_profiles!quests_poster_id_fkey(username, display_name)').order('created_at', { ascending: false }).limit(100);
-      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No quests found.</td></tr>'; return; }
+      allQuestsData = data || [];
+      renderQuestsTable();
+    }
+
+    window.renderQuestsTable = function () {
+      const tbody = document.getElementById('questsTableBody');
+      if (allQuestsData.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No quests found.</td></tr>'; return; }
+
+      const query = (document.getElementById('questSearchInput')?.value || '').trim().toLowerCase();
+      const data = query
+        ? allQuestsData.filter(q =>
+            (q.title || '').toLowerCase().includes(query) ||
+            (q.poster?.display_name || '').toLowerCase().includes(query) ||
+            (q.poster?.username || '').toLowerCase().includes(query))
+        : allQuestsData;
+
+      if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No quests match your search.</td></tr>'; return; }
+
       tbody.innerHTML = data.map(q => {
         const poster = q.poster?.display_name || q.poster?.username || 'Unknown';
         const reward = q.payment_type === 'coins' ? q.coin_amount + ' FC' : q.payment_type === 'upi' ? '₹' + q.upi_amount : 'Free';
@@ -353,19 +378,37 @@
       }).join('');
     }
 
+    let allWishesData = [];
+
     // ── WISHES ──
     async function fetchWishes() {
       const tbody = document.getElementById('wishesTableBody');
       tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
       const { data } = await window.sb.from('wishes').select('id, title, wish_type, coin_amount, upi_amount, status, is_deleted, total_coin_backing, total_upi_backing, backer_count, creator:user_profiles!wishes_creator_id_fkey(username, display_name)').order('created_at', { ascending: false }).limit(100);
-      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No wishes found.</td></tr>'; return; }
+      if (!data || data.length === 0) { allWishesData = []; renderWishesTable(); return; }
 
       // Get vote counts
-      const enriched = await Promise.all(data.map(async w => {
+      allWishesData = await Promise.all(data.map(async w => {
         const { data: count } = await window.sb.rpc('get_wish_votes', { p_wish_id: w.id });
         w.votesCount = count || 0;
         return w;
       }));
+      renderWishesTable();
+    }
+
+    window.renderWishesTable = function () {
+      const tbody = document.getElementById('wishesTableBody');
+      if (allWishesData.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No wishes found.</td></tr>'; return; }
+
+      const query = (document.getElementById('wishSearchInputAdmin')?.value || '').trim().toLowerCase();
+      const enriched = query
+        ? allWishesData.filter(w =>
+            (w.title || '').toLowerCase().includes(query) ||
+            (w.creator?.display_name || '').toLowerCase().includes(query) ||
+            (w.creator?.username || '').toLowerCase().includes(query))
+        : allWishesData;
+
+      if (enriched.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No wishes match your search.</td></tr>'; return; }
 
       tbody.innerHTML = enriched.map(w => {
         const creator = w.creator?.display_name || w.creator?.username || 'Unknown';
