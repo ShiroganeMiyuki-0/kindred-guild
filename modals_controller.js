@@ -54,8 +54,8 @@ function showGuildModal(type, onConfirm, onCancel) {
     cancelBtn.style.display = 'block';
     confirmBtn.textContent = 'Proceed at Own Risk';
   } else if (type === 'upi-warning') {
-    title.textContent = '⚠️ UPI Direct — Know the Risks';
-    body.textContent = "Kindred Guild cannot mediate disputes or verify completion for UPI quests. If payment is withheld, only reputation damage and eventual suspension apply. Proceed only if you trust the other party.";
+    title.textContent = '⚠️ UPI Direct — How It Works';
+    body.textContent = "UPI payments happen directly between you and the other user — the platform never handles real money. We lock a 10% Fairy Coin deposit from the poster as a trust deposit (like a security deposit). The actual ₹ payment is between you two. Kindred Guild can't mediate UPI disputes — only reputation damage and suspension apply if someone misbehaves. Proceed if you trust the other party.";
     cancelBtn.style.display = 'block';
     confirmBtn.textContent = 'I understand, proceed';
   } else if (type === 'free-quest') {

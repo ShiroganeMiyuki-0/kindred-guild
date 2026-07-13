@@ -48,7 +48,7 @@ const searchInput = document.getElementById('searchInput');
 
 function renderPresetTags() {
   const cloud = document.getElementById('tagCloud');
-  const presets = ['#Showcase', '#Fundraiser', '#Art', '#Coding', '#SkillShare', '#Goodwill', '#Design'];
+  const presets = ['#Coding', '#Design', '#Writing', '#Art', '#IRL', '#Tutoring', '#Music', '#Marketing', '#SkillShare', '#Goodwill', '#Showcase', '#Fundraiser'];
   cloud.innerHTML = presets.map(tag => `
     <span class="tag-badge ${activeTagFilter === tag ? 'active' : ''}" onclick="toggleTagFilter('${tag}')">${tag}</span>
   `).join('');
@@ -221,6 +221,15 @@ function renderQuests() {
     const rankBadge = quest.min_rank ? `<span class="rank-requirement">🏆 Min Rank: <span class="rank-badge rank-${quest.min_rank}" style="width:20px;height:20px;font-size:0.65rem;">${quest.min_rank}</span></span>` : '';
     const posterBadge = quest.poster?.is_admin ? '<span style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:2px 6px;border-radius:4px;font-weight:900;font-size:0.6rem;margin-left:4px;">👑 GM</span>' : '';
 
+    // Trust badges
+    let trustBadges = '';
+    if (quest.payment_type === 'coins') trustBadges += '<span style="font-size:0.7rem;background:rgba(16,185,129,0.1);color:#10b981;padding:2px 8px;border-radius:10px;margin-right:4px">🛡️ Escrow</span>';
+    if (quest.payment_type === 'upi') trustBadges += '<span style="font-size:0.7rem;background:rgba(249,115,22,0.1);color:#f97316;padding:2px 8px;border-radius:10px;margin-right:4px">🔒 Trust Deposit</span>';
+    if (quest.status === 'open') trustBadges += '<span style="font-size:0.7rem;background:rgba(59,130,246,0.1);color:#3b82f6;padding:2px 8px;border-radius:10px;margin-right:4px">⏰ Auto-Approve</span>';
+    const deadlineDate = new Date(quest.deadline);
+    const hoursLeft = (deadlineDate - new Date()) / 3600000;
+    if (hoursLeft > 0 && hoursLeft < 48 && quest.status === 'open') trustBadges += '<span style="font-size:0.7rem;background:rgba(239,68,68,0.1);color:#ef4444;padding:2px 8px;border-radius:10px">🔥 Urgent</span>';
+
     let actionBtn = '';
     if (quest.status === 'open') {
       actionBtn = isOwn
@@ -248,6 +257,7 @@ function renderQuests() {
           <div class="poster">by <a href="profile.html?username=${quest.poster?.username}">${escapeHtml(posterName)}</a>${posterBadge}${posterVerified} ⭐ ${rep}</div>
           <div class="description">${escapeHtml(quest.description)}</div>
           ${tagsHtml}
+          ${trustBadges}
           ${rankBadge}
         </div>
         <div>
