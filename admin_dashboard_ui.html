@@ -182,11 +182,11 @@
     <div id="panel-wishes" class="tab-content">
       <div class="card">
         <h3>All Wishes</h3>
-        <p class="hint">Manage community wishes. Remove inappropriate wishes.</p>
+        <p class="hint">Manage community wishes. Grant popular wishes or remove inappropriate ones.</p>
         <button class="btn btn-refresh" onclick="fetchWishes()" style="margin-bottom:12px;">🔄 Refresh</button>
         <table>
-          <thead><tr><th>Title</th><th>Creator</th><th>Type</th><th>Votes</th><th>Backers</th><th>Actions</th></tr></thead>
-          <tbody id="wishesTableBody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+          <thead><tr><th>Title</th><th>Creator</th><th>Type</th><th>Status</th><th>Votes</th><th>Backers</th><th>Actions</th></tr></thead>
+          <tbody id="wishesTableBody"><tr><td colspan="7" class="empty-state">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -370,15 +370,24 @@
       tbody.innerHTML = enriched.map(w => {
         const creator = w.creator?.display_name || w.creator?.username || 'Unknown';
         const typeBadge = w.wish_type === 'coins' ? `🪙 ${w.coin_amount} FC` : w.wish_type === 'upi' ? `₹${w.upi_amount}` : '🎁 Free';
-        const statusBadge = w.is_deleted ? 'badge-rejected' : 'badge-verified';
+        let statusBadge;
+        if (w.is_deleted) statusBadge = 'badge-rejected';
+        else if (w.status === 'granted') statusBadge = 'badge-verified';
+        else statusBadge = 'badge-pending';
+        const statusText = w.is_deleted ? 'deleted' : w.status === 'granted' ? 'granted' : 'active';
+        const canGrant = !w.is_deleted && w.status === 'active';
         return `<tr>
           <td style="font-weight:600">${escapeHtml(w.title)}</td>
           <td>${escapeHtml(creator)}</td>
           <td>${typeBadge}</td>
+          <td><span class="badge ${statusBadge}">${statusText}</span></td>
           <td style="color:var(--accent)">${w.votesCount}</td>
           <td>${w.backer_count > 0 ? `🪙${w.total_coin_backing} FC / ₹${w.total_upi_backing} (${w.backer_count})` : '—'}</td>
           <td>
-            ${!w.is_deleted ? `<button class="btn btn-danger" onclick="openDeleteModal('wish','${w.id}')">Remove</button>` : '<span class="badge badge-rejected">deleted</span>'}
+            ${canGrant ? `<button class="btn btn-approve" onclick="grantWish('${w.id}', '${escapeHtml(w.title).replace(/'/g, "\\'")}')" style="margin-right:4px">🌟 Grant</button>` : ''}
+            ${!w.is_deleted && w.status !== 'granted' ? `<button class="btn btn-danger" onclick="openDeleteModal('wish','${w.id}')">Remove</button>` : ''}
+            ${w.status === 'granted' ? '<span class="badge badge-verified">✅ granted</span>' : ''}
+            ${w.is_deleted ? '<span class="badge badge-rejected">deleted</span>' : ''}
           </td>
         </tr>`;
       }).join('');
@@ -547,6 +556,16 @@
           <td>${new Date(w.created_at).toLocaleString()}</td>
         </tr>`;
       }).join('');
+    }
+
+    // ── GRANT WISH ──
+    async function grantWish(wishId, wishTitle) {
+      if (!confirm(`Grant the wish "${wishTitle}"?\n\nThis will:\n• Set wish status to "granted"\n• Credit pooled coin backings to the creator\n• Show the granted wish banner on the wishes page`)) return;
+      const { error } = await window.sb.rpc('admin_grant_wish', { p_wish_id: wishId });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert('Wish granted! The community will see the celebration banner.');
+      fetchWishes();
+      loadStats();
     }
 
     // ── DELETE MODAL ──
