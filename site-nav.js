@@ -100,6 +100,7 @@
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
         { name: 'Guild Charter', icon: 'fa-scroll', file: 'trust-and-safety.html' },
+        { name: 'Quest Rules', icon: 'fa-book', file: 'quest-rules.html' },
         { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' },
         { name: 'Terms', icon: 'fa-file-contract', file: 'terms-of-service.html' },
@@ -118,6 +119,7 @@
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
         { name: 'Guild Charter', icon: 'fa-scroll', file: 'trust-and-safety.html' },
+        { name: 'Quest Rules', icon: 'fa-book', file: 'quest-rules.html' },
         { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
         { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' },
@@ -341,6 +343,7 @@
             { name: 'Workers', icon: '🛡️', file: 'worker-post.html' },
             { name: 'Activity', icon: '📰', file: 'activity.html' },
             { name: 'Charter', icon: '📜', file: 'trust-and-safety.html' },
+            { name: 'Rules', icon: '📖', file: 'quest-rules.html' },
             { name: 'Support', icon: '❤️', file: 'donation.html' }
         ];
 
