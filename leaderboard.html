@@ -125,6 +125,10 @@
       <span class="sort-tab" data-sort="active" onclick="sortLeaderboard('active')">🔥 Most Active</span>
     </div>
 
+    <div style="margin:14px 0;">
+      <input type="text" id="lbSearchInput" placeholder="🔍 Search members..." oninput="renderLeaderboard()" style="width:100%;max-width:320px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-size:0.85rem;outline:none;box-sizing:border-box;">
+    </div>
+
     <div class="leaderboard-list" id="leaderboardList">
       <div class="empty-state">Loading leaderboard...</div>
     </div>
@@ -247,9 +251,23 @@
       // Separate Guildmaster (admins) from regular members — admins don't appear on leaderboard
       const members = sorted.filter(u => !u.is_admin).sort(sortFns[currentSort] || sortFns.reputation);
 
+      // Attach true rank before any search filtering, so filtered results keep their real position
+      const ranked = members.map((u, i) => ({ u, rank: i + 1 }));
+
+      const query = (document.getElementById('lbSearchInput')?.value || '').trim().toLowerCase();
+      const visible = query
+        ? ranked.filter(({ u }) =>
+            (u.display_name || '').toLowerCase().includes(query) ||
+            (u.username || '').toLowerCase().includes(query))
+        : ranked;
+
       const container = document.getElementById('leaderboardList');
       if (members.length === 0) {
         container.innerHTML = '<div class="empty-state">No guild members yet.</div>';
+        return;
+      }
+      if (visible.length === 0) {
+        container.innerHTML = '<div class="empty-state">No members match your search.</div>';
         return;
       }
 
@@ -258,8 +276,7 @@
 
       // Regular members section
       html += '<div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-left:4px;">⚔️ Guild Members Rankings</div>';
-      html += members.map((u, i) => {
-        const rank = i + 1;
+      html += visible.map(({ u, rank }) => {
         const isTop3 = rank <= 3;
         const name = u.display_name || u.username || 'Member';
         const rep = u.reputation_score ? (u.reputation_score / 10).toFixed(1) : '0.0';

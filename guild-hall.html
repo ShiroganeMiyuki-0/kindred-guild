@@ -92,9 +92,13 @@
       <!-- Channel Sidebar -->
       <div class="channel-sidebar" id="channelSidebar">
         <h3>Channels</h3>
+        <div style="padding:0 12px 8px;">
+          <input type="text" id="channelSearchInput" placeholder="🔍 Search channels..." oninput="filterChannelList()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;color:var(--text);font-size:0.8rem;outline:none;box-sizing:border-box;">
+        </div>
         <ul class="channel-list" id="channelList">
           <li class="active" data-channel="general"><span class="ch-icon">#</span> general</li>
         </ul>
+        <div id="channelNoResults" style="display:none;padding:10px 16px;color:var(--text-dim);font-size:0.8rem;">No channels match your search.</div>
         <!-- Create Channel (admins only, shown via JS) -->
         <div id="createChannelSection" style="display:none;padding:10px 12px;border-top:1px solid var(--border);">
           <button onclick="showCreateChannel()" style="width:100%;padding:8px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--accent);font-size:0.8rem;cursor:pointer;transition:all 0.15s;" onmouseover="this.borderColor='var(--accent)'" onmouseout="this.borderColor='var(--border)'">+ Create Channel</button>
@@ -264,13 +268,35 @@
 
     function renderChannelList() {
       const list = document.getElementById('channelList');
-      list.innerHTML = channels.map(ch => {
+      const noResults = document.getElementById('channelNoResults');
+      const searchInput = document.getElementById('channelSearchInput');
+      const query = (searchInput?.value || '').trim().toLowerCase();
+
+      const visible = query
+        ? channels.filter(ch =>
+            ch.name.toLowerCase().includes(query) ||
+            (ch.description || '').toLowerCase().includes(query))
+        : channels;
+
+      if (visible.length === 0) {
+        list.innerHTML = '';
+        noResults.style.display = 'block';
+        return;
+      }
+      noResults.style.display = 'none';
+
+      list.innerHTML = visible.map(ch => {
         const icon = ch.channel_type === 'announcement' ? '📢' : '#';
         const active = ch.id === activeChannelId ? 'active' : '';
         const deleteBtn = isAdmin ? `<button onclick="event.stopPropagation();deleteChannel('${ch.id}')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.7rem;padding:2px 4px;margin-left:auto;" title="Delete channel">✕</button>` : '';
         return `<li class="${active}" data-channel="${ch.id}" onclick="selectChannel('${ch.id}')"><span class="ch-icon">${icon}</span> ${escapeHtml(ch.name)}${deleteBtn}</li>`;
       }).join('');
     }
+
+    // Search/filter channels
+    window.filterChannelList = function () {
+      renderChannelList();
+    };
 
     async function selectChannel(channelId) {
       activeChannelId = channelId;

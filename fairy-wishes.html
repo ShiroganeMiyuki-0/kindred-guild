@@ -164,6 +164,9 @@
           <span class="wish-filter-tab" data-filter="backed" onclick="filterWishes('backed')">🪙 Backed</span>
           <span class="wish-filter-tab" data-filter="mine" onclick="filterWishes('mine')">👤 My Wishes</span>
         </div>
+        <div style="margin-bottom:12px;">
+          <input type="text" id="wishSearchInput" placeholder="🔍 Search wishes..." oninput="renderWishes()" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-size:0.85rem;outline:none;box-sizing:border-box;">
+        </div>
         <div class="wish-list" id="wishesFeed">
           <div style="color:var(--text-dim);padding:20px;text-align:center">Loading wishes...</div>
         </div>
@@ -377,7 +380,19 @@
       let filtered = [...wishesList];
       if (activeFilter === 'backed') filtered = filtered.filter(w => w.wish_type !== 'free' || w.backer_count > 0);
       if (activeFilter === 'mine') filtered = filtered.filter(w => w.creator_id === currentUser?.id);
+
+      const query = (document.getElementById('wishSearchInput')?.value || '').trim().toLowerCase();
+      if (query) {
+        filtered = filtered.filter(w =>
+          (w.title || '').toLowerCase().includes(query) ||
+          (w.description || '').toLowerCase().includes(query) ||
+          (w.creator?.display_name || '').toLowerCase().includes(query) ||
+          (w.creator?.username || '').toLowerCase().includes(query));
+      }
+
       filtered.sort(activeFilter === 'hot' ? (a, b) => b.votesCount - a.votesCount : (a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      if (filtered.length === 0) { container.innerHTML = '<div style="color:var(--text-dim);padding:30px;text-align:center">No wishes match your search.</div>'; return; }
 
       container.innerHTML = filtered.map(w => {
         const badge = w.wish_type === 'coins' ? `🪙 ${w.coin_amount} FC` : w.wish_type === 'upi' ? `₹ ${w.upi_amount}` : '🎁 Free';
