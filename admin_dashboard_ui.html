@@ -223,11 +223,11 @@
     <div id="panel-coins" class="tab-content">
       <div class="card">
         <h3>Pending Coin Purchases</h3>
-        <p class="hint">Verify UPI payments and credit Fairy Coins.</p>
+        <p class="hint">Verify UPI / PayPal payments and credit Fairy Coins.</p>
         <button class="btn btn-refresh" onclick="fetchPendingCoins()" style="margin-bottom:12px;">🔄 Refresh</button>
         <table>
-          <thead><tr><th>User</th><th>Amount</th><th>UTR / Note</th><th>Time</th><th>Actions</th></tr></thead>
-          <tbody id="coinsTableBody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+          <thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Reference</th><th>Time</th><th>Actions</th></tr></thead>
+          <tbody id="coinsTableBody"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -476,15 +476,35 @@
     // ── COIN PURCHASES ──
     async function fetchPendingCoins() {
       const tbody = document.getElementById('coinsTableBody');
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
-      const { data } = await window.sb.from('coin_purchases').select('id, coin_amount, upi_transaction_ref, payment_note, status, created_at, user_id, user:user_profiles!coin_purchases_user_id_fkey(username, display_name)').eq('status', 'pending').order('created_at', { ascending: false });
-      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No pending purchases.</td></tr>'; return; }
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading...</td></tr>';
+      const { data } = await window.sb.from('coin_purchases').select('id, coin_amount, upi_transaction_ref, payment_note, status, created_at, payment_method, paypal_capture_id, paypal_payer_email, foreign_currency, foreign_amount, user_id, user:user_profiles!coin_purchases_user_id_fkey(username, display_name)').eq('status', 'pending').order('created_at', { ascending: false });
+      if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No pending purchases.</td></tr>'; return; }
       tbody.innerHTML = data.map(tx => {
         const name = tx.user?.display_name || tx.user?.username || 'Unknown';
+        const isPaypal = tx.payment_method === 'paypal';
+        const methodBadge = isPaypal
+          ? '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;background:rgba(0,112,186,0.15);color:#4a90c4;text-transform:uppercase;">PayPal</span>'
+          : '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;background:rgba(76,175,80,0.15);color:#4caf50;text-transform:uppercase;">UPI</span>';
+
+        let refCell = '';
+        if (isPaypal) {
+          const captureShort = tx.paypal_capture_id ? tx.paypal_capture_id.slice(0, 14) + '…' : '—';
+          const amount = tx.foreign_amount && tx.foreign_currency
+            ? `${tx.foreign_amount} ${tx.foreign_currency}`
+            : '';
+          refCell = `<div style="font-family:monospace;font-size:0.78rem">${escapeHtml(captureShort)}</div>
+                     ${amount ? `<div style="font-size:0.75rem;color:var(--muted)">${escapeHtml(amount)}</div>` : ''}
+                     ${tx.paypal_payer_email ? `<div style="font-size:0.7rem;color:var(--muted)">${escapeHtml(tx.paypal_payer_email)}</div>` : ''}`;
+        } else {
+          refCell = `<div style="font-family:monospace;font-size:0.8rem">${escapeHtml(tx.upi_transaction_ref || tx.payment_note || 'N/A')}</div>
+                     ${tx.upi_transaction_ref && tx.payment_note ? `<div style="font-size:0.7rem;color:var(--muted)">Note: ${escapeHtml(tx.payment_note)}</div>` : ''}`;
+        }
+
         return `<tr>
           <td style="font-weight:600">${escapeHtml(name)}</td>
           <td style="color:var(--accent);font-weight:600">${tx.coin_amount} FC</td>
-          <td style="font-family:monospace;font-size:0.8rem">${escapeHtml(tx.upi_transaction_ref || tx.payment_note || 'N/A')}</td>
+          <td>${methodBadge}</td>
+          <td>${refCell}</td>
           <td>${new Date(tx.created_at).toLocaleDateString()}</td>
           <td>
             <button class="btn btn-approve" onclick="approveCoins('${tx.id}')">✅ Approve</button>

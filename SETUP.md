@@ -73,8 +73,70 @@ Make sure these are set in your Supabase project:
 | Notifications | ✅ Working | In-app notifications |
 | Email Notifications | ⚠️ Needs deploy | Deploy edge function |
 | Referral System | ✅ Working | Share codes, track referrals |
-| Coin Purchase | ✅ Working | UPI payment flow |
+| Coin Purchase (UPI) | ✅ Working | Indian users, manual verify |
+| Coin Purchase (PayPal) | ⚠️ Needs setup | International, manual verify |
 | PWA | ✅ Working | Installable as app |
 | Admin Dashboard | ✅ Working | Manage quests, users, guild |
 | Terms Agreement | ✅ Working | First-visit modal |
 | Action History/Undo | ✅ Working | Grace window undo |
+
+---
+
+## PayPal International Payments (Optional)
+
+Adds a PayPal Smart-Buttons flow alongside the existing UPI flow so international users can buy Fairy Coins with cards / PayPal balance / local payment methods.
+
+### 1. Run the SQL migration
+Supabase Dashboard → SQL Editor → paste the contents of `migration_paypal_support.sql` → Run. This adds:
+- `payment_method` column (defaults to `'upi'`, so existing UPI rows are untouched)
+- PayPal-only columns: `paypal_order_id`, `paypal_capture_id`, `paypal_payer_email`, `foreign_currency`, `foreign_amount`
+- Partial unique indexes so UPI refs and PayPal capture ids can't collide
+
+### 2. Create a PayPal app
+1. Sign in at https://developer.paypal.com/dashboard/
+2. Go to **Apps & Credentials** → switch to **Sandbox** (for testing) or **Live** (for production)
+3. Click **Create App** → name it "Kindred Guild" → copy the **Client ID** and **Secret**
+
+### 3. Deploy the edge functions
+```bash
+supabase functions deploy create-paypal-order
+supabase functions deploy capture-paypal-order
+```
+
+### 4. Set the secrets
+```bash
+supabase secrets set PAYPAL_CLIENT_ID=your_sandbox_client_id
+supabase secrets set PAYPAL_CLIENT_SECRET=your_sandbox_secret
+supabase secrets set PAYPAL_ENV=sandbox            # or "live" for production
+supabase secrets set SITE_ORIGIN=https://kindredguild.org
+```
+
+For production later, repeat with the Live client id/secret and `PAYPAL_ENV=live`.
+
+### 5. Paste the PayPal Client ID into the frontend
+PayPal client IDs are PUBLIC, so it's safe to ship in JS.
+Open `js/supabase-client.js` and replace the empty string on this line:
+```js
+window.PAYPAL_CLIENT_ID = ''; // <-- paste your PayPal sandbox client id here
+```
+
+### 6. Tune the USD prices (optional)
+Open `coin_purchase_js_logic.js` and edit the `PACKAGE_USD_PRICES` map. Default:
+- 100 FC = $1.20
+- 200 FC = $2.40
+- 500 FC = $6.00
+- 1000 FC = $12.00
+
+These are hardcoded so you stay in control of the conversion rate. The same numbers are used for both the displayed USD amount AND what the user is actually charged.
+
+### 7. Test the flow
+1. Visit https://www.sandbox.paypal.com/ and create a sandbox buyer account
+2. Open `coin_purchase_ui.html?region=paypal` in your app
+3. Click the gold PayPal button → log in with the sandbox buyer → complete payment
+4. The purchase should appear in the **Admin Dashboard → Coin Purchases** tab with a blue **PayPal** badge
+5. Approve it → coins land in the user's `fairy_ledger` (same flow as UPI)
+
+### Notes
+- **Manual admin approval is reused** for PayPal, just like UPI. The capture happens on the server, but coins don't credit until you click Approve in the admin dashboard. This keeps the workflow consistent across both payment methods.
+- **No webhooks yet.** If a user's network drops between PayPal capture and our insert, the row may be missing — the capture edge function is idempotent and will return `already_logged: true` on retries, so worst case the user reopens the page and we re-attempt the insert (which will succeed thanks to the partial unique index on `paypal_capture_id`).
+- **Minimum charge:** PayPal requires at least $0.50 USD per transaction. The smallest package is $1.20 so this is fine.

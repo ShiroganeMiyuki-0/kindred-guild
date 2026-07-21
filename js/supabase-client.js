@@ -15,6 +15,24 @@
     console.error('[Kindred Guild] Supabase CDN not loaded. Add the CDN script before supabase-client.js');
   }
 
+  // Expose Supabase URL + anon key on window so edge function calls can use them
+  window.SUPABASE_URL = SUPABASE_URL;
+  window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
+
+  // ---------------------------------------------------------------------
+  // PayPal public client ID. Get yours at https://developer.paypal.com/dashboard/
+  // -> Apps & Credentials -> create app -> copy "Client ID".
+  // These IDs are PUBLIC (PayPal documents this), so it's safe to ship in JS.
+  // Use the Sandbox client ID while testing; switch to Live before going public.
+  // ---------------------------------------------------------------------
+  // Sandbox (testing):
+  window.PAYPAL_CLIENT_ID = ''; // <-- paste your PayPal sandbox client id here
+  // Live (production):
+  // window.PAYPAL_CLIENT_ID = 'PASTE_LIVE_CLIENT_ID_HERE';
+
+  // Override the value above at deploy time by setting window.PAYPAL_CLIENT_ID
+  // in a <script> tag before this file loads, or by editing this line directly.
+
   // Shared utility: escape HTML to prevent XSS
   window.escapeHtml = function (text) {
     if (!text) return '';
