@@ -422,6 +422,17 @@
     </div>
   </section>
 
+  <!-- RECENT QUESTS PREVIEW -->
+  <section id="recentQuests" style="padding:60px 20px;max-width:900px;margin:0 auto">
+    <h2 style="text-align:center;font-size:1.8rem;color:var(--accent);margin-bottom:8px">Live Quest Board</h2>
+    <p style="text-align:center;color:var(--text-dim);margin-bottom:32px;font-size:1rem">Real tasks posted by real people. Sign up to accept or post your own.</p>
+    <div id="recentQuestsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
+    <div style="text-align:center;margin-top:32px">
+      <a href="quest-board.html" class="btn btn-primary">View All Quests</a>
+      <a href="auth.html" class="btn btn-outline" style="margin-left:8px">Sign Up to Accept</a>
+    </div>
+  </section>
+
   <!-- HOW IT WORKS -->
   <div class="section-divider"></div>
   <section class="how-it-works reveal">
@@ -715,6 +726,45 @@
         el.textContent = current >= 1000 ? (current/1000).toFixed(1) + 'k' : current;
       }, 30);
     }
+
+    // Load recent quests preview (no auth required)
+    (async function() {
+      try {
+        const { data: quests } = await window.sb
+          .from('quests')
+          .select('id, title, description, payment_type, coin_amount, upi_amount, deadline, poster:user_profiles!quests_poster_id_fkey(display_name, username, is_verified)')
+          .eq('status', 'open')
+          .eq('is_deleted', false)
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        if (!quests || quests.length === 0) return;
+
+        const grid = document.getElementById('recentQuestsGrid');
+        grid.innerHTML = quests.map(q => {
+          const badge = q.payment_type === 'coins' ? '🪙 ' + q.coin_amount + ' FC' : q.payment_type === 'upi' ? '₹' + q.upi_amount : '🎁 Free';
+          const badgeBg = q.payment_type === 'coins' ? 'rgba(234,179,8,0.12)' : q.payment_type === 'upi' ? 'rgba(249,115,22,0.12)' : 'rgba(16,185,129,0.12)';
+          const badgeColor = q.payment_type === 'coins' ? '#eab308' : q.payment_type === 'upi' ? '#f97316' : '#10b981';
+          const poster = q.poster?.display_name || q.poster?.username || 'Member';
+          const verified = q.poster?.is_verified ? ' ✅' : '';
+          const deadline = new Date(q.deadline);
+          const daysLeft = Math.max(0, Math.ceil((deadline - Date.now()) / 86400000));
+          const timeStr = daysLeft === 0 ? 'Today' : daysLeft === 1 ? '1 day left' : daysLeft + ' days left';
+          const desc = q.description.length > 100 ? q.description.substring(0, 100) + '...' : q.description;
+
+          return `
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color 0.2s;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="window.location='auth.html'">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <span style="background:${badgeBg};color:${badgeColor};padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:700">${badge}</span>
+                <span style="font-size:0.7rem;color:var(--text-dim)">${timeStr}</span>
+              </div>
+              <h3 style="font-size:1rem;color:var(--text);margin-bottom:6px;font-weight:600">${escapeHtml(q.title)}</h3>
+              <p style="font-size:0.82rem;color:var(--text-dim);line-height:1.5;margin-bottom:10px">${escapeHtml(desc)}</p>
+              <div style="font-size:0.75rem;color:var(--text-muted)">by ${escapeHtml(poster)}${verified}</div>
+            </div>`;
+        }).join('');
+      } catch(e) { console.log('Recent quests error:', e); }
+    })();
   </script>
 </body>
 </html>
