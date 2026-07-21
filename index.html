@@ -128,9 +128,13 @@
 
     /* Scroll reveal animation */
     .reveal {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.hidden-anim {
       opacity: 0;
       transform: translateY(30px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
     }
     .reveal.visible {
       opacity: 1;
@@ -668,11 +672,15 @@
       }
     })();
 
-    // Scroll reveal
+    // Scroll reveal — add hidden-anim class first, then observer removes it
     (function() {
+      // Mark sections as hidden only after JS is ready
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('hidden-anim'));
+
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
+            entry.target.classList.remove('hidden-anim');
             entry.target.classList.add('visible');
           }
         });
