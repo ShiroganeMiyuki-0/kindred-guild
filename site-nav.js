@@ -330,6 +330,13 @@
         setupEventHandlers(user);
         adjustFlexBody();
         if (user) loadNotificationCount();
+
+        // Show the Terms & Conditions agreement modal for first-time visitors.
+        // Previously this function was defined but never invoked, so the
+        // welcome-onboarding flow shipped dead. Safe to call repeatedly — it
+        // no-ops once the user has accepted (kg_terms_accepted in localStorage)
+        // and also no-ops if the overlay is already on screen.
+        if (user) showTermsAgreement();
     }
 
     // Inject a consistent page-level nav bar under the floating nav on every page
@@ -672,9 +679,11 @@
     // ── PWA: Service Worker + Install Prompt ──
     let deferredInstallPrompt = null;
 
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-    }
+    // NOTE: Service worker registration happens once at the bottom of this
+    // IIFE (after the `load` event) with proper error logging. The duplicate
+    // registration that used to live here was removed — registering twice
+    // doesn't break anything but spawns two parallel SW pipelines and
+    // confuses debug tooling.
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();

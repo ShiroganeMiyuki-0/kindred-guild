@@ -62,7 +62,7 @@
           <div class="upi-link">
             <a href="upi://pay?pa=yashwanthrangaswamy72@okhdfcbank&pn=Kindred%20Guild&am=100&tn=Guild%20Donation" id="upiDeepLink">💳 Open in UPI App</a>
           </div>
-          <div style="margin-top:10px;font-size:0.8rem;color:var(--text-dim)">UPI ID: yashwanthrangaswamy72@okhdfcbank</div>
+          <div style="margin-top:10px;font-size:0.8rem;color:var(--text-dim)">UPI ID: <span id="upiIdDisplay">yashwanthrangaswamy72@okhdfcbank</span></div>
         </div>
         <div class="form-group">
           <label>Your Name (optional)</label>
@@ -100,7 +100,14 @@
     function updateUPILink() {
       let amount = donationAmountSelect.value;
       if (amount === 'custom') amount = customAmountInput.value || '100';
-      upiDeepLink.href = `upi://pay?pa=yashwanthrangaswamy72@okhdfcbank&pn=Kindred%20Guild&am=${amount}&tn=Guild%20Donation`;
+      // Use the centralized UPI config from window.UPI_ID (set in supabase-client.js)
+      // with a fallback for safety. Keeps this page in sync if the ID ever changes.
+      const upiId = window.UPI_ID || 'yashwanthrangaswamy72@okhdfcbank';
+      const payeeName = window.PAYEE_NAME || 'Kindred Guild';
+      const pn = encodeURIComponent(payeeName);
+      upiDeepLink.href = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${pn}&am=${encodeURIComponent(amount)}&tn=Guild%20Donation`;
+      const idSpan = document.getElementById('upiIdDisplay');
+      if (idSpan) idSpan.textContent = upiId;
     }
 
     customAmountInput.addEventListener('change', updateUPILink);

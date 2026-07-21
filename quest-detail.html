@@ -210,7 +210,10 @@
   <script src="dispute-enhancements.js"></script>
   <script>
     window.addEventListener('load', () => {
+      let attempts = 0;
+      const MAX_ATTEMPTS = 40; // ~20s at 500ms — give up gracefully after that
       const check = setInterval(() => {
+        attempts++;
         if (window.currentQuest && window.currentUser) {
           clearInterval(check);
           const isPoster = window.currentQuest.poster_id === window.currentUser.id;
@@ -220,6 +223,10 @@
             actions.style.display = 'block';
             link.href = 'quest-edit.html?id=' + window.currentQuest.id;
           } else { actions.style.display = 'none'; }
+        } else if (attempts >= MAX_ATTEMPTS) {
+          clearInterval(check);
+          const actions = document.getElementById('posterActions');
+          if (actions) actions.style.display = 'none';
         }
       }, 500);
     });

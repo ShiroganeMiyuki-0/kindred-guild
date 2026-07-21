@@ -75,14 +75,23 @@
     if (paypalSdkReady) return Promise.resolve();
     if (paypalSdkLoading) return paypalSdkLoading;
 
-    if (!CLIENT_ID) {
+    // Re-read the client id at call time. supabase-client.js may have resolved
+    // it from localStorage / URL param / <meta> AFTER this IIFE captured the
+    // initial value (which could have been empty if no override was set).
+    const resolvedClientId =
+      (typeof window.PAYPAL_CLIENT_ID === 'string' && window.PAYPAL_CLIENT_ID) ||
+      CLIENT_ID;
+
+    if (!resolvedClientId) {
       return Promise.reject(new Error(
-        'PayPal client id is not configured. Set window.PAYPAL_CLIENT_ID in js/supabase-client.js.'
+        'PayPal is not configured yet. An admin needs to set window.PAYPAL_CLIENT_ID ' +
+        'in js/supabase-client.js (or via <meta name="paypal-client-id"> / ' +
+        'localStorage.kg_paypal_client_id). See SETUP.md for the full guide.'
       ));
     }
 
     paypalSdkLoading = new Promise((resolve, reject) => {
-      const url = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(CLIENT_ID)}&currency=${CURRENCY}&intent=capture&components=buttons`;
+      const url = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(resolvedClientId)}&currency=${CURRENCY}&intent=capture&components=buttons`;
 
       // Replace the placeholder tag from the HTML (or any stale tag) with a
       // tag pointing at the real client id.
@@ -101,7 +110,7 @@
         paypalSdkReady = true;
         resolve();
       });
-      tag.addEventListener('error', () => reject(new Error('PayPal SDK failed to load')));
+      tag.addEventListener('error', () => reject(new Error('PayPal SDK failed to load. Check your network connection and that the client id is valid.')));
     });
 
     return paypalSdkLoading;

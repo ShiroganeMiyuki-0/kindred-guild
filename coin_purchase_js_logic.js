@@ -5,8 +5,11 @@
 // Uses shared window.sb from supabase-client.js
 // ============================================
 
-const UPI_ID = 'yashwanthrangaswamy72@okhdfcbank';
-const PAYEE_NAME = 'Kindred Guild';
+// UPI configuration is centralized in js/supabase-client.js as window.UPI_ID
+// and window.PAYEE_NAME. Fall back to the historical values only if the
+// shared client failed to load for some reason.
+const UPI_ID = (window.UPI_ID || 'yashwanthrangaswamy72@okhdfcbank');
+const PAYEE_NAME = (window.PAYEE_NAME || 'Kindred Guild');
 
 // USD price per coin package. These are the BASE prices (= the INR value
 // converted to USD at your chosen rate). The price the international user
@@ -157,6 +160,11 @@ window.updatePaymentDetails = function() {
   document.getElementById('amountDueSpan').textContent = `₹${amount}`;
   currentPaymentNote = generatePaymentNote(coins);
   document.getElementById('paymentNote').textContent = currentPaymentNote;
+
+  // Keep the displayed UPI ID and QR code in sync with window.UPI_ID
+  // (centralized in supabase-client.js) so changing it there flows here too.
+  const upiIdEl = document.getElementById('upiIdDisplay');
+  if (upiIdEl && window.UPI_ID) upiIdEl.textContent = window.UPI_ID;
 
   const upiLink = generateUpiLink(amount, currentPaymentNote);
   document.getElementById('upiLink').href = upiLink;

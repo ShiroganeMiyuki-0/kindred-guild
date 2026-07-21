@@ -7,19 +7,24 @@
 //   PAYPAL_CLIENT_ID      — from https://developer.paypal.com/dashboard/
 //   PAYPAL_CLIENT_SECRET  — same place (use Sandbox values during testing)
 //   PAYPAL_ENV            — "sandbox" (default) or "live"
+//   SUPABASE_URL          — auto-set by Supabase
+//   SUPABASE_ANON_KEY     — auto-set by Supabase
 //
 // Flow:
 //   client -> { coins, amount_usd, payment_note }
+//   server -> verify JWT, recompute amount_usd server-side (DO NOT trust client)
 //   server -> PayPal Orders API (POST /v2/checkout/orders)
 //   server -> { orderId }
 // =========================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const PAYPAL_CLIENT_ID = Deno.env.get("PAYPAL_CLIENT_ID") || "";
 const PAYPAL_CLIENT_SECRET = Deno.env.get("PAYPAL_CLIENT_SECRET") || "";
 const PAYPAL_ENV = (Deno.env.get("PAYPAL_ENV") || "sandbox").toLowerCase();
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
 const PAYPAL_API_BASE =
   PAYPAL_ENV === "live"
@@ -34,6 +39,33 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+// ---------------------------------------------------------------------------
+// Canonical price table. MUST match coin_purchase_js_logic.js BASE_USD_PRICES.
+// The client sends us amount_usd for display convenience only — we ALWAYS
+// recompute the real charge from this server-side table so a malicious client
+// can't request 1000 FC for $0.50.
+// ---------------------------------------------------------------------------
+const BASE_USD_PRICES: Record<number, number> = {
+  100: 1.20,
+  200: 2.40,
+  500: 6.00,
+  1000: 12.00,
+};
+
+const PAYPAL_FEE_PERCENT = 0.044;
+const PAYPAL_FIXED_FEE_USD = 0.30;
+const PLATFORM_PROFIT_MARGIN = 0.10;
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function computeChargeUsd(baseUsd: number): number {
+  const target = baseUsd * (1 + PLATFORM_PROFIT_MARGIN);
+  const charged = (target + PAYPAL_FIXED_FEE_USD) / (1 - PAYPAL_FEE_PERCENT);
+  return round2(charged);
+}
 
 async function getPayPalAccessToken(): Promise<string> {
   const auth = btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`);
@@ -51,10 +83,6 @@ async function getPayPalAccessToken(): Promise<string> {
   }
   const data = await res.json();
   return data.access_token as string;
-}
-
-function isPositiveNumber(v: unknown): v is number {
-  return typeof v === "number" && Number.isFinite(v) && v > 0;
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -81,11 +109,23 @@ serve(async (req) => {
     );
   }
 
-  // Authenticate the caller against Supabase using their JWT (anon + user)
-  // so only logged-in guild members can create an order.
+  // ---------------------------------------------------------------------------
+  // Authenticate the caller against Supabase using their JWT.
+  // Previously we only checked the Authorization header started with "bearer ",
+  // which means anyone with any string could create orders. Now we verify the
+  // JWT resolves to a real Supabase user before doing anything else.
+  // ---------------------------------------------------------------------------
   const authHeader = req.headers.get("Authorization") || "";
   if (!authHeader.toLowerCase().startsWith("bearer ")) {
     return jsonResponse({ error: "Missing Authorization header" }, 401);
+  }
+
+  const supabaseUser = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: userData, error: userErr } = await supabaseUser.auth.getUser();
+  if (userErr || !userData?.user) {
+    return jsonResponse({ error: "Invalid user session" }, 401);
   }
 
   let payload: { coins?: number; amount_usd?: number; payment_note?: string };
@@ -96,15 +136,27 @@ serve(async (req) => {
   }
 
   const coins = Number(payload.coins);
-  const amountUsd = Number(payload.amount_usd);
   const paymentNote = String(payload.payment_note || "").slice(0, 120);
 
   if (!Number.isInteger(coins) || coins <= 0) {
     return jsonResponse({ error: "coins must be a positive integer" }, 400);
   }
-  if (!isPositiveNumber(amountUsd)) {
-    return jsonResponse({ error: "amount_usd must be a positive number" }, 400);
+
+  // ---------------------------------------------------------------------------
+  // CRITICAL: Look up the canonical base price for `coins` server-side and
+  // recompute the charge. Ignore the client-supplied amount_usd entirely —
+  // a malicious user could otherwise pass coins=1000 & amount_usd=0.50 and
+  // receive 1000 FC for $0.50 after admin approval.
+  // ---------------------------------------------------------------------------
+  const baseUsd = BASE_USD_PRICES[coins];
+  if (typeof baseUsd !== "number" || !Number.isFinite(baseUsd) || baseUsd <= 0) {
+    return jsonResponse(
+      { error: `No price tier defined for ${coins} coins` },
+      400,
+    );
   }
+  const amountUsd = computeChargeUsd(baseUsd);
+
   if (amountUsd < 0.5) {
     // PayPal minimum for USD
     return jsonResponse({ error: "amount_usd is below PayPal's minimum" }, 400);
@@ -173,6 +225,7 @@ serve(async (req) => {
       orderId: order.id,
       status: order.status,
       env: PAYPAL_ENV,
+      charged_usd: amountUsd, // echo back so the client can sanity-check
     });
   } catch (err) {
     console.error("create-paypal-order crashed:", err);

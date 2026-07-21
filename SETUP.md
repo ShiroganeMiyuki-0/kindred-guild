@@ -115,19 +115,49 @@ For production later, repeat with the Live client id/secret and `PAYPAL_ENV=live
 
 ### 5. Paste the PayPal Client ID into the frontend
 PayPal client IDs are PUBLIC, so it's safe to ship in JS.
-Open `js/supabase-client.js` and replace the empty string on this line:
+
+**Option A — Edit `js/supabase-client.js`** (recommended for production):
+Replace the empty string on this line:
 ```js
 window.PAYPAL_CLIENT_ID = ''; // <-- paste your PayPal sandbox client id here
 ```
 
+**Option B — Use a `<meta>` tag** (no source edit needed):
+Add this to the `<head>` of `coin_purchase_ui.html` (or any page that uses PayPal):
+```html
+<meta name="paypal-client-id" content="YOUR_SANDBOX_OR_LIVE_CLIENT_ID">
+```
+
+**Option C — Use `localStorage`** (great for staging / quick QA without redeploying):
+```js
+// In the browser console on kindredguild.org:
+localStorage.setItem('kg_paypal_client_id', 'YOUR_CLIENT_ID');
+```
+
+**Option D — URL parameter** (one-shot testing only — never ship a link with this):
+```
+https://kindredguild.org/coin_purchase_ui.html?region=paypal&paypal_client_id=YOUR_CLIENT_ID
+```
+
+The runtime resolver tries these in order: URL param → localStorage → `<meta>` tag → hardcoded value. First non-empty match wins. All four accept only `[A-Za-z0-9_-]{20,}` so a malformed value can't accidentally become the client id.
+
 ### 6. Tune the USD prices (optional)
-Open `coin_purchase_js_logic.js` and edit the `PACKAGE_USD_PRICES` map. Default:
+Open `coin_purchase_js_logic.js` and edit the `BASE_USD_PRICES` map. Default base prices:
 - 100 FC = $1.20
 - 200 FC = $2.40
 - 500 FC = $6.00
 - 1000 FC = $12.00
 
-These are hardcoded so you stay in control of the conversion rate. The same numbers are used for both the displayed USD amount AND what the user is actually charged.
+These are the BASE values (the fair USD equivalent of the coins). The amount the international user is **actually charged** is computed at runtime by `computeChargeUsd()` so that, after PayPal's 4.4% + $0.30 processing fee, you keep a 10% platform margin on top of the base. Example for 100 FC:
+- Base: $1.20
+- PayPal fee: ~$0.38
+- Platform margin (10%): ~$0.12
+- **User pays: ~$1.70** (this is what shows on the PayPal button)
+- You receive: ~$1.32 (= base + margin)
+
+If you change `BASE_USD_PRICES`, **also update the matching `BASE_USD_PRICES` map in `supabase/functions/create-paypal-order/index.ts`** — the server recomputes the charge from its own copy and ignores the client-supplied `amount_usd` to prevent users from paying $0.50 for 1000 FC.
+
+To change the fee assumptions (PayPal rate, platform margin), edit `PAYPAL_FEE_PERCENT`, `PAYPAL_FIXED_FEE_USD`, and `PLATFORM_PROFIT_MARGIN` in BOTH `coin_purchase_js_logic.js` AND the create-paypal-order edge function.
 
 ### 7. Test the flow
 1. Visit https://www.sandbox.paypal.com/ and create a sandbox buyer account

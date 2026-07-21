@@ -20,18 +20,56 @@
   window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
 
   // ---------------------------------------------------------------------
+  // Centralized UPI configuration. Previously this was hardcoded in 4+
+  // different places (coin_purchase_js_logic.js, coin_purchase_ui.html,
+  // donation.html x3). If the UPI ID ever changes, you only need to update
+  // it here — every page reads from window.UPI_ID / window.PAYEE_NAME.
+  // ---------------------------------------------------------------------
+  window.UPI_ID = 'yashwanthrangaswamy72@okhdfcbank';
+  window.PAYEE_NAME = 'Kindred Guild';
+
+  // ---------------------------------------------------------------------
   // PayPal public client ID. Get yours at https://developer.paypal.com/dashboard/
   // -> Apps & Credentials -> create app -> copy "Client ID".
   // These IDs are PUBLIC (PayPal documents this), so it's safe to ship in JS.
   // Use the Sandbox client ID while testing; switch to Live before going public.
+  //
+  // Resolution order (first non-empty wins):
+  //   1. ?paypal_client_id=... URL param  (for quick testing only — never ship)
+  //   2. localStorage.kg_paypal_client_id (admin "set and forget" override)
+  //   3. <meta name="paypal-client-id" content="..."> tag in the HTML head
+  //   4. The hardcoded value below
   // ---------------------------------------------------------------------
   // Sandbox (testing):
   window.PAYPAL_CLIENT_ID = ''; // <-- paste your PayPal sandbox client id here
   // Live (production):
   // window.PAYPAL_CLIENT_ID = 'PASTE_LIVE_CLIENT_ID_HERE';
 
-  // Override the value above at deploy time by setting window.PAYPAL_CLIENT_ID
-  // in a <script> tag before this file loads, or by editing this line directly.
+  // Allow runtime overrides WITHOUT touching source. Useful for staging
+  // environments, customer-specific deployments, or quick QA.
+  (function resolvePayPalClientId() {
+    try {
+      // 1. URL param (testing only — never log or persist this)
+      const urlParam = new URLSearchParams(window.location.search).get('paypal_client_id');
+      if (urlParam && /^[A-Za-z0-9_-]{20,}$/.test(urlParam)) {
+        window.PAYPAL_CLIENT_ID = urlParam;
+        return;
+      }
+      // 2. localStorage override
+      const lsVal = window.localStorage && window.localStorage.getItem('kg_paypal_client_id');
+      if (lsVal && /^[A-Za-z0-9_-]{20,}$/.test(lsVal)) {
+        window.PAYPAL_CLIENT_ID = lsVal;
+        return;
+      }
+      // 3. <meta name="paypal-client-id"> tag
+      const meta = document.querySelector('meta[name="paypal-client-id"]');
+      if (meta && meta.content && /^[A-Za-z0-9_-]{20,}$/.test(meta.content)) {
+        window.PAYPAL_CLIENT_ID = meta.content;
+        return;
+      }
+      // 4. Already set above (hardcoded)
+    } catch (_) { /* localStorage may throw in private mode — ignore */ }
+  })();
 
   // Shared utility: escape HTML to prevent XSS
   window.escapeHtml = function (text) {
