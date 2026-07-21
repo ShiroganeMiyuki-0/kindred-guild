@@ -63,3 +63,4 @@ htmlcov/
 screenshot-*.png
 auth-page.png
 .openclaw/tmp/
+supabase/.temp/

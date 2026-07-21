@@ -47,7 +47,7 @@
   //   3. <meta name="paypal-me-username" content="..."> tag in the HTML head
   //   4. The hardcoded value below
   // ---------------------------------------------------------------------
-  window.PAYPAL_ME_USERNAME = ''; // <-- paste your PayPal.me username here
+  window.PAYPAL_ME_USERNAME = 'YashwanthR131'; // <-- PayPal.me username (paypal.me/YashwanthR131)
 
   (function resolvePayPalMeUsername() {
     const isValid = (v) => typeof v === 'string' && /^[A-Za-z0-9_-]{3,50}$/.test(v);
