@@ -122,6 +122,8 @@ async function loadQuests() {
   } else if (currentView === 'bookmarked') {
     if (bookmarkedIds.length === 0) { quests = []; renderQuests(); return; }
     query = query.in('id', bookmarkedIds);
+  } else if (currentView === 'expired') {
+    query = query.eq('status', 'expired').eq('is_deleted', false);
   }
 
   const typeFilter = filterType.value;
@@ -231,7 +233,11 @@ function renderQuests() {
     if (hoursLeft > 0 && hoursLeft < 48 && quest.status === 'open') trustBadges += '<span style="font-size:0.7rem;background:rgba(239,68,68,0.1);color:#ef4444;padding:2px 8px;border-radius:10px">🔥 Urgent</span>';
 
     let actionBtn = '';
-    if (quest.status === 'open') {
+    if (quest.status === 'expired') {
+      actionBtn = isOwn
+        ? `<button class="action-btn" onclick="repostQuest('${quest.id}')" style="background:var(--accent);color:#000;font-weight:700;">🔄 Re-post This Quest</button>`
+        : `<span class="action-btn" style="opacity:0.5;cursor:default">⏰ Expired</span>`;
+    } else if (quest.status === 'open') {
       actionBtn = isOwn
         ? `<a href="quest-edit.html?id=${quest.id}" class="action-btn own">✏️ Edit / Cancel</a>`
         : `<button class="action-btn" onclick="acceptQuest('${quest.id}')">Accept This Task</button>`;
@@ -368,4 +374,14 @@ window.toggleBookmark = async function (questId) {
   } else {
     renderQuests();
   }
+};
+
+window.repostQuest = async function (questId) {
+  if (!confirm('Re-post this quest? A new 7-day deadline will be set and coins will be locked again.')) return;
+
+  const { data: newId, error } = await window.sb.rpc('repost_expired_quest', { p_quest_id: questId });
+  if (error) { window.showToast('Failed: ' + error.message, 'error'); return; }
+
+  window.showToast('Quest re-posted! New deadline: 7 days from now.', 'success');
+  loadQuests();
 };

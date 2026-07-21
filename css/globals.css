@@ -173,6 +173,7 @@ textarea { min-height: 100px; resize: vertical; }
 .status-approved { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 .status-disputed { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 .status-cancelled { background: rgba(94, 94, 108, 0.15); color: var(--text-dim); }
+.status-expired { background: rgba(239, 68, 68, 0.1); color: #f87171; }
 
 /* ---- Tag styles ---- */
 .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
