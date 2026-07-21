@@ -77,11 +77,9 @@ window.undoAction = async function (actionId, actionType) {
       await window.sb.rpc('restore_quest', { p_quest_id: action.quest_id });
     } else if (actionType === 'worker_post_deleted' && action.worker_post_id) {
       await window.sb.from('worker_posts').update({ is_deleted: false, deleted_at: null }).eq('id', action.worker_post_id);
-    } else if (actionType === 'quest_edited' && action.quest_id && action.old_data) {
-      await window.sb.from('quests').update({
-        title: action.old_data.title, description: action.old_data.description,
-        tags: action.old_data.tags, coin_amount: action.old_data.coin_amount, upi_amount: action.old_data.upi_amount
-      }).eq('id', action.quest_id);
+    } else if (actionType === 'quest_edited' && action.quest_id) {
+      const { error } = await window.sb.rpc('undo_quest_edit', { p_action_log_id: actionId });
+      if (error) throw error;
     } else { window.showToast('This action cannot be undone.', 'warning'); return; }
 
     window.showToast('Action undone successfully!', 'success');
