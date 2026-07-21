@@ -96,6 +96,7 @@
     const publicMenuItems = [
         { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html', primary: true },
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
+        { name: 'Getting Started', icon: 'fa-book-open', file: 'getting-started.html' },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
@@ -112,6 +113,7 @@
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
         { name: 'Messages', icon: 'fa-envelope', file: 'dm.html', primary: true },
         { name: 'Post Quest', icon: 'fa-circle-plus', file: 'quest-post.html', primary: true },
+        { name: 'Getting Started', icon: 'fa-book-open', file: 'getting-started.html' },
         { name: 'Find People', icon: 'fa-magnifying-glass', file: 'search.html' },
         { name: 'Friends & Groups', icon: 'fa-user-group', file: 'friends.html' },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
