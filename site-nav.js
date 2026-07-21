@@ -340,6 +340,16 @@
         // Moving the menu to be a direct child of <body> fixes this and
         // matches the standard production pattern (mobile overlay is a
         // sibling of the navbar, not a child).
+        //
+        // DEDUPE: renderNavContainer() can run multiple times per page
+        // lifecycle (initial null fallback, post-Supabase resolve,
+        // onAuthStateChange). Each previous run left an orphan #mobile-menu
+        // attached to <body> because innerHTML = ... on the nav element
+        // detaches the old menu's children but doesn't remove the one we
+        // already appended to body. Remove any stale body-children first so
+        // we don't end up with duplicate IDs (which breaks getElementById
+        // and causes the Escape handler to act on a detached closure).
+        document.querySelectorAll('body > #mobile-menu').forEach(m => m.remove());
         const mobileMenu = navElement.querySelector('#mobile-menu');
         if (mobileMenu) {
             document.body.appendChild(mobileMenu);
@@ -529,15 +539,27 @@
         //     so we can restore it on close. This is the canonical iOS-safe
         //     scroll-lock pattern.
         //   - closes on Escape key, on link click, and on resize to desktop
-        const toggleBtn = document.getElementById('mobile-menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const icon = document.getElementById('hamburger-icon');
+        //
+        // LIVE REFS: setMenuOpen() re-queries #mobile-menu, #mobile-menu-toggle,
+        // and #hamburger-icon on EVERY call instead of capturing them once in
+        // closure variables. This is defensive against renderNavContainer()
+        // running multiple times per page lifecycle (which replaces the nav's
+        // innerHTML and detaches the old elements). With closure captures,
+        // a stale Escape listener would call setMenuOpen(false) on detached
+        // elements — visually closing the menu but leaving the new toggle's
+        // icon/aria-expanded stuck in the "open" state. Re-querying live
+        // guarantees we always operate on the current DOM.
 
         // Saved scroll position so we can restore it when the menu closes
         // (the position:fixed trick scrolls the body to top).
         let savedScrollY = 0;
 
         function setMenuOpen(open) {
+            // Re-query on every call so we always act on the current DOM
+            // (renderNavContainer may have replaced the nav's innerHTML).
+            const toggleBtn = document.getElementById('mobile-menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('hamburger-icon');
             if (!toggleBtn || !mobileMenu || !icon) return;
 
             // Desktop guard: the hamburger button is hidden above 768px via
@@ -579,22 +601,41 @@
             }
         }
 
-        if (toggleBtn && mobileMenu) {
-            toggleBtn.addEventListener('click', () => {
-                const isHidden = mobileMenu.classList.contains('hidden');
+        // Expose for debugging + so the resize handler below can call it
+        // even if the toggle button doesn't exist (e.g. on pages that
+        // override the navbar).
+        window.__kgSetMenuOpen = setMenuOpen;
+
+        // Attach handlers (idempotent — addEventListener with the same
+        // function ref is a no-op on re-render, but we pass new anonymous
+        // arrows each time, so we DO accumulate duplicates. That's OK
+        // because setMenuOpen() re-queries the DOM — duplicates just call
+        // the same logic twice, with no side effects beyond a redundant
+        // classList toggle.)
+        const toggleBtn0 = document.getElementById('mobile-menu-toggle');
+        const mobileMenu0 = document.getElementById('mobile-menu');
+        if (toggleBtn0 && mobileMenu0) {
+            toggleBtn0.addEventListener('click', () => {
+                const isHidden = mobileMenu0.classList.contains('hidden');
                 setMenuOpen(isHidden);
             });
 
             // Close on Escape
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
-                    setMenuOpen(false);
+                if (e.key === 'Escape') {
+                    const mm = document.getElementById('mobile-menu');
+                    if (mm && !mm.classList.contains('hidden')) {
+                        setMenuOpen(false);
+                    }
                 }
             });
 
             // Close when any link inside the menu is clicked (so navigating
-            // to a new page doesn't leave the menu open in the bfcache)
-            mobileMenu.querySelectorAll('a').forEach(a => {
+            // to a new page doesn't leave the menu open in the bfcache).
+            // Re-queries links on each click delegation-style — but since
+            // the menu DOM is replaced on re-render, we attach directly to
+            // the current menu's links.
+            mobileMenu0.querySelectorAll('a').forEach(a => {
                 a.addEventListener('click', () => setMenuOpen(false));
             });
             // Also close when the mobile Sign Out button is clicked
@@ -607,7 +648,8 @@
             // Tailwind's md:hidden above that breakpoint, but the body lock
             // would persist if we don't clean up.
             window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768 && !mobileMenu.classList.contains('hidden')) {
+                const mm = document.getElementById('mobile-menu');
+                if (window.innerWidth >= 768 && mm && !mm.classList.contains('hidden')) {
                     setMenuOpen(false);
                 }
             });
