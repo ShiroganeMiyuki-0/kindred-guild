@@ -144,13 +144,13 @@
     targetEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
 
     setTimeout(() => {
-      const rect = targetEl.getBoundingClientRect();
-      const tooltipRect = activeTooltip.getBoundingClientRect();
-      let top = rect.bottom + window.scrollY + 12, left = rect.left + window.scrollX;
-      if (top + tooltipRect.height > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - tooltipRect.height - 12;
-      if (left + tooltipRect.width > window.innerWidth) left = window.innerWidth - tooltipRect.width - 20;
-      if (left < 12) left = 12;
-      if (top < 12) top = 12;
+      // Center the tooltip on screen
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const tw = activeTooltip.offsetWidth || 320;
+      const th = activeTooltip.offsetHeight || 200;
+      const left = Math.max(12, (vw - tw) / 2);
+      const top = Math.max(12, (vh - th) / 2);
       activeTooltip.style.top = `${top}px`;
       activeTooltip.style.left = `${left}px`;
     }, 150);
