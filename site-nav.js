@@ -686,7 +686,7 @@
         if (localStorage.getItem('kg_install_dismissed')) return;
         const banner = document.createElement('div');
         banner.id = 'pwa-install-banner';
-        banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d4af37,#b8941e);color:#000;padding:12px 20px;border-radius:12px;display:flex;align-items:center;gap:12px;z-index:500;box-shadow:0 4px 20px rgba(212,175,55,0.3);font-size:0.85rem;font-weight:600;max-width:90vw;';
+        banner.style.cssText = 'position:fixed;bottom:calc(env(safe-area-inset-bottom, 0px) + 20px);left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d4af37,#b8941e);color:#000;padding:12px 20px;border-radius:12px;display:flex;align-items:center;gap:12px;z-index:500;box-shadow:0 4px 20px rgba(212,175,55,0.3);font-size:0.85rem;font-weight:600;max-width:90vw;';
         banner.innerHTML = `
             <span>🏰 Install Kindred Guild as an app!</span>
             <button id="pwa-install-btn" style="background:#000;color:#d4af37;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.8rem;">Install</button>

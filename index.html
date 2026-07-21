@@ -644,7 +644,7 @@
 
   <!-- Scroll down nudge -->
   <button onclick="window.scrollBy({top: window.innerHeight * 0.7, behavior: 'smooth'})"
-    style="position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#000;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 15px rgba(212,175,55,0.3);z-index:90;"
+    style="position:fixed;bottom:calc(env(safe-area-inset-bottom, 0px) + 80px);right:20px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#000;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 15px rgba(212,175,55,0.3);z-index:90;"
     aria-label="Scroll down" title="Explore more">↓</button>
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>

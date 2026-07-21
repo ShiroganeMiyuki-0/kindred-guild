@@ -1,6 +1,6 @@
 /* ============================================
    KINDRED GUILD — GLOBAL FIXES
-   Responsive + overflow protection.
+   Responsive + mobile safe areas + spacing.
    Include AFTER globals.css on every page.
    ============================================ */
 
@@ -10,47 +10,65 @@
 .modal-overlay { z-index: 2000; }
 #toast-container { z-index: 3000; }
 
-/* ── 2. BODY & CONTAINER ──────────────────── */
+/* ── 2. BODY ──────────────────────────────── */
 body {
   overflow-x: hidden;
+  /* Safe area for notched phones (iPhone X+, etc.) */
+  padding-top: env(safe-area-inset-top, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+  /* Extra bottom padding for Android nav bar + safe area */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
 }
 
+/* ── 3. CONTAINER ─────────────────────────── */
 .container {
   width: 100%;
   max-width: var(--max-width, 1100px);
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 24px;
+  /* Space below sticky nav */
+  padding-top: 8px;
 }
 
-/* ── 3. GLOBAL TEXT WRAP ──────────────────── */
+/* ── 4. STICKY NAV BOTTOM SPACING ─────────── */
+/* Ensure content isn't hidden behind the fixed nav */
+#site-nav {
+  position: sticky;
+  top: 0;
+}
+
+/* ── 5. GLOBAL TEXT WRAP ──────────────────── */
 p, span, div, li, td, a,
 h1, h2, h3, h4, h5, h6 {
   overflow-wrap: break-word;
   word-break: break-word;
 }
 
-/* ── 4. INPUTS ────────────────────────────── */
+/* ── 6. INPUTS ────────────────────────────── */
 input, textarea, select {
   max-width: 100%;
   box-sizing: border-box;
+  /* Prevent zoom on iOS */
+  font-size: 16px;
 }
 
-/* ── 5. IMAGES ────────────────────────────── */
+/* ── 7. IMAGES ────────────────────────────── */
 img {
   max-width: 100%;
   height: auto;
 }
 
-/* ── 6. PAGE HEADERS ──────────────────────── */
+/* ── 8. PAGE HEADERS ──────────────────────── */
 .page-header,
 .header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -58,16 +76,23 @@ img {
 .header-bar > div {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
 }
 
-/* ── 7. CHAT LAYOUTS ──────────────────────── */
+/* ── 9. CARDS ─────────────────────────────── */
+.card, .quest-card, .wish-card, .worker-card,
+.profile-card, .quest-header, .post-form {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* ── 10. CHAT LAYOUTS ─────────────────────── */
 .dm-layout {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
   gap: 0;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 140px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
@@ -78,7 +103,7 @@ img {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   gap: 0;
-  height: calc(100vh - 80px);
+  height: calc(100vh - 120px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
@@ -90,15 +115,16 @@ img {
   word-break: break-word;
 }
 
-/* ── 8. MODAL OVERFLOW ────────────────────── */
+/* ── 11. MODAL ────────────────────────────── */
 .modal-box, .custom-modal {
-  max-height: 90vh;
-  max-width: calc(100vw - 40px);
+  max-height: 85vh;
+  max-width: calc(100vw - 32px);
   overflow-y: auto;
-  margin: 20px;
+  margin: 16px;
+  padding: 24px;
 }
 
-/* ── 9. TABLES ────────────────────────────── */
+/* ── 12. TABLES ───────────────────────────── */
 table {
   width: 100%;
   overflow-x: auto;
@@ -109,7 +135,7 @@ table {
   table { display: table; }
 }
 
-/* ── 10. SCROLLBAR ────────────────────────── */
+/* ── 13. SCROLLBAR ────────────────────────── */
 .view-selector, .section-tabs, .tabs {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -127,13 +153,58 @@ table {
   white-space: nowrap;
 }
 
-/* ── 11. MOBILE ───────────────────────────── */
-@media (max-width: 768px) {
-  .container { padding: 0 16px; }
+/* ── 14. QUEST CARD GRID ──────────────────── */
+.quest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
 
+/* ── 15. FAIRY WISHES LAYOUT ──────────────── */
+.layout-split {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+}
+
+/* ── 16. FLOATING BUTTONS ─────────────────── */
+/* Keep floating elements above Android nav bar */
+.floating-btn, .fab, [style*="position: fixed"][style*="bottom"] {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+}
+
+/* ── 17. TOAST NOTIFICATIONS ──────────────── */
+#toast-container {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 100px) !important;
+}
+
+/* ── 18. TABLET ───────────────────────────── */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .container { padding: 0 20px; }
+  
+  /* Hide brand text on tablet, keep logo */
+  #site-nav .nav-brand span {
+    display: none;
+  }
+}
+
+/* ── 19. MOBILE ───────────────────────────── */
+@media (max-width: 768px) {
+  body {
+    /* Extra bottom space for Android gesture nav */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+  }
+
+  .container {
+    padding: 0 16px;
+    padding-top: 8px;
+  }
+
+  /* Chat layouts: stack on mobile */
   .dm-layout, .hall-layout {
     grid-template-columns: 1fr;
     height: auto;
+    min-height: 60vh;
   }
 
   .dm-sidebar, .channel-sidebar {
@@ -146,19 +217,24 @@ table {
     inset: 0;
     z-index: 200;
     background: var(--surface);
+    /* Safe area padding inside sidebar */
+    padding-top: env(safe-area-inset-top, 0);
   }
 
+  /* Page headers: stack on mobile */
   .page-header, .header-bar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
 
   .page-header .actions .btn,
   .header-bar .btn {
-    padding: 6px 10px;
-    font-size: 0.72rem;
+    padding: 8px 12px;
+    font-size: 0.78rem;
   }
 
+  /* Wishes layout: stack */
   .layout-split {
     grid-template-columns: 1fr;
   }
@@ -167,6 +243,7 @@ table {
     position: static;
   }
 
+  /* Modals: full width on mobile */
   .modal-footer, .custom-modal-actions {
     flex-direction: column;
     gap: 8px;
@@ -176,13 +253,79 @@ table {
   .custom-modal-actions button {
     width: 100%;
   }
+
+  .modal-box, .custom-modal {
+    margin: 12px;
+    padding: 20px 16px;
+    max-height: 80vh;
+  }
+
+  /* Cards: less padding on mobile */
+  .card, .quest-card, .wish-card, .worker-card,
+  .profile-card, .quest-header, .post-form {
+    padding: 16px;
+  }
+
+  /* Footer links: wrap */
+  .footer-links {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 }
 
+/* ── 20. SMALL PHONES ─────────────────────── */
 @media (max-width: 480px) {
-  .container { padding: 0 12px; }
-  body { font-size: 14px; }
-  .btn { padding: 10px 16px; font-size: 0.85rem; }
-  .hero h1 { font-size: 1.6rem; }
-  .cta-group { flex-direction: column; }
-  .cta-group .btn { width: 100%; }
+  body {
+    font-size: 14px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px);
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+
+  .hero h1 {
+    font-size: 1.6rem;
+  }
+
+  .cta-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cta-group .btn {
+    width: 100%;
+  }
+
+  /* Quest grid: single column on small phones */
+  .quest-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Stats grid: 2 columns */
+  #liveStats > div {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
+
+/* ── 21. LANDSCAPE MODE ───────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+  body {
+    padding-bottom: 40px;
+  }
+  
+  .hero {
+    padding: 40px 20px;
+  }
+}
+
+/* ── 22. SCROLLBAR ────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--surface-3); }

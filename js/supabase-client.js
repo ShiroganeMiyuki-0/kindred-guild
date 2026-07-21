@@ -76,7 +76,7 @@
     if (!container) {
       container = document.createElement('div');
       container.id = 'toast-container';
-      container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:360px;';
+      container.style.cssText = 'position:fixed;bottom:calc(env(safe-area-inset-bottom, 0px) + 100px);right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:360px;';
       document.body.appendChild(container);
     }
     const colors = {
