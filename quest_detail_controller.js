@@ -55,6 +55,12 @@ function clearAlert() { document.getElementById('alertBox').className = 'message
   const user = await window.requireAuth();
   if (!user) return;
   currentUser = user;
+  // Expose on window so inline scripts in quest-detail.html can poll for it.
+  // Top-level `let` bindings are module-scoped to this classic script's
+  // lexical environment and do NOT become window properties, so the inline
+  // poller at quest-detail.html:212 (which checks window.currentUser) would
+  // otherwise never fire and the "Edit Quest" link would stay disabled.
+  window.currentUser = user;
 
   const profile = await window.getUserProfile(user.id);
   const name = profile?.display_name || profile?.username || 'Member';

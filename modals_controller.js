@@ -88,22 +88,9 @@ function closeGuildModal() {
 // -----------------------------
 // TOAST NOTIFICATIONS
 // -----------------------------
-function showToast(message, type = 'info', duration = 3000) {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
-
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-
-  toast.onclick = () => toast.remove();
-
-  container.appendChild(toast);
-
-  if (duration > 0) {
-    setTimeout(() => {
-      toast.style.animation = 'slideIn 0.3s reverse';
-      setTimeout(() => toast.remove(), 250);
-    }, duration);
-  }
-}
+// NOTE: showToast used to be redefined here, which shadowed the (better)
+// implementation in js/supabase-client.js. That version is loaded on every
+// page, includes its own inline styles + animation, and supports the
+// 'warning' type used elsewhere in the codebase. The override here produced
+// unstyled <div class="toast"> elements (no .toast CSS exists anywhere in
+// the project). Deleted to avoid the inconsistency.

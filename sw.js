@@ -6,11 +6,13 @@
 // means returning users can be stuck on stale cached JS/CSS indefinitely,
 // even after a hard refresh, because cache-first below never re-checks the
 // network once something is cached.
-const CACHE_NAME = 'kindred-guild-v2';
+// Bumped to v3 after removing the non-existent /css/layout-fix.css reference
+// that was causing caches.addAll() to reject and break SW install entirely.
+const CACHE_NAME = 'kindred-guild-v3';
 const STATIC_ASSETS = [
   '/',
   '/css/globals.css',
-  '/css/layout-fix.css',
+  '/css/fixes.css',
   '/js/supabase-client.js',
   '/manifest.json',
   '/logo-192.png',
@@ -19,8 +21,20 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', event => {
+  // addAll() is atomic — one 404 rejects the whole batch and SW install fails.
+  // Use put() per-asset instead so a single missing file doesn't kill offline
+  // caching for everything else.
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(async cache => {
+      await Promise.all(
+        STATIC_ASSETS.map(async (url) => {
+          try {
+            const res = await fetch(url, { cache: 'reload' });
+            if (res.ok) await cache.put(url, res);
+          } catch (_) { /* ignore individual asset failures */ }
+        })
+      );
+    })
   );
   self.skipWaiting();
 });

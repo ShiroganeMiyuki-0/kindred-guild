@@ -21,7 +21,7 @@ const corsHeaders = {
 };
 
 interface EmailPayload {
-  type: "quest_accepted" | "proof_submitted" | "quest_approved" | "quest_completed" | "wish_created" | "coin_credited" | "dispute_filed";
+  type: "quest_accepted" | "quest_pending" | "proof_submitted" | "quest_approved" | "quest_completed" | "wish_created" | "coin_credited" | "dispute_filed" | "welcome";
   quest_id?: string;
   wish_id?: string;
   recipient_id: string;
@@ -38,10 +38,30 @@ const templates: Record<string, (data: any) => { subject: string; html: string }
         <p><strong>${data.worker_name}</strong> has accepted your quest:</p>
         <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:16px;margin:16px 0">
           <h3 style="color:#d4af37;margin:0 0 8px">${data.title}</h3>
-          <p style="color:#888;margin:0">${data.description?.substring(0, 150)}...</p>
+          <p style="color:#888;margin:0">${(data.description || "").substring(0, 150)}...</p>
         </div>
         <p>They'll work on it and submit proof when done. You'll get notified when they do.</p>
         <a href="https://kindredguild.org/quest-detail.html?id=${data.quest_id}" style="display:inline-block;background:#d4af37;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:12px">View Quest →</a>
+        <hr style="border:none;border-top:1px solid #333;margin:24px 0">
+        <p style="color:#666;font-size:0.8rem">Kindred Guild — Help your community, earn trust.</p>
+      </div>
+    `,
+  }),
+
+  // Triggered when a worker applies to a quest that requires poster approval.
+  // Caller: quest-board.js -> window.sendNotification('quest_pending', poster.id, questId)
+  quest_pending: (data) => ({
+    subject: `⏳ ${data.worker_name} applied to your quest "${data.title}"`,
+    html: `
+      <div style="font-family:system-ui;max-width:600px;margin:0 auto;padding:20px;background:#0f0f0f;color:#e0e0e0;border-radius:12px">
+        <h2 style="color:#d4af37;margin-bottom:16px">⏳ Application Received</h2>
+        <p>Hey <strong>${data.poster_name}</strong>,</p>
+        <p><strong>${data.worker_name}</strong> would like to work on your quest:</p>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:16px;margin:16px 0">
+          <h3 style="color:#d4af37;margin:0 0 8px">${data.title}</h3>
+        </div>
+        <p>Review their application and approve or reject them on the quest page.</p>
+        <a href="https://kindredguild.org/quest-detail.html?id=${data.quest_id}" style="display:inline-block;background:#d4af37;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:12px">Review Application →</a>
         <hr style="border:none;border-top:1px solid #333;margin:24px 0">
         <p style="color:#666;font-size:0.8rem">Kindred Guild — Help your community, earn trust.</p>
       </div>
@@ -109,6 +129,81 @@ const templates: Record<string, (data: any) => { subject: string; html: string }
         <a href="https://kindredguild.org/quest-detail.html?id=${data.quest_id}" style="display:inline-block;background:#d4af37;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:12px">View Dispute →</a>
         <hr style="border:none;border-top:1px solid #333;margin:24px 0">
         <p style="color:#666;font-size:0.8rem">Kindred Guild — Help your community, earn trust.</p>
+      </div>
+    `,
+  }),
+
+  // Sent to both parties when a quest is fully completed (after both ratings
+  // are in or after the rating window closes). Currently not invoked by any
+  // caller, but kept in the type union so future code can opt in.
+  quest_completed: (data) => ({
+    subject: `🎉 Quest "${data.title}" completed`,
+    html: `
+      <div style="font-family:system-ui;max-width:600px;margin:0 auto;padding:20px;background:#0f0f0f;color:#e0e0e0;border-radius:12px">
+        <h2 style="color:#10b981;margin-bottom:16px">🎉 Quest Complete</h2>
+        <p>Hey <strong>${data.username}</strong>,</p>
+        <p>The quest "<strong>${data.title}</strong>" is now marked complete. Thanks for being part of it!</p>
+        <a href="https://kindredguild.org/quest-detail.html?id=${data.quest_id}" style="display:inline-block;background:#d4af37;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:12px">View Quest →</a>
+        <hr style="border:none;border-top:1px solid #333;margin:24px 0">
+        <p style="color:#666;font-size:0.8rem">Kindred Guild — Help your community, earn trust.</p>
+      </div>
+    `,
+  }),
+
+  // Sent when a community wish the user backed is fulfilled / granted.
+  // Currently not invoked by any caller, but kept in the type union.
+  wish_created: (data) => ({
+    subject: `🌟 A wish you might love: "${data.title}"`,
+    html: `
+      <div style="font-family:system-ui;max-width:600px;margin:0 auto;padding:20px;background:#0f0f0f;color:#e0e0e0;border-radius:12px">
+        <h2 style="color:#d4af37;margin-bottom:16px">🌟 New Community Wish</h2>
+        <p>Hey <strong>${data.username}</strong>,</p>
+        <p>A new wish was just posted:</p>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:16px;margin:16px 0">
+          <h3 style="color:#d4af37;margin:0 0 8px">${data.title}</h3>
+          <p style="color:#888;margin:0">${(data.description || "").substring(0, 200)}</p>
+        </div>
+        <a href="https://kindredguild.org/fairy-wishes.html" style="display:inline-block;background:#d4af37;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:12px">View Wishes →</a>
+        <hr style="border:none;border-top:1px solid #333;margin:24px 0">
+        <p style="color:#666;font-size:0.8rem">Kindred Guild — Help your community, earn trust.</p>
+      </div>
+    `,
+  }),
+
+  // Sent on first sign-in (within 60s of account creation).
+  // Caller: welcome-email.js -> sb.functions.invoke('send-email', { body: { type: 'welcome', recipient_id } })
+  welcome: (data) => ({
+    subject: `Welcome to the Guild! Here's how to get started 🛡️`,
+    html: `
+      <div style="font-family:system-ui;max-width:600px;margin:0 auto;padding:40px 20px;background:#0d0d0d;color:#e0e0e0">
+        <div style="text-align:center;margin-bottom:32px">
+          <h1 style="color:#d4af37;font-size:1.8rem;margin-bottom:8px">Welcome to Kindred Guild! 🛡️</h1>
+          <p style="color:#888;font-size:0.95rem">You just joined a community where people help each other out.</p>
+        </div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:24px;margin-bottom:20px">
+          <h2 style="color:#d4af37;font-size:1.2rem;margin-bottom:12px">🪙 You have 100 Fairy Coins</h2>
+          <p style="color:#aaa;font-size:0.9rem;line-height:1.6">Every new member gets 100 coins to try out the platform. Use them to post a paid quest, or save them for later.</p>
+        </div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:24px;margin-bottom:20px">
+          <h2 style="color:#d4af37;font-size:1.2rem;margin-bottom:12px">📝 Post Your First Quest</h2>
+          <p style="color:#aaa;font-size:0.9rem;line-height:1.6">Got something you need help with? Post a quest — it can be anything: a logo design, help moving, code review, and more.</p>
+        </div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:24px;margin-bottom:20px">
+          <h2 style="color:#d4af37;font-size:1.2rem;margin-bottom:12px">🛡️ Offer Your Skills</h2>
+          <p style="color:#aaa;font-size:0.9rem;line-height:1.6">Post your availability as a worker. Show what you can do, and quest posters will find you.</p>
+        </div>
+        <div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:24px;margin-bottom:20px">
+          <h2 style="color:#d4af37;font-size:1.2rem;margin-bottom:12px">🏰 Visit the Guild Hall</h2>
+          <p style="color:#aaa;font-size:0.9rem;line-height:1.6">Chat with the community. Ask questions, share ideas, or just hang out. We have channels for everything — #general, #meetups, #skill-swap, #study-buddies, and more.</p>
+        </div>
+        <div style="text-align:center;margin-top:32px;padding-top:20px;border-top:1px solid #333">
+          <a href="https://kindredguild.org/quest-board.html" style="display:inline-block;background:#d4af37;color:#000;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.95rem;margin:0 8px">Browse Quests</a>
+          <a href="https://kindredguild.org/quest-rules.html" style="display:inline-block;background:transparent;color:#d4af37;padding:12px 28px;border:1px solid #d4af37;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.95rem;margin:0 8px">Read the Rules</a>
+        </div>
+        <p style="color:#555;font-size:0.8rem;text-align:center;margin-top:32px">
+          You're receiving this because you signed up at kindredguild.org.<br>
+          Questions? Reply to this email or ask in the Guild Hall.
+        </p>
       </div>
     `,
   }),

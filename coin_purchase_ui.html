@@ -11,14 +11,8 @@
   <link rel="stylesheet" href="css/fixes.css">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-  <link rel="preconnect" href="https://www.paypal.com" crossorigin>
-  <link rel="dns-prefetch" href="https://www.paypal.com">
-  <link rel="preconnect" href="https://www.sandbox.paypal.com" crossorigin>
-  <link rel="dns-prefetch" href="https://www.sandbox.paypal.com">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
-  <!-- PayPal SDK is injected on demand by coin_purchase_paypal.js
-       once the user opens the International tab. -->
   <style>
     :root {
       --bg: #0f0f1a;
@@ -471,8 +465,8 @@
     <div id="upiRegion">
     <div class="payment-card">
       <h3>💳 UPI Payment</h3>
-      <div class="upi-id">yashwanthrangaswamy72@okhdfcbank</div>
-      
+      <div class="upi-id" id="upiIdDisplay">yashwanthrangaswamy72@okhdfcbank</div>
+
       <div class="qr-wrap">
         <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi%3A%2F%2Fpay%3Fpa%3Dyashwanthrangaswamy72%40okhdfcbank%26pn%3DKindred%20Guild%26am%3D100%26cu%3DINR" alt="UPI QR Code" />
       </div>
@@ -515,11 +509,10 @@
 
     <!-- ============ PAYPAL REGION ============ -->
     <div id="paypalRegion" style="display: none;">
-      <div class="paypal-card">
+      <div class="payment-card">
         <h3>🅿️ Pay with PayPal</h3>
-        <span class="paypal-tag">International</span>
-        <div class="paypal-amount-line">
-          Pay <strong><span id="paypalAmountUsd">$1.20</span></strong> for <strong id="paypalAmountFc">100</strong> Fairy Coins
+        <div class="paypal-amount-line" style="margin-bottom: 12px;">
+          Pay <strong><span id="paypalAmountUsd">$1.70</span></strong> for <strong id="paypalAmountFc">100</strong> Fairy Coins
         </div>
 
         <!-- Fee breakdown: collapsible so the UI stays clean. -->
@@ -542,20 +535,52 @@
               <span>You pay</span>
               <span id="paypalBreakTotal">$1.70</span>
             </div>
-            <div class="fee-row fee-row-net">
-              <span>Merchant receives (after PayPal fee)</span>
-              <span id="paypalBreakNet">$1.32</span>
-            </div>
           </div>
           <p class="fee-note">
-            PayPal charges a small processing fee on every international transaction. We add a 10% platform margin on top so the guild can keep operating. The merchant receives the base value plus that margin, exactly as you'd expect.
+            PayPal charges a small processing fee on every international transaction. We add a 10% platform margin on top so the guild can keep operating.
           </p>
         </details>
 
-        <div id="paypal-button-container">
-          <div class="paypal-loading">Loading PayPal…</div>
+        <!-- PayPal.me deep link + QR code (manual flow, just like UPI) -->
+        <div class="upi-id" id="paypalMeLinkDisplay" style="margin-bottom: 16px; word-break: break-all;">paypal.me/your-username</div>
+
+        <div class="qr-wrap">
+          <img id="paypalQrImage" src="" alt="PayPal QR Code" />
         </div>
-        <div id="paypal-error" class="paypal-error" style="display: none;"></div>
+
+        <div class="amount-due">Amount Due: <span id="paypalAmountDue">$1.70</span></div>
+
+        <div class="payment-note-box">
+          <label>📝 Payment Note (Auto-generated)</label>
+          <div class="payment-note" id="paypalPaymentNote">KINDRED-LOADING...</div>
+          <div class="copy-hint">Include this note (or your PayPal email) when you pay — it helps us match your payment instantly.</div>
+        </div>
+
+        <a id="paypalMeLink" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
+          <button class="btn btn-primary" type="button">
+            💳 Open PayPal.me to Pay
+          </button>
+        </a>
+        <button class="btn btn-secondary" type="button" onclick="copyPayPalLink()">
+          🔗 Copy PayPal.me Link
+        </button>
+
+        <div class="divider"><span>OR</span></div>
+
+        <div class="utr-section">
+          <p>
+            <strong>Already paid?</strong> Click below to notify us. Your coins will be credited within 24 hours after we verify your PayPal payment.
+          </p>
+          <p style="font-size: 0.8rem; color: var(--muted);">
+            Optional: Enter your PayPal email or transaction ID for faster verification.
+          </p>
+          <label for="paypalTxnRef" style="margin-top: 8px;">PayPal Email / Transaction ID (Optional)</label>
+          <input type="text" id="paypalTxnRef" placeholder="e.g. john@example.com or 1AB23456CD" maxlength="80" />
+          <button class="btn btn-success" id="submitPaypalPaymentBtn" onclick="submitPayPalPaymentReference()">
+            ✅ I've Paid — Log My Purchase
+          </button>
+        </div>
+
         <p style="font-size: 0.75rem; color: var(--muted); margin-top: 12px;">
           PayPal handles all major cards and local payment methods in 200+ countries. After you pay, your purchase will be logged for admin verification and coins will be credited shortly.
         </p>
@@ -572,7 +597,6 @@
   </div>
 
   <script src="coin_purchase_js_logic.js"></script>
-  <script src="coin_purchase_paypal.js"></script>
   <script src="site-nav.js"></script>
 </body>
 </html>

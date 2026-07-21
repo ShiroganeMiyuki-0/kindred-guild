@@ -20,18 +20,56 @@
   window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
 
   // ---------------------------------------------------------------------
-  // PayPal public client ID. Get yours at https://developer.paypal.com/dashboard/
-  // -> Apps & Credentials -> create app -> copy "Client ID".
-  // These IDs are PUBLIC (PayPal documents this), so it's safe to ship in JS.
-  // Use the Sandbox client ID while testing; switch to Live before going public.
+  // Centralized UPI configuration. Previously this was hardcoded in 4+
+  // different places (coin_purchase_js_logic.js, coin_purchase_ui.html,
+  // donation.html x3). If the UPI ID ever changes, you only need to update
+  // it here — every page reads from window.UPI_ID / window.PAYEE_NAME.
   // ---------------------------------------------------------------------
-  // Sandbox (testing):
-  window.PAYPAL_CLIENT_ID = ''; // <-- paste your PayPal sandbox client id here
-  // Live (production):
-  // window.PAYPAL_CLIENT_ID = 'PASTE_LIVE_CLIENT_ID_HERE';
+  window.UPI_ID = 'yashwanthrangaswamy72@okhdfcbank';
+  window.PAYEE_NAME = 'Kindred Guild';
 
-  // Override the value above at deploy time by setting window.PAYPAL_CLIENT_ID
-  // in a <script> tag before this file loads, or by editing this line directly.
+  // ---------------------------------------------------------------------
+  // PayPal.me username for MANUAL international payments.
+  //
+  // We deliberately removed the PayPal Smart Buttons SDK + server-side
+  // capture flow in favour of a manual UPI-style flow: the user scans a
+  // QR code that opens PayPal.me with the amount pre-filled, pays in their
+  // PayPal app, then clicks "I've Paid — Log My Purchase" just like UPI.
+  // The admin verifies manually in the dashboard.
+  //
+  // Set this to your PayPal.me username (the part after paypal.me/).
+  //   Example: if your link is https://paypal.me/yashwanthrangaswamy72
+  //            then PAYPAL_ME_USERNAME = 'yashwanthrangaswamy72'
+  //
+  // Resolution order (first non-empty wins):
+  //   1. ?paypal_me=... URL param (for quick testing)
+  //   2. localStorage.kg_paypal_me_username
+  //   3. <meta name="paypal-me-username" content="..."> tag in the HTML head
+  //   4. The hardcoded value below
+  // ---------------------------------------------------------------------
+  window.PAYPAL_ME_USERNAME = ''; // <-- paste your PayPal.me username here
+
+  (function resolvePayPalMeUsername() {
+    const isValid = (v) => typeof v === 'string' && /^[A-Za-z0-9_-]{3,50}$/.test(v);
+    try {
+      const urlParam = new URLSearchParams(window.location.search).get('paypal_me');
+      if (isValid(urlParam)) { window.PAYPAL_ME_USERNAME = urlParam; return; }
+      const lsVal = window.localStorage && window.localStorage.getItem('kg_paypal_me_username');
+      if (isValid(lsVal)) { window.PAYPAL_ME_USERNAME = lsVal; return; }
+      const meta = document.querySelector('meta[name="paypal-me-username"]');
+      if (isValid(meta?.content)) { window.PAYPAL_ME_USERNAME = meta.content; return; }
+    } catch (_) { /* localStorage may throw in private mode — ignore */ }
+  })();
+
+  // Helper used by coin_purchase_js_logic.js to build a paypal.me link
+  // for a given USD amount. Returns '' if the username is not configured.
+  window.buildPayPalMeUrl = function (amountUsd) {
+    if (!window.PAYPAL_ME_USERNAME) return '';
+    // paypal.me/<username>/<amount> — PayPal.me accepts amounts with up to
+    // 2 decimal places. Trailing zeros are fine.
+    const amt = Number(amountUsd).toFixed(2);
+    return `https://www.paypal.com/paypalme/${encodeURIComponent(window.PAYPAL_ME_USERNAME)}/${amt}`;
+  };
 
   // Shared utility: escape HTML to prevent XSS
   window.escapeHtml = function (text) {

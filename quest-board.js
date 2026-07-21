@@ -356,10 +356,8 @@ window.dropQuest = async function (questId) {
   loadQuests();
 };
 
-window.logout = async function () {
-  await window.sb.auth.signOut();
-  window.location.href = 'auth.html';
-};
+// NOTE: `window.logout` used to be defined here but was never called from any
+// HTML — site-nav.js owns the logout button. Removed to avoid confusion.
 
 window.toggleBookmark = async function (questId) {
   const { data: added, error } = await window.sb.rpc('toggle_quest_bookmark', { p_quest_id: questId });
