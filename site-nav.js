@@ -405,7 +405,11 @@
     function adjustFlexBody() {
         const bodyStyle = window.getComputedStyle(document.body);
         if (bodyStyle.display === 'flex' && bodyStyle.flexDirection !== 'column') {
-            document.body.classList.add('site-nav-flex-adjusted');
+            // Only adjust pages that need centering (auth, 404)
+            const hasCenterContent = document.querySelector('.auth-card, .error-container');
+            if (hasCenterContent) {
+                document.body.classList.add('site-nav-flex-adjusted');
+            }
         }
     }
 
