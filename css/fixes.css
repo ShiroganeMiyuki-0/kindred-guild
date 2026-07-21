@@ -38,6 +38,45 @@ body {
   top: 0;
 }
 
+/* ── 4b. MOBILE MENU OVERLAY ──────────────── */
+/* The hamburger menu used to render inline inside #site-nav (which is
+   position: sticky), so it grew the nav to ~1100px tall on mobile and
+   its bottom was clipped below the fold. Users had to scroll the BODY
+   (which wasn't locked) to reach the Sign Out button.
+
+   Now: render #mobile-menu as a true full-viewport fixed overlay below
+   the navbar, with its own internal scroll. Body scroll is locked via
+   the .mobile-menu-open class on <body> (added by site-nav.js). */
+@media (max-width: 767px) {
+  #mobile-menu {
+    position: fixed;
+    top: 56px;                /* below the 56px-tall navbar */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+    overscroll-behavior: contain;   /* prevents scroll chaining to body */
+    -webkit-overflow-scrolling: touch;
+    z-index: 90;              /* below #site-nav (100) so navbar stays above */
+    background: rgba(2, 6, 23, 0.98);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    /* Subtle top edge so the menu visually separates from the navbar */
+    border-top: 1px solid var(--border, #262636);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  /* When the menu is open, lock the body so the page behind can't scroll.
+     iOS Safari ignores overflow:hidden on body alone, so we also set
+     position: fixed and remember the scroll offset in JS (site-nav.js
+     restores it on close). */
+  body.mobile-menu-open {
+    overflow: hidden;
+    /* position: fixed is applied inline by JS so we can preserve scrollY */
+  }
+}
+
 /* ── 5. GLOBAL TEXT WRAP ──────────────────── */
 p, span, div, li, td, a,
 h1, h2, h3, h4, h5, h6 {
