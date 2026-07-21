@@ -119,12 +119,11 @@ let currentRegion = 'upi'; // 'upi' | 'paypal'
     window.switchPaymentRegion(region);
   }
 
-  // Handle return from PayPal popup (close enough — capture usually already done)
-  if (params.get('paypal') === 'return' || params.get('paypal') === 'cancel') {
-    if (params.get('paypal') === 'cancel') {
-      showAlert('PayPal payment was cancelled. No charge was made.', 'info');
-    }
-    // Clean the URL
+  // NOTE: The PayPal SDK used to redirect back to ?paypal=return|cancel after
+  // the popup closed. The manual QR flow doesn't redirect, so that handling
+  // is gone. If an old cached link still points to ?paypal=return we just
+  // clean the URL silently.
+  if (params.get('paypal')) {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 })();
@@ -171,11 +170,13 @@ window.updatePaymentDetails = function() {
 
   document.getElementById('qrImage').src = generateQrUrl(amount, currentPaymentNote);
 
-  // Update PayPal display
+  // Update PayPal display (manual QR flow — no SDK, no smart buttons)
   const usdEl = document.getElementById('paypalAmountUsd');
   const fcEl = document.getElementById('paypalAmountFc');
+  const dueEl = document.getElementById('paypalAmountDue');
   if (usdEl) usdEl.textContent = `$${usd.toFixed(2)}`;
   if (fcEl) fcEl.textContent = coins.toLocaleString('en-IN');
+  if (dueEl) dueEl.textContent = `$${usd.toFixed(2)}`;
 
   // Update the fee breakdown (if those elements exist)
   const baseEl = document.getElementById('paypalBreakBase');
@@ -184,22 +185,47 @@ window.updatePaymentDetails = function() {
   const marginEl = document.getElementById('paypalBreakMargin');
   const marginPctEl = document.getElementById('paypalBreakMarginPct');
   const totalEl = document.getElementById('paypalBreakTotal');
-  const netEl = document.getElementById('paypalBreakNet');
   if (baseEl) baseEl.textContent = `$${pricing.baseUsd.toFixed(2)}`;
   if (feeEl) feeEl.textContent = `$${pricing.paypalFee.toFixed(2)}`;
   if (feePctEl) feePctEl.textContent = `${pricing.paypalFeePercent.toFixed(2)}% + $${PAYPAL_FIXED_FEE_USD.toFixed(2)}`;
   if (marginEl) marginEl.textContent = `$${pricing.platformMargin.toFixed(2)}`;
   if (marginPctEl) marginPctEl.textContent = `${pricing.platformMarginPercent.toFixed(0)}%`;
   if (totalEl) totalEl.textContent = `$${pricing.charged.toFixed(2)}`;
-  if (netEl) netEl.textContent = `$${pricing.netReceived.toFixed(2)}`;
 
-  // Keep window.currentPaymentNote in sync for the PayPal module
-  window.currentPaymentNote = currentPaymentNote;
+  // Update the PayPal.me link, QR code, and payment note for the manual flow
+  const paypalMeUrl = (typeof window.buildPayPalMeUrl === 'function')
+    ? window.buildPayPalMeUrl(usd)
+    : '';
+  const paypalMeLink = document.getElementById('paypalMeLink');
+  const paypalMeDisplay = document.getElementById('paypalMeLinkDisplay');
+  const paypalQrImage = document.getElementById('paypalQrImage');
+  const paypalNoteEl = document.getElementById('paypalPaymentNote');
 
-  // Notify the PayPal module (if loaded) so it can refresh its buttons
-  if (typeof window.onCoinPackageChanged === 'function') {
-    window.onCoinPackageChanged(coins, usd);
+  if (paypalMeLink) paypalMeLink.href = paypalMeUrl || '#';
+  if (paypalMeDisplay) {
+    paypalMeDisplay.textContent = window.PAYPAL_ME_USERNAME
+      ? `paypal.me/${window.PAYPAL_ME_USERNAME}/${usd.toFixed(2)}`
+      : 'PayPal.me not configured — see js/supabase-client.js';
   }
+  if (paypalQrImage) {
+    if (paypalMeUrl) {
+      // Reuse the same QR generation service as UPI (api.qrserver.com)
+      paypalQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(paypalMeUrl)}`;
+      paypalQrImage.style.opacity = '1';
+    } else {
+      // No PayPal.me username configured — show a placeholder so the page
+      // doesn't look broken. Admin sees an actionable message in the link
+      // display above.
+      paypalQrImage.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#f5f5f5"/><text x="100" y="100" font-family="sans-serif" font-size="12" fill="#888" text-anchor="middle">PayPal.me</text><text x="100" y="118" font-family="sans-serif" font-size="12" fill="#888" text-anchor="middle">not configured</text></svg>'
+      );
+      paypalQrImage.style.opacity = '0.6';
+    }
+  }
+  if (paypalNoteEl) paypalNoteEl.textContent = currentPaymentNote;
+
+  // Keep window.currentPaymentNote in sync (some external scripts may read it)
+  window.currentPaymentNote = currentPaymentNote;
 };
 
 // ---- Region tabs (UPI / PayPal) ----
@@ -229,9 +255,11 @@ window.switchPaymentRegion = function(region) {
     upiTab.setAttribute('aria-selected', 'false');
     ppTab.setAttribute('aria-selected', 'true');
     hint.textContent = 'PayPal supports cards and local payment methods in 200+ countries.';
-    if (typeof window.ensurePayPalButtonsRendered === 'function') {
-      window.ensurePayPalButtonsRendered();
-    }
+    // Manual flow — no SDK to render. The QR + link are kept up to date by
+    // updatePaymentDetails() which fires on dropdown change. If the user
+    // switches tabs without touching the dropdown, force a refresh so the
+    // QR image always shows the correct amount.
+    updatePaymentDetails();
   }
 };
 
@@ -287,56 +315,92 @@ window.submitPaymentReference = async function() {
   loadPendingPurchases();
 };
 
-// Log a PayPal purchase (called from coin_purchase_paypal.js after capture)
-window.logPayPalPurchase = async function({ capture_id, payer_email, amount, currency, raw }) {
+// Copy the PayPal.me link to clipboard (manual flow — mirrors copyUpiLink)
+window.copyPayPalLink = function() {
   const coins = parseInt(document.getElementById('coinPackage').value);
-  const utrInput = document.getElementById('utrRef');
-  if (utrInput) utrInput.value = ''; // not applicable for PayPal
+  const pricing = PACKAGE_PRICING[coins] || { charged: 0 };
+  const usd = pricing.charged;
+  const link = (typeof window.buildPayPalMeUrl === 'function')
+    ? window.buildPayPalMeUrl(usd)
+    : '';
 
-  // Build a useful reference for the admin to identify the txn
-  const ref = `PayPal#${capture_id}`;
+  if (!link) {
+    showAlert('PayPal.me is not configured yet. An admin needs to set window.PAYPAL_ME_USERNAME in js/supabase-client.js.', 'info');
+    return;
+  }
 
-  const { data, error } = await window.sb
+  navigator.clipboard.writeText(link).then(() => {
+    showAlert('PayPal.me link copied! Open it in any browser or share it with the payer.', 'info');
+  }).catch(() => {
+    showAlert('Failed to copy. Please use the "Open PayPal.me to Pay" button instead.', 'info');
+  });
+};
+
+// Log a PayPal purchase (manual flow — user clicked "I've Paid" after
+// scanning the QR / opening the PayPal.me link). Mirrors submitPaymentReference
+// for UPI but populates the PayPal-specific columns so admin can distinguish.
+window.submitPayPalPaymentReference = async function() {
+  const coins = parseInt(document.getElementById('coinPackage').value);
+  const pricing = PACKAGE_PRICING[coins] || { charged: 0 };
+  const usd = pricing.charged;
+  const txnRef = (document.getElementById('paypalTxnRef')?.value || '').trim();
+
+  const btn = document.getElementById('submitPaypalPaymentBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Logging...';
+  }
+
+  const { error } = await window.sb
     .from('coin_purchases')
     .insert({
       user_id: currentUser.id,
       coin_amount: coins,
-      upi_transaction_ref: null,           // not applicable
+      upi_transaction_ref: null,            // not applicable for PayPal
       payment_note: currentPaymentNote,
       payment_method: 'paypal',
-      paypal_order_id: raw?.order_id || null,
-      paypal_capture_id: capture_id,
-      paypal_payer_email: payer_email || null,
-      foreign_currency: currency || 'USD',
-      foreign_amount: amount ? Number(amount) : null,
+      // For the manual flow we don't have a capture id — store the user-
+      // supplied email/txn id in the payer email column so admin can match.
+      paypal_payer_email: txnRef || null,
+      foreign_currency: 'USD',
+      foreign_amount: Number(usd) || null,
       status: 'pending',
-    })
-    .select('id')
-    .single();
+    });
 
   if (error) {
-    // Idempotent case: capture was already logged
-    if (error.code === '23505') {
-      showAlert(
-        '✅ This PayPal payment was already recorded. Coins will be credited after admin verification.',
-        'success'
-      );
-      loadPendingPurchases();
-      return { ok: true, duplicate: true };
+    showAlert('Failed to submit: ' + error.message, 'info');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '✅ I\'ve Paid — Log My Purchase';
     }
-    throw error;
+    return;
   }
 
   showAlert(
-    `✅ PayPal payment of ${currency || 'USD'} ${amount} captured! ` +
-    `Transaction reference: ${ref}. ` +
+    `✅ PayPal purchase logged!${txnRef ? ' Your reference has been recorded.' : ''} ` +
+    `Please include payment note "${currentPaymentNote}" when you pay if you haven't already. ` +
     `Coins will be credited within 24 hours after admin verification.`,
     'success'
   );
 
+  const txnInput = document.getElementById('paypalTxnRef');
+  if (txnInput) txnInput.value = '';
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = '✅ I\'ve Paid — Log My Purchase';
+  }
+
   updatePaymentDetails();
   loadPendingPurchases();
-  return { ok: true, purchase_id: data?.id };
+};
+
+// Legacy hook kept for backward compatibility — older versions of the page
+// may still call window.logPayPalPurchase from cached HTML. It now delegates
+// to the manual submit flow.
+window.logPayPalPurchase = function() {
+  if (typeof window.submitPayPalPaymentReference === 'function') {
+    return window.submitPayPalPaymentReference();
+  }
 };
 
 async function loadPendingPurchases() {

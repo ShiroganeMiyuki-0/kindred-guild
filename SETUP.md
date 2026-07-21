@@ -37,24 +37,36 @@ The email notification system uses a Supabase Edge Function + Resend API.
 1. Sign up at https://resend.com and get your API key
 2. In Supabase Dashboard → Edge Functions → deploy `send-email`:
    ```bash
-   supabase functions deploy send-email
+   supabase functions deploy send-email --project-ref owpyqeubmfvtuqjaxauo
    ```
 3. Set the Resend API key:
    ```bash
-   supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxx
+   supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxx --project-ref owpyqeubmfvtuqjaxauo
    ```
-4. Verify your domain at Resend and update `FROM_EMAIL` in `supabase/functions/send-email/index.ts`
+4. Verify your domain at Resend (https://resend.com/emails → Domains tab) — must verify `kindredguild.org` so the `FROM_EMAIL` (`notifications@kindredguild.org`) is allowed to send.
 
 Without this, the app works fine — just no email notifications.
+
+---
+
+## Auto-Approve Cron (Optional but recommended)
+
+Auto-approves quests after the 48-hour proof window, and reveals blinded ratings after 7 days.
+
+```bash
+supabase functions deploy auto-approve-cron --project-ref owpyqeubmfvtuqjaxauo
+```
+
+Then schedule it via Supabase pg_cron (see `supabase_pg_cron_setup.sql` for the SQL).
 
 ---
 
 ## Environment Variables
 
 Make sure these are set in your Supabase project:
-- `SUPABASE_URL` — your project URL
-- `SUPABASE_ANON_KEY` — your public anon key (in `js/supabase-client.js`)
-- `SUPABASE_SERVICE_ROLE_KEY` — used by edge functions only (never in client code)
+- `SUPABASE_URL` — your project URL (auto-set by Supabase)
+- `SUPABASE_ANON_KEY` — your public anon key (auto-set, also hardcoded in `js/supabase-client.js`)
+- `SUPABASE_SERVICE_ROLE_KEY` — used by edge functions only (auto-set, never in client code)
 
 ---
 
@@ -71,10 +83,10 @@ Make sure these are set in your Supabase project:
 | Leaderboard | ✅ Working | Guildmaster separated |
 | Worker Posts | ✅ Working | Post availability |
 | Notifications | ✅ Working | In-app notifications |
-| Email Notifications | ⚠️ Needs deploy | Deploy edge function |
+| Email Notifications | ⚠️ Needs deploy | Deploy send-email + RESEND_API_KEY |
 | Referral System | ✅ Working | Share codes, track referrals |
 | Coin Purchase (UPI) | ✅ Working | Indian users, manual verify |
-| Coin Purchase (PayPal) | ⚠️ Needs setup | International, manual verify |
+| Coin Purchase (PayPal) | ✅ Manual flow | International, PayPal.me QR + manual verify |
 | PWA | ✅ Working | Installable as app |
 | Admin Dashboard | ✅ Working | Manage quests, users, guild |
 | Terms Agreement | ✅ Working | First-visit modal |
@@ -82,91 +94,76 @@ Make sure these are set in your Supabase project:
 
 ---
 
-## PayPal International Payments (Optional)
+## PayPal International Payments (Manual QR Flow)
 
-Adds a PayPal Smart-Buttons flow alongside the existing UPI flow so international users can buy Fairy Coins with cards / PayPal balance / local payment methods.
+International users scan a PayPal.me QR code (or click a link), pay in their PayPal app, then click "I've Paid — Log My Purchase" — exactly like the UPI flow. Admin verifies manually in the dashboard.
 
-### 1. Run the SQL migration
+### 1. Run the SQL migration (one-time)
 Supabase Dashboard → SQL Editor → paste the contents of `migration_paypal_support.sql` → Run. This adds:
 - `payment_method` column (defaults to `'upi'`, so existing UPI rows are untouched)
 - PayPal-only columns: `paypal_order_id`, `paypal_capture_id`, `paypal_payer_email`, `foreign_currency`, `foreign_amount`
-- Partial unique indexes so UPI refs and PayPal capture ids can't collide
 
-### 2. Create a PayPal app
-1. Sign in at https://developer.paypal.com/dashboard/
-2. Go to **Apps & Credentials** → switch to **Sandbox** (for testing) or **Live** (for production)
-3. Click **Create App** → name it "Kindred Guild" → copy the **Client ID** and **Secret**
+### 2. Get a PayPal.me link
+1. Sign in at https://www.paypal.com/paypalme/
+2. Click **Claim your PayPal.me link** (or use your existing one)
+3. Pick a username (e.g. `yashwanthrangaswamy72`)
+4. Your link will be `https://paypal.me/yashwanthrangaswamy72`
 
-### 3. Deploy the edge functions
-```bash
-supabase functions deploy create-paypal-order
-supabase functions deploy capture-paypal-order
-```
+### 3. Paste your PayPal.me username into the frontend
 
-### 4. Set the secrets
-```bash
-supabase secrets set PAYPAL_CLIENT_ID=your_sandbox_client_id
-supabase secrets set PAYPAL_CLIENT_SECRET=your_sandbox_secret
-supabase secrets set PAYPAL_ENV=sandbox            # or "live" for production
-supabase secrets set SITE_ORIGIN=https://kindredguild.org
-```
+Pick ONE of these four methods (Option A is best for production):
 
-For production later, repeat with the Live client id/secret and `PAYPAL_ENV=live`.
-
-### 5. Paste the PayPal Client ID into the frontend
-PayPal client IDs are PUBLIC, so it's safe to ship in JS.
-
-**Option A — Edit `js/supabase-client.js`** (recommended for production):
-Replace the empty string on this line:
+**Option A — Edit source** (recommended):
 ```js
-window.PAYPAL_CLIENT_ID = ''; // <-- paste your PayPal sandbox client id here
+// js/supabase-client.js, around line 50
+window.PAYPAL_ME_USERNAME = 'your-paypal-me-username';
 ```
 
-**Option B — Use a `<meta>` tag** (no source edit needed):
-Add this to the `<head>` of `coin_purchase_ui.html` (or any page that uses PayPal):
+**Option B — `<meta>` tag** (no source edit):
 ```html
-<meta name="paypal-client-id" content="YOUR_SANDBOX_OR_LIVE_CLIENT_ID">
+<!-- in coin_purchase_ui.html <head> -->
+<meta name="paypal-me-username" content="your-paypal-me-username">
 ```
 
-**Option C — Use `localStorage`** (great for staging / quick QA without redeploying):
+**Option C — `localStorage`** (great for staging / quick QA without redeploying):
 ```js
 // In the browser console on kindredguild.org:
-localStorage.setItem('kg_paypal_client_id', 'YOUR_CLIENT_ID');
+localStorage.setItem('kg_paypal_me_username', 'your-paypal-me-username');
 ```
 
 **Option D — URL parameter** (one-shot testing only — never ship a link with this):
 ```
-https://kindredguild.org/coin_purchase_ui.html?region=paypal&paypal_client_id=YOUR_CLIENT_ID
+https://kindredguild.org/coin_purchase_ui.html?region=paypal&paypal_me=your-username
 ```
 
-The runtime resolver tries these in order: URL param → localStorage → `<meta>` tag → hardcoded value. First non-empty match wins. All four accept only `[A-Za-z0-9_-]{20,}` so a malformed value can't accidentally become the client id.
+The runtime resolver tries these in order: URL param → localStorage → `<meta>` tag → hardcoded value. First non-empty match wins. All four accept only `[A-Za-z0-9_-]{3,50}` so a malformed value can't accidentally become the username.
 
-### 6. Tune the USD prices (optional)
+### 4. Tune the USD prices (optional)
 Open `coin_purchase_js_logic.js` and edit the `BASE_USD_PRICES` map. Default base prices:
 - 100 FC = $1.20
 - 200 FC = $2.40
 - 500 FC = $6.00
 - 1000 FC = $12.00
 
-These are the BASE values (the fair USD equivalent of the coins). The amount the international user is **actually charged** is computed at runtime by `computeChargeUsd()` so that, after PayPal's 4.4% + $0.30 processing fee, you keep a 10% platform margin on top of the base. Example for 100 FC:
+These are the BASE values (the fair USD equivalent of the coins). The amount the international user is **actually asked to pay** is computed at runtime by `computeChargeUsd()` so that, after PayPal's 4.4% + $0.30 processing fee, you keep a 10% platform margin on top of the base. Example for 100 FC:
 - Base: $1.20
 - PayPal fee: ~$0.38
 - Platform margin (10%): ~$0.12
-- **User pays: ~$1.70** (this is what shows on the PayPal button)
+- **User pays: ~$1.70** (this is what shows on the PayPal.me link/QR)
 - You receive: ~$1.32 (= base + margin)
 
-If you change `BASE_USD_PRICES`, **also update the matching `BASE_USD_PRICES` map in `supabase/functions/create-paypal-order/index.ts`** — the server recomputes the charge from its own copy and ignores the client-supplied `amount_usd` to prevent users from paying $0.50 for 1000 FC.
+To change the fee assumptions (PayPal rate, platform margin), edit `PAYPAL_FEE_PERCENT`, `PAYPAL_FIXED_FEE_USD`, and `PLATFORM_PROFIT_MARGIN` in `coin_purchase_js_logic.js`.
 
-To change the fee assumptions (PayPal rate, platform margin), edit `PAYPAL_FEE_PERCENT`, `PAYPAL_FIXED_FEE_USD`, and `PLATFORM_PROFIT_MARGIN` in BOTH `coin_purchase_js_logic.js` AND the create-paypal-order edge function.
-
-### 7. Test the flow
-1. Visit https://www.sandbox.paypal.com/ and create a sandbox buyer account
-2. Open `coin_purchase_ui.html?region=paypal` in your app
-3. Click the gold PayPal button → log in with the sandbox buyer → complete payment
-4. The purchase should appear in the **Admin Dashboard → Coin Purchases** tab with a blue **PayPal** badge
-5. Approve it → coins land in the user's `fairy_ledger` (same flow as UPI)
+### 5. Test the flow
+1. Open `coin_purchase_ui.html?region=paypal` on your site
+2. The PayPal.me link + QR code should display with the correct amount pre-filled
+3. Click "Open PayPal.me to Pay" (or scan the QR with your phone) → pay in PayPal
+4. Click "I've Paid — Log My Purchase"
+5. The purchase appears in **Admin Dashboard → Coin Purchases** with the **PayPal** badge
+6. Approve it → coins land in the user's `fairy_ledger` (same flow as UPI)
 
 ### Notes
-- **Manual admin approval is reused** for PayPal, just like UPI. The capture happens on the server, but coins don't credit until you click Approve in the admin dashboard. This keeps the workflow consistent across both payment methods.
-- **No webhooks yet.** If a user's network drops between PayPal capture and our insert, the row may be missing — the capture edge function is idempotent and will return `already_logged: true` on retries, so worst case the user reopens the page and we re-attempt the insert (which will succeed thanks to the partial unique index on `paypal_capture_id`).
-- **Minimum charge:** PayPal requires at least $0.50 USD per transaction. The smallest package is $1.20 so this is fine.
+- **No PayPal SDK / API keys needed.** This is a pure manual flow — no server-side capture, no webhooks, no edge functions to deploy for PayPal. Just the PayPal.me username in the frontend.
+- **Manual admin verification is reused** for PayPal, just like UPI. Coins don't credit until you click Approve in the admin dashboard.
+- **Optional PayPal email / transaction ID field** lets the buyer enter their PayPal email or txn id so you can match payments faster in your PayPal dashboard.
+- **The PayPal.me link uses `https://www.paypal.com/paypalme/<username>/<amount>`** (the canonical form). PayPal.me also accepts `https://paypal.me/<username>/<amount>` — both work, the first is just more reliable for mobile deep-linking.
