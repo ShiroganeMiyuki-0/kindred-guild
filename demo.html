@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How Kindred Guild Works — Interactive Demo</title>
+  <meta name="description" content="See how Kindred Guild works in 60 seconds. Post tasks, get help, earn coins — all protected by escrow.">
+  <meta property="og:title" content="How Kindred Guild Works — 60 Second Demo">
+  <meta property="og:description" content="Post tasks, get help, earn coins. Protected by escrow. Built on trust.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://kindredguild.org/og-image.png">
+  <link rel="icon" href="data:image/png;base64,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">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root { --bg:#0c0c0f; --surface:#14141e; --text:#f0f0f5; --dim:#9494a8; --accent:#d4af37; --glow:rgba(212,175,55,0.15); --border:#262636; --green:#10b981; }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; overflow-x:hidden; }
+    
+    .demo-container { max-width:800px; margin:0 auto; padding:20px; min-height:100vh; display:flex; flex-direction:column; justify-content:center; }
+    
+    /* Progress bar */
+    .progress { position:fixed; top:0; left:0; height:3px; background:var(--accent); z-index:100; transition:width 0.3s ease; }
+    
+    /* Scene */
+    .scene { display:none; animation:fadeIn 0.6s ease; }
+    .scene.active { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+    @keyframes glow { 0%,100% { box-shadow:0 0 20px rgba(212,175,55,0.2); } 50% { box-shadow:0 0 40px rgba(212,175,55,0.4); } }
+    @keyframes coinDrop { 0% { transform:translateY(-40px) rotate(0deg); opacity:0; } 50% { opacity:1; } 100% { transform:translateY(0) rotate(360deg); opacity:1; } }
+    @keyframes checkmark { 0% { transform:scale(0) rotate(-45deg); opacity:0; } 50% { transform:scale(1.2) rotate(0deg); } 100% { transform:scale(1) rotate(0deg); opacity:1; } }
+    
+    .scene-title { font-size:2.5rem; color:var(--accent); text-align:center; margin-bottom:12px; animation:slideUp 0.6s ease; }
+    .scene-sub { font-size:1.1rem; color:var(--dim); text-align:center; margin-bottom:40px; line-height:1.6; animation:slideUp 0.6s ease 0.1s both; }
+    
+    /* Mock UI elements */
+    .mock-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin:16px auto; max-width:500px; animation:slideUp 0.6s ease 0.2s both; }
+    .mock-card:hover { border-color:var(--accent); }
+    .mock-badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:700; }
+    .badge-coins { background:rgba(234,179,8,0.12); color:#eab308; }
+    .badge-free { background:rgba(16,185,129,0.12); color:#10b981; }
+    .mock-title { font-size:1.1rem; font-weight:600; margin:8px 0 4px; }
+    .mock-desc { font-size:0.85rem; color:var(--dim); line-height:1.5; }
+    .mock-meta { display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:0.8rem; color:var(--dim); }
+    .mock-reward { color:var(--accent); font-weight:700; font-size:1rem; }
+    .mock-btn { background:var(--accent); color:#000; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.9rem; margin-top:12px; width:100%; }
+    
+    /* Coin animation */
+    .coin-anim { font-size:3rem; text-align:center; margin:20px 0; }
+    .coin-anim span { display:inline-block; animation:coinDrop 0.6s ease both; }
+    .coin-anim span:nth-child(2) { animation-delay:0.15s; }
+    .coin-anim span:nth-child(3) { animation-delay:0.3s; }
+    
+    /* Checkmark */
+    .check-anim { font-size:4rem; text-align:center; margin:20px 0; }
+    .check-anim span { display:inline-block; animation:checkmark 0.8s ease 0.3s both; }
+    
+    /* Rating stars */
+    .stars { text-align:center; font-size:2rem; margin:20px 0; }
+    .stars span { display:inline-block; animation:pulse 0.5s ease both; }
+    .stars span:nth-child(2) { animation-delay:0.1s; }
+    .stars span:nth-child(3) { animation-delay:0.2s; }
+    .stars span:nth-child(4) { animation-delay:0.3s; }
+    .stars span:nth-child(5) { animation-delay:0.4s; }
+    
+    /* Stats row */
+    .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:24px 0; }
+    .stat { text-align:center; padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+    .stat .val { font-size:2rem; font-weight:800; color:var(--accent); }
+    .stat .lbl { font-size:0.75rem; color:var(--dim); margin-top:4px; }
+    
+    /* Nav */
+    .demo-nav { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:12px; z-index:100; }
+    .demo-nav button { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:12px 24px; border-radius:30px; cursor:pointer; font-size:0.9rem; font-weight:600; transition:all 0.2s; }
+    .demo-nav button:hover { border-color:var(--accent); color:var(--accent); }
+    .demo-nav button.primary { background:var(--accent); color:#000; border-color:var(--accent); }
+    .demo-nav button.primary:hover { box-shadow:0 4px 20px rgba(212,175,55,0.3); }
+    
+    /* Counter */
+    .counter { position:fixed; top:16px; right:20px; font-size:0.8rem; color:var(--dim); z-index:100; }
+    
+    /* Final CTA */
+    .final-cta { text-align:center; padding:40px 20px; }
+    .final-cta h2 { font-size:2rem; color:var(--accent); margin-bottom:12px; }
+    .final-cta p { color:var(--dim); margin-bottom:24px; max-width:400px; margin-left:auto; margin-right:auto; }
+    .final-cta .btn-group { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .final-cta a { display:inline-block; padding:14px 28px; border-radius:10px; font-weight:700; text-decoration:none; font-size:1rem; transition:all 0.2s; }
+    .final-cta a.primary { background:var(--accent); color:#000; }
+    .final-cta a.primary:hover { box-shadow:0 4px 20px rgba(212,175,55,0.3); }
+    .final-cta a.outline { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+    .final-cta a.outline:hover { background:var(--glow); }
+    
+    @media(max-width:640px) {
+      .scene-title { font-size:1.8rem; }
+      .scene-sub { font-size:0.95rem; }
+      .stats-row { grid-template-columns:1fr; }
+      .demo-nav button { padding:10px 18px; font-size:0.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="counter" id="counter">1 / 7</div>
+
+  <div class="demo-container">
+    <!-- Scene 1: Intro -->
+    <div class="scene active" id="scene1">
+      <div class="scene-title">⚔️ Kindred Guild</div>
+      <div class="scene-sub">A community where people help each other.<br>Free tasks. Paid tasks. Protected by escrow.</div>
+      <div class="stats-row" style="animation:slideUp 0.6s ease 0.3s both">
+        <div class="stat"><div class="val">45</div><div class="lbl">Members</div></div>
+        <div class="stat"><div class="val">123</div><div class="lbl">Quests</div></div>
+        <div class="stat"><div class="val">817</div><div class="lbl">Votes</div></div>
+      </div>
+    </div>
+
+    <!-- Scene 2: Post a Quest -->
+    <div class="scene" id="scene2">
+      <div class="scene-title">📝 Post a Task</div>
+      <div class="scene-sub">Describe what you need. Set a reward. Your coins lock in escrow.</div>
+      <div class="mock-card">
+        <span class="mock-badge badge-coins">🪙 150 FC</span>
+        <div class="mock-title">Design a logo for my bakery</div>
+        <div class="mock-desc">Starting a home bakery called "Sugar & Spice". Need a clean logo that works on packaging and Instagram.</div>
+        <div class="mock-meta">
+          <span>by Deepa S. ⭐ 4.5</span>
+          <span class="mock-reward">150 FC</span>
+        </div>
+        <div style="margin-top:8px;padding:10px;background:var(--glow);border-radius:8px;font-size:0.8rem;color:var(--accent)">🔒 165 FC locked in escrow (150 reward + 15 fee)</div>
+      </div>
+    </div>
+
+    <!-- Scene 3: Someone Accepts -->
+    <div class="scene" id="scene3">
+      <div class="scene-title">🤝 Someone Accepts</div>
+      <div class="scene-sub">A community member picks up your task. They message you, share updates.</div>
+      <div class="mock-card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--glow);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent)">K</div>
+          <div>
+            <div style="font-weight:600">Kai C.</div>
+            <div style="font-size:0.75rem;color:var(--dim)">⭐ 4.1 reputation · ✅ Verified</div>
+          </div>
+        </div>
+        <div style="font-size:0.9rem;color:var(--dim);line-height:1.5">"I'd love to work on this! I have experience with food branding. I'll send some mockups by tomorrow. Do you have a mood board or color preferences?"</div>
+      </div>
+    </div>
+
+    <!-- Scene 4: Work Submitted -->
+    <div class="scene" id="scene4">
+      <div class="scene-title">📤 Proof Submitted</div>
+      <div class="scene-sub">Worker uploads proof of completion. You review the work.</div>
+      <div class="mock-card">
+        <div style="text-align:center;padding:20px">
+          <div style="font-size:3rem;margin-bottom:12px">📎</div>
+          <div style="font-weight:600;margin-bottom:4px">logo-v3-final.png</div>
+          <div style="font-size:0.8rem;color:var(--dim)">Uploaded by Kai C. · 2 hours ago</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="mock-btn" style="background:var(--green)">✅ Approve</button>
+          <button class="mock-btn" style="background:transparent;border:1px solid var(--border);color:var(--text)">📝 Request Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene 5: Approved & Paid -->
+    <div class="scene" id="scene5">
+      <div class="scene-title">✅ Approved!</div>
+      <div class="scene-sub">You approve the work. Coins release to the worker instantly.</div>
+      <div class="coin-anim">🪙 → 💰</div>
+      <div class="mock-card" style="text-align:center">
+        <div style="font-size:1.5rem;font-weight:700;color:var(--green);margin-bottom:8px">Payment Released</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--accent)">150 FC</div>
+        <div style="font-size:0.85rem;color:var(--dim);margin-top:8px">Kai C. received 150 Fairy Coins</div>
+      </div>
+    </div>
+
+    <!-- Scene 6: Rating -->
+    <div class="scene" id="scene6">
+      <div class="scene-title">⭐ Rate Each Other</div>
+      <div class="scene-sub">Both sides rate. Double-blind — neither sees the other's rating until both submit.</div>
+      <div class="stars">⭐ ⭐ ⭐ ⭐ ⭐</div>
+      <div class="mock-card" style="text-align:center">
+        <div style="font-weight:600;margin-bottom:8px">How was your experience?</div>
+        <div style="display:flex;justify-content:center;gap:8px;margin:12px 0">
+          <span style="font-size:2rem;cursor:pointer">😐</span>
+          <span style="font-size:2rem;cursor:pointer">🙂</span>
+          <span style="font-size:2rem;cursor:pointer">😊</span>
+          <span style="font-size:2rem;cursor:pointer">🤩</span>
+          <span style="font-size:2rem;cursor:pointer">💯</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--dim)">Your rating is hidden until the other person rates too.</div>
+      </div>
+    </div>
+
+    <!-- Scene 7: CTA -->
+    <div class="scene" id="scene7">
+      <div class="final-cta">
+        <div style="font-size:3rem;margin-bottom:16px">⚔️</div>
+        <h2>Ready to Join?</h2>
+        <p>Post tasks, get help, earn coins. Free to join. Protected by escrow. Built on trust.</p>
+        <div class="btn-group">
+          <a href="auth.html" class="primary">Create Your Account</a>
+          <a href="quest-board.html" class="outline">Browse Quests</a>
+        </div>
+        <div style="margin-top:24px;font-size:0.8rem;color:var(--dim)">
+          <a href="getting-started.html" style="color:var(--accent)">📖 Getting Started</a> · 
+          <a href="stats.html" style="color:var(--accent)">📊 Platform Stats</a> · 
+          <a href="blog/community-task-boards.html" style="color:var(--accent)">📝 What is a Task Board?</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="demo-nav">
+    <button id="prevBtn" onclick="navigate(-1)">← Back</button>
+    <button id="nextBtn" class="primary" onclick="navigate(1)">Next →</button>
+  </div>
+
+  <script>
+    let current = 1;
+    const total = 7;
+
+    function navigate(dir) {
+      const next = current + dir;
+      if (next < 1 || next > total) return;
+      
+      document.getElementById('scene' + current).classList.remove('active');
+      current = next;
+      document.getElementById('scene' + current).classList.add('active');
+      
+      // Update progress
+      document.getElementById('progress').style.width = ((current / total) * 100) + '%';
+      document.getElementById('counter').textContent = current + ' / ' + total;
+      
+      // Update buttons
+      document.getElementById('prevBtn').style.visibility = current === 1 ? 'hidden' : 'visible';
+      document.getElementById('nextBtn').textContent = current === total ? '🏠 Visit Site' : 'Next →';
+      if (current === total) {
+        document.getElementById('nextBtn').onclick = () => window.location.href = 'index.html';
+      } else {
+        document.getElementById('nextBtn').onclick = () => navigate(1);
+      }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+      if (e.key === 'ArrowLeft') navigate(-1);
+    });
+
+    // Touch swipe
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', (e) => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) navigate(diff > 0 ? 1 : -1);
+    });
+
+    // Auto-advance timer (optional — comment out if you want manual only)
+    // let autoTimer = setInterval(() => navigate(1), 5000);
+    // document.addEventListener('click', () => { clearInterval(autoTimer); });
+
+    // Init
+    navigate(0);
+  </script>
+</body>
+</html>
