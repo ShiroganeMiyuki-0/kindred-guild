@@ -132,6 +132,27 @@
     </div>
   </div>
 
+  <!-- Create Announcement Modal -->
+  <div id="announcementModal" class="modal-overlay">
+    <div class="modal-box">
+      <h4>📢 Create Announcement</h4>
+      <label>Title</label>
+      <input type="text" id="annTitle" placeholder="e.g. New Feature Launch" maxlength="200">
+      <label>Content</label>
+      <textarea id="annContent" placeholder="What do you want to tell the community?" maxlength="2000"></textarea>
+      <label>Priority</label>
+      <select id="annPriority">
+        <option value="normal">📢 Normal</option>
+        <option value="important">⚠️ Important</option>
+        <option value="urgent">🚨 Urgent</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn btn-refresh" onclick="closeAnnouncementModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="createAnnouncement()">Publish</button>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="header">
       <h1>🛡️ Admin Center</h1>
@@ -163,6 +184,7 @@
       <button class="tab-btn" onclick="switchTab('guild')">🏰 Guild Hall</button>
       <button class="tab-btn" onclick="switchTab('warnings')">⚠️ Warnings</button>
       <button class="tab-btn" onclick="switchTab('analytics')">📊 Analytics</button>
+      <button class="tab-btn" onclick="switchTab('announcements')">📢 Announcements</button>
     </div>
 
     <!-- Quests Tab -->
@@ -269,6 +291,20 @@
       </div>
     </div>
 
+    <!-- Announcements Tab -->
+    <div id="panel-announcements" class="tab-content">
+      <div class="card">
+        <h3>📢 Manage Announcements</h3>
+        <p class="hint">Create and manage platform-wide announcements visible to all users on the landing page and Guild Hall.</p>
+        <button class="btn btn-primary" onclick="openCreateAnnouncementModal()" style="margin-bottom:16px;">+ New Announcement</button>
+        <button class="btn btn-refresh" onclick="fetchAnnouncements()" style="margin-bottom:16px;">🔄 Refresh</button>
+        <table>
+          <thead><tr><th>Title</th><th>Priority</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="announcementsTableBody"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/supabase-client.js"></script>
@@ -333,6 +369,7 @@
       if (tabId === 'wishes') fetchWishes();
       if (tabId === 'coins') fetchPendingCoins();
       if (tabId === 'analytics') loadAnalytics();
+      if (tabId === 'announcements') fetchAnnouncements();
     }
 
     // ── QUESTS ──
@@ -703,6 +740,84 @@
 
     // Init
     window.addEventListener('load', () => setTimeout(checkAdmin, 200));
+
+    // ── ANNOUNCEMENTS ──
+    window.openCreateAnnouncementModal = function() {
+      document.getElementById('annTitle').value = '';
+      document.getElementById('annContent').value = '';
+      document.getElementById('annPriority').value = 'normal';
+      document.getElementById('announcementModal').classList.add('show');
+    };
+
+    window.closeAnnouncementModal = function() {
+      document.getElementById('announcementModal').classList.remove('show');
+    };
+
+    window.createAnnouncement = async function() {
+      const title = document.getElementById('annTitle').value.trim();
+      const content = document.getElementById('annContent').value.trim();
+      const priority = document.getElementById('annPriority').value;
+
+      if (!title || !content) {
+        showGlobalAlert('Title and content are required.', 'error');
+        return;
+      }
+
+      const { error } = await window.sb.rpc('admin_create_announcement', {
+        p_title: title, p_content: content, p_priority: priority
+      });
+
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert('Announcement published!');
+      closeAnnouncementModal();
+      fetchAnnouncements();
+    };
+
+    window.fetchAnnouncements = async function() {
+      const tbody = document.getElementById('announcementsTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Loading...</td></tr>';
+
+      const { data } = await window.sb.from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No announcements yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(a => {
+        const prioBadge = a.priority === 'urgent' ? 'badge-final' : a.priority === 'important' ? 'badge-warning' : 'badge-info';
+        const prioText = a.priority === 'urgent' ? '🚨 Urgent' : a.priority === 'important' ? '⚠️ Important' : '📢 Normal';
+        const statusBadge = a.is_active ? 'badge-verified' : 'badge-rejected';
+        return `<tr>
+          <td style="font-weight:600">${escapeHtml(a.title)}</td>
+          <td><span class="badge ${prioBadge}">${prioText}</span></td>
+          <td><span class="badge ${statusBadge}">${a.is_active ? 'Active' : 'Hidden'}</span></td>
+          <td>${new Date(a.created_at).toLocaleDateString()}</td>
+          <td>
+            <button class="btn ${a.is_active ? 'btn-reject' : 'btn-approve'}" onclick="toggleAnnouncement('${a.id}', ${!a.is_active})" style="margin-right:4px">${a.is_active ? 'Hide' : 'Show'}</button>
+            <button class="btn btn-danger" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+          </td>
+        </tr>`;
+      }).join('');
+    };
+
+    window.toggleAnnouncement = async function(id, active) {
+      const { error } = await window.sb.rpc('admin_toggle_announcement', { p_announcement_id: id, p_active: active });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert(active ? 'Announcement is now visible.' : 'Announcement hidden.');
+      fetchAnnouncements();
+    };
+
+    window.deleteAnnouncement = async function(id) {
+      if (!confirm('Delete this announcement?')) return;
+      const { error } = await window.sb.rpc('admin_delete_announcement', { p_announcement_id: id });
+      if (error) { showGlobalAlert(error.message, 'error'); return; }
+      showGlobalAlert('Announcement deleted.');
+      fetchAnnouncements();
+    };
   </script>
   <script src="site-nav.js"></script>
 </body>
