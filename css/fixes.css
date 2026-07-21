@@ -160,6 +160,41 @@ table {
   gap: 16px;
 }
 
+.quest-card {
+  overflow: hidden;
+  word-break: break-word;
+}
+
+/* ── 15. VIEW SELECTOR ───────────────────── */
+.view-selector {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+
+.view-selector::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── 16. FILTER BAR ──────────────────────── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filters select {
+  max-width: 100%;
+  min-width: 0;
+  flex: 1;
+  min-width: 120px;
+}
+
 /* ── 15. FAIRY WISHES LAYOUT ──────────────── */
 .layout-split {
   display: grid;

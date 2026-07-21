@@ -213,7 +213,7 @@ function renderQuests() {
     const isOwn = quest.poster_id === currentUser?.id;
     const badgeClass = quest.payment_type === 'coins' ? 'badge-coins' : quest.payment_type === 'upi' ? 'badge-upi' : 'badge-free';
     const badgeText = quest.payment_type === 'coins' ? '🪙 Coins' : quest.payment_type === 'upi' ? '₹ UPI' : '🎁 Free';
-    const rewardText = quest.payment_type === 'coins' ? quest.coin_amount + ' FC' : quest.payment_type === 'upi' ? '₹' + quest.upi_amount : 'Free';
+    const rewardText = quest.payment_type === 'coins' ? (quest.coin_amount || 0) + ' FC' : quest.payment_type === 'upi' ? '₹' + (quest.upi_amount || 0) : 'Free';
     const posterName = quest.poster?.display_name || quest.poster?.username || 'Unknown';
     const rep = quest.poster?.reputation_score ? (quest.poster.reputation_score / 10).toFixed(1) : '—';
     const posterVerified = quest.poster?.is_verified ? ' <span style="color:#10b981" title="Verified">✅</span>' : '';
