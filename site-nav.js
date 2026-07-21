@@ -181,11 +181,12 @@
             `;
         }).join('');
 
-        // Mobile: all items listed
+        // Mobile: all items listed. py-2.5 (was py-3) — saves ~80px vertical
+        // across 18 links so the menu fits better in small viewports.
         const mobileLinks = menuItems.map(item => {
             const activeClass = isItemActive(item.file) ? 'nav-mobile-active text-amber-400 bg-amber-500/10 font-bold' : 'text-gray-300 hover:bg-slate-800 hover:text-amber-300';
             return `
-                <a href="${getPath(item.file)}" class="flex items-center gap-3 pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out ${activeClass}">
+                <a href="${getPath(item.file)}" class="flex items-center gap-3 pl-3 pr-4 py-2.5 text-base font-medium transition duration-150 ease-in-out ${activeClass}">
                     <i class="fa-solid ${item.icon} w-5 text-center text-sm"></i>
                     <span>${item.name}</span>
                 </a>
@@ -193,7 +194,7 @@
         }).join('');
 
         const mobileAdminLink = isAdmin ? `
-            <a href="${getPath('admin_dashboard_ui.html')}" class="flex items-center gap-3 pl-3 pr-4 py-3 text-base font-medium transition duration-150 ease-in-out text-rose-300 hover:bg-rose-950/20 hover:text-rose-200">
+            <a href="${getPath('admin_dashboard_ui.html')}" class="flex items-center gap-3 pl-3 pr-4 py-2.5 text-base font-medium transition duration-150 ease-in-out text-rose-300 hover:bg-rose-950/20 hover:text-rose-200">
                 <i class="fa-solid fa-lock-open w-5 text-center text-sm text-rose-400"></i>
                 <span>Admin Panel</span>
             </a>
@@ -492,24 +493,98 @@
     }
 
     function setupEventHandlers(user) {
-        // Mobile hamburger toggle
+        // Mobile hamburger toggle — with body scroll lock
+        //
+        // The previous version only toggled the .hidden class on #mobile-menu,
+        // which meant:
+        //   1. The menu grew to ~1100px tall inside the sticky #site-nav, so
+        //      its bottom (including the Sign Out button) was clipped below
+        //      the fold on mobile. Users had to scroll the BODY to reach it.
+        //   2. The body wasn't locked, so scrolling DID move the page behind
+        //      the menu — confusing and broken-feeling.
+        //
+        // The new version uses a setMenuOpen(open) helper that:
+        //   - toggles .hidden + the hamburger/xmark icon
+        //   - adds/removes .mobile-menu-open on <body> (CSS locks overflow)
+        //   - on iOS Safari (which ignores body{overflow:hidden} for touch
+        //     scroll), applies position:fixed to body and remembers scrollY
+        //     so we can restore it on close. This is the canonical iOS-safe
+        //     scroll-lock pattern.
+        //   - closes on Escape key, on link click, and on resize to desktop
         const toggleBtn = document.getElementById('mobile-menu-toggle');
         const mobileMenu = document.getElementById('mobile-menu');
         const icon = document.getElementById('hamburger-icon');
 
+        // Saved scroll position so we can restore it when the menu closes
+        // (the position:fixed trick scrolls the body to top).
+        let savedScrollY = 0;
+
+        function setMenuOpen(open) {
+            if (!toggleBtn || !mobileMenu || !icon) return;
+
+            if (open) {
+                // Lock the body. On iOS, position:fixed is required because
+                // body{overflow:hidden} doesn't prevent touch scrolling.
+                // We remember scrollY so we can restore it on close.
+                savedScrollY = window.scrollY || window.pageYOffset || 0;
+                document.body.classList.add('mobile-menu-open');
+                document.body.style.position = 'fixed';
+                document.body.style.top = `-${savedScrollY}px`;
+                document.body.style.left = '0';
+                document.body.style.right = '0';
+                document.body.style.width = '100%';
+
+                mobileMenu.classList.remove('hidden');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+                toggleBtn.setAttribute('aria-expanded', 'true');
+            } else {
+                mobileMenu.classList.add('hidden');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+
+                // Unlock the body and restore scroll position
+                document.body.classList.remove('mobile-menu-open');
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.left = '';
+                document.body.style.right = '';
+                document.body.style.width = '';
+                window.scrollTo(0, savedScrollY);
+            }
+        }
+
         if (toggleBtn && mobileMenu) {
             toggleBtn.addEventListener('click', () => {
                 const isHidden = mobileMenu.classList.contains('hidden');
-                if (isHidden) {
-                    mobileMenu.classList.remove('hidden');
-                    icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-xmark');
-                    toggleBtn.setAttribute('aria-expanded', 'true');
-                } else {
-                    mobileMenu.classList.add('hidden');
-                    icon.classList.remove('fa-xmark');
-                    icon.classList.add('fa-bars');
-                    toggleBtn.setAttribute('aria-expanded', 'false');
+                setMenuOpen(isHidden);
+            });
+
+            // Close on Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+                    setMenuOpen(false);
+                }
+            });
+
+            // Close when any link inside the menu is clicked (so navigating
+            // to a new page doesn't leave the menu open in the bfcache)
+            mobileMenu.querySelectorAll('a').forEach(a => {
+                a.addEventListener('click', () => setMenuOpen(false));
+            });
+            // Also close when the mobile Sign Out button is clicked
+            const mobileLogout = document.getElementById('btn-logout-mobile');
+            if (mobileLogout) {
+                mobileLogout.addEventListener('click', () => setMenuOpen(false));
+            }
+
+            // Close on resize to desktop (>= 768px) — the menu is hidden by
+            // Tailwind's md:hidden above that breakpoint, but the body lock
+            // would persist if we don't clean up.
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768 && !mobileMenu.classList.contains('hidden')) {
+                    setMenuOpen(false);
                 }
             });
         }
