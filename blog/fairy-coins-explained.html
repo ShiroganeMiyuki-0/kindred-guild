@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What Are Fairy Coins? — Kindred Guild's Internal Currency Explained</title>
+  <meta name="description" content="Fairy Coins are Kindred Guild's internal currency. Earn them by completing tasks, spend them to post paid quests. Locked in escrow for safety. Not crypto.">
+  <meta name="keywords" content="fairy coins, internal currency, community currency, escrow, task rewards, kindred guild">
+  <meta property="og:title" content="What Are Fairy Coins? — Kindred Guild">
+  <meta property="og:description" content="Learn how Fairy Coins work — earn, spend, lock in escrow. The community currency that keeps Kindred Guild fair.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://kindredguild.org/blog/fairy-coins-explained.html">
+  <meta property="og:image" content="https://kindredguild.org/og-image.png">
+  <link rel="icon" href="data:image/png;base64,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">
+  <link rel="stylesheet" href="css/globals.css">
+  <link rel="stylesheet" href="css/layout-fix.css">
+  <link rel="stylesheet" href="css/comprehensive-fixes.css">
+  <style>
+    .article { max-width:720px; margin:0 auto; padding:40px 20px 80px; }
+    .article-meta { color:var(--text-muted); font-size:0.85rem; margin-bottom:32px; }
+    .article h1 { font-size:2rem; color:var(--accent); margin-bottom:16px; line-height:1.3; }
+    .article h2 { font-size:1.4rem; color:var(--accent); margin-top:40px; margin-bottom:16px; }
+    .article h3 { font-size:1.1rem; color:var(--text); margin-top:28px; margin-bottom:12px; }
+    .article p { color:var(--text-dim); font-size:1rem; line-height:1.8; margin-bottom:16px; }
+    .article ul, .article ol { color:var(--text-dim); font-size:1rem; line-height:1.8; margin-bottom:16px; padding-left:24px; }
+    .article li { margin-bottom:8px; }
+    .article strong { color:var(--text); }
+    .article a { color:var(--accent); }
+    .callout { background:var(--accent-glow); border-left:4px solid var(--accent); padding:16px 20px; border-radius:0 var(--radius-sm) var(--radius-sm) 0; margin:24px 0; }
+    .callout p { margin:0; font-size:0.9rem; }
+    .flow-diagram { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; margin:24px 0; padding:20px; background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); }
+    .flow-step { text-align:center; padding:12px 16px; }
+    .flow-step .icon { font-size:1.5rem; }
+    .flow-step .label { font-size:0.8rem; color:var(--text-dim); margin-top:4px; }
+    .flow-arrow { color:var(--accent); font-size:1.2rem; }
+    .cta-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; text-align:center; margin-top:40px; }
+    .cta-box h3 { color:var(--accent); margin-bottom:8px; }
+    .cta-box p { color:var(--text-dim); margin-bottom:16px; }
+    @media(max-width:640px) { .article h1 { font-size:1.5rem; } .flow-diagram { flex-direction:column; } .flow-arrow { transform:rotate(90deg); } }
+  </style>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <article class="article">
+    <div class="article-meta">Published July 2026 · 4 min read · Kindred Guild</div>
+    
+    <h1>🪙 What Are Fairy Coins? The Complete Guide to Kindred Guild's Internal Currency</h1>
+    
+    <p>Fairy Coins are the internal currency of Kindred Guild. They're how you post paid tasks, earn rewards, and participate in the platform's economy. Think of them like gold in a video game — earned, spent, and locked in escrow. They never leave the platform.</p>
+
+    <p>Here's everything you need to know about how they work.</p>
+
+    <h2>How Do You Earn Fairy Coins?</h2>
+    
+    <p>There are several ways to earn coins:</p>
+    
+    <ul>
+      <li><strong>Complete quests</strong> — When you finish a paid task and the poster approves your work, the locked coins transfer to your balance. This is the primary way to earn.</li>
+      <li><strong>Referrals</strong> — Share your referral code with friends. When they sign up and complete their first quest, you both earn bonus coins.</li>
+      <li><strong>Receive gifts</strong> — Other community members can send you coins as a thank-you or reward.</li>
+      <li><strong>Buy with UPI</strong> — Need coins urgently? Purchase them directly via UPI payment on the <a href="coin_purchase_ui.html">Buy Coins</a> page. Admin verification within 24 hours.</li>
+    </ul>
+
+    <h2>How Do You Spend Fairy Coins?</h2>
+
+    <p>Coins are used to post paid tasks. Here's how it works:</p>
+
+    <div class="flow-diagram">
+      <div class="flow-step"><div class="icon">📝</div><div class="label">Post Quest</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="icon">🔒</div><div class="label">Coins Lock<br>(Escrow)</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="icon">🤝</div><div class="label">Worker<br>Accepts</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="icon">✅</div><div class="label">You Approve</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="icon">💰</div><div class="label">Worker<br>Gets Paid</div></div>
+    </div>
+
+    <p>When you post a quest with a coin reward, two things happen:</p>
+    <ol>
+      <li>The <strong>reward amount</strong> locks in escrow — it leaves your balance but isn't given to anyone yet</li>
+      <li>A <strong>10% platform fee</strong> locks alongside it — this supports the platform and community rewards</li>
+    </ol>
+
+    <div class="callout">
+      <p><strong>Example:</strong> You post a quest with a 100 FC reward. Your balance is deducted 110 FC (100 reward + 10 fee). When you approve the work, the worker receives 100 FC. The 10 FC fee is retained by the platform.</p>
+    </div>
+
+    <h2>What Happens If Things Go Wrong?</h2>
+
+    <p>Kindred Guild has built-in protections:</p>
+
+    <ul>
+      <li><strong>Quest cancelled</strong> — If you cancel your quest before anyone accepts, all locked coins (reward + fee) refund to your balance instantly.</li>
+      <li><strong>Worker abandons</strong> — If a worker drops your quest, it goes back to "open" and your coins stay locked for the next worker.</li>
+      <li><strong>Dispute</strong> — If there's a disagreement, either party can file a dispute. Coins stay locked until resolved. Both parties can agree on a resolution, or an admin decides.</li>
+      <li><strong>Quest expires</strong> — If your quest passes its deadline without being completed, it auto-closes and all locked coins refund to you.</li>
+      <li><strong>Auto-approval</strong> — If a worker submits proof and you don't respond within 48 hours, the quest auto-approves and the worker gets paid. This prevents ghosting.</li>
+    </ul>
+
+    <h2>Fairy Coins vs Real Money</h2>
+
+    <p>Important distinctions:</p>
+
+    <ul>
+      <li><strong>Not cryptocurrency</strong> — Fairy Coins don't use blockchain. They're a simple internal ledger, like game currency.</li>
+      <li><strong>Can't be cashed out</strong> — You can't convert coins to real money. They stay inside Kindred Guild.</li>
+      <li><strong>Can't be transferred off-platform</strong> — Coins have no value outside the platform.</li>
+      <li><strong>For platform use only</strong> — Post tasks, back wishes, participate in the economy.</li>
+    </ul>
+
+    <div class="callout">
+      <p><strong>Why this matters:</strong> Keeping coins internal prevents scams, money laundering, and regulatory issues. It also means we can focus on building a fair community economy without worrying about exchange rates or banking regulations.</p>
+    </div>
+
+    <h2>UPI Payments (Direct)</h2>
+
+    <p>For tasks where you prefer real money, there's a UPI option. When you post a UPI quest:</p>
+
+    <ul>
+      <li>You set a ₹ amount as the reward</li>
+      <li>A 10% commission in Fairy Coins is locked (to prevent spam)</li>
+      <li>Payment happens directly between you and the worker via UPI</li>
+      <li>Kindred Guild doesn't handle the UPI payment — it's between you two</li>
+    </ul>
+
+    <p>This is great for larger tasks where you want to pay in rupees but still use the platform's trust and reputation system.</p>
+
+    <h2>The Fairy Coin Economy</h2>
+
+    <p>The coin economy is designed to be self-sustaining:</p>
+
+    <ul>
+      <li><strong>Earned through work</strong> — Coins enter circulation when tasks are completed</li>
+      <li><strong>Recycled through posting</strong> — Coins leave your balance when you post, but enter someone else's when they complete work</li>
+      <li><strong>Platform fees</strong> — The 10% fee is the only "leak" in the system, keeping the platform running</li>
+      <li><strong>No inflation</strong> — Coins aren't printed out of thin air. They're earned through actual contribution.</li>
+    </ul>
+
+    <h2>Ready to Start Earning?</h2>
+
+    <p>The best way to understand Fairy Coins is to use them. Sign up, accept a free quest to build reputation, then move to paid tasks. You'll have coins flowing in no time.</p>
+
+    <div class="cta-box">
+      <h3>Join Kindred Guild</h3>
+      <p>Post tasks, earn coins, build trust. Free to join.</p>
+      <a href="auth.html" class="btn btn-primary">Create Your Account</a>
+      <a href="quest-board.html" class="btn btn-outline" style="margin-left:8px">Browse Quests</a>
+    </div>
+
+    <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--border);">
+      <p style="font-size:0.85rem;color:var(--text-muted);">Related: <a href="getting-started.html">Getting Started Guide</a> · <a href="trust-and-safety.html">Trust & Safety</a> · <a href="quest-rules.html">Quest Rules</a></p>
+    </div>
+  </article>
+
+  <script src="site-nav.js"></script>
+</body>
+</html>

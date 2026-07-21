@@ -7,6 +7,18 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://kindredguild.org/blog/fairy-coins-explained.html</loc>
+    <lastmod>2026-07-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://kindredguild.org/blog/community-task-boards.html</loc>
+    <lastmod>2026-07-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://kindredguild.org/getting-started.html</loc>
     <lastmod>2026-07-21</lastmod>
     <changefreq>monthly</changefreq>
