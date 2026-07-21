@@ -274,6 +274,15 @@ p, span, div, li, td, a, h1, h2, h3, h4, h5, h6,
 
 /* ── 12. VIEW SELECTOR FIXES ─────────────────── */
 
+/* Fairy Wishes two-column layout + wish-card flex child: same min-width:auto
+   overflow pattern as the chat grids above. */
+.layout-split {
+  grid-template-columns: minmax(0, 1fr) 320px !important;
+}
+.wish-info {
+  min-width: 0 !important;
+}
+
 /* Horizontal scroll for tabs */
 .view-selector {
   overflow-x: auto !important;
