@@ -233,7 +233,35 @@
   }
 }
 
-/* ── 11. FILTER BAR FIXES ────────────────────── */
+/* ── 13. TEXT OVERFLOW SAFETY NET ────────────────
+   Root cause of "buttons/messages rendering outside the screen":
+   body has overflow-x:hidden globally, so any text without a
+   natural break point (long URL, long unbroken word) doesn't wrap —
+   it silently overflows past the viewport edge and gets clipped,
+   taking anything after it out of reach. Applies everywhere,
+   both mobile and desktop, since this isn't a viewport-width bug. */
+p, span, div, li, td, a, h1, h2, h3, h4, h5, h6,
+.dm-msg-bubble, .msg-content, .comment-text,
+.quest-description, .wish-description, .worker-description {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+/* Grid chat layouts (DM, Guild Hall): a plain 1fr column still has an
+   implicit min-width equal to its content, so unbroken content can
+   force the whole grid wider than the viewport even with the rule
+   above. minmax(0, 1fr) removes that implicit floor. */
+.dm-layout {
+  grid-template-columns: 300px minmax(0, 1fr) !important;
+}
+.hall-layout {
+  grid-template-columns: 220px minmax(0, 1fr) !important;
+}
+@media (max-width: 768px) {
+  .dm-layout, .hall-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
 
 /* Prevent filter dropdowns from being cut off */
 .filter-bar {
