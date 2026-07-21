@@ -327,6 +327,24 @@
         navElement.className = 'glass-nav sticky top-0 z-50 w-full transition-all duration-300';
         navElement.innerHTML = buildNavbarHTML(user, isAdmin);
 
+        // CRITICAL: Reparent #mobile-menu out of #site-nav and into <body>.
+        //
+        // .glass-nav (above) sets `backdrop-filter: blur(12px)`. Per CSS spec,
+        // an ancestor with backdrop-filter becomes the containing block for
+        // position: fixed descendants. Our mobile menu CSS uses
+        // `position: fixed; top: 56px; bottom: 0` to make it a full-viewport
+        // overlay — but if the menu stays inside #site-nav, those fixed
+        // coordinates resolve against the 57px-tall navbar instead of the
+        // viewport, yielding a 1px-tall invisible sliver.
+        //
+        // Moving the menu to be a direct child of <body> fixes this and
+        // matches the standard production pattern (mobile overlay is a
+        // sibling of the navbar, not a child).
+        const mobileMenu = navElement.querySelector('#mobile-menu');
+        if (mobileMenu) {
+            document.body.appendChild(mobileMenu);
+        }
+
         injectPageNav(user);
         setupEventHandlers(user);
         adjustFlexBody();
@@ -521,6 +539,12 @@
 
         function setMenuOpen(open) {
             if (!toggleBtn || !mobileMenu || !icon) return;
+
+            // Desktop guard: the hamburger button is hidden above 768px via
+            // Tailwind's md:hidden, but it's still focusable/clickable via
+            // keyboard (Tab + Enter). Without this guard, activating it on
+            // desktop would lock the body and leave no visible way to unlock.
+            if (open && window.innerWidth >= 768) return;
 
             if (open) {
                 // Lock the body. On iOS, position:fixed is required because
