@@ -30,8 +30,9 @@
     .layout-split { display:grid; grid-template-columns:1fr 320px; gap:24px; }
     @media(max-width:768px) { .layout-split { grid-template-columns:1fr; } .side-card { position:static; } }
     .wish-list { display:flex; flex-direction:column; gap:14px; }
-    .wish-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; display:flex; justify-content:space-between; align-items:flex-start; gap:14px; }
-    .wish-info { flex:1; }
+    .wish-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; display:flex; flex-direction:column; gap:12px; }
+    .wish-top-row { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; }
+    .wish-info { flex:1; min-width:0; }
     .wish-badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:0.7rem; font-weight:bold; text-transform:uppercase; margin-bottom:8px; }
     .wish-badge.coins { background:rgba(234,179,8,0.12); color:#eab308; }
     .wish-badge.upi { background:rgba(249,115,22,0.12); color:#f97316; }
@@ -47,6 +48,18 @@
     .vote-panel.voted { background:var(--accent); color:#000; border-color:var(--accent); }
     .vote-icon { font-size:1.1rem; }
     .vote-count { font-size:0.85rem; font-weight:bold; }
+    .wish-comments-toggle { background:none; border:none; color:var(--text-dim); font-size:0.75rem; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px; }
+    .wish-comments-toggle:hover { color:var(--accent); }
+    .wish-comments-panel { display:none; border-top:1px solid var(--border); padding-top:12px; }
+    .wish-comments-panel.open { display:block; }
+    .wish-comments-list { display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; margin-bottom:10px; }
+    .wish-comment-card { background:var(--bg); border:1px solid var(--border); padding:8px 12px; border-radius:var(--radius-sm); }
+    .wish-comment-meta { display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-dim); margin-bottom:3px; }
+    .wish-comment-meta strong { color:var(--accent); }
+    .wish-comment-content { font-size:0.82rem; line-height:1.5; }
+    .wish-comment-input-row { display:flex; gap:8px; }
+    .wish-comment-input-row input { flex:1; }
+    .wish-comment-empty { color:var(--text-dim); font-size:0.78rem; text-align:center; padding:10px; }
     .side-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; height:fit-content; position:sticky; top:20px; }
     .side-card h3 { color:var(--accent); font-size:1.1rem; margin-bottom:14px; }
     .wish-filters { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
@@ -410,24 +423,34 @@
 
         return `
           <div class="wish-card">
-            <div class="wish-info">
-              <span class="wish-badge ${badgeClass}">${badge}</span>
-              <div class="wish-title">${escapeHtml(w.title)}</div>
-              <div class="wish-desc">${escapeHtml(w.description)}</div>
-              <div class="wish-meta">
-                <span>by @${escapeHtml(name)}</span>
-                ${totalBackingTags.join(' ')}
-                ${backingStatus ? `<span style="color:var(--accent);font-weight:600">${backingStatus}</span>` : ''}
+            <div class="wish-top-row">
+              <div class="wish-info">
+                <span class="wish-badge ${badgeClass}">${badge}</span>
+                <div class="wish-title">${escapeHtml(w.title)}</div>
+                <div class="wish-desc">${escapeHtml(w.description)}</div>
+                <div class="wish-meta">
+                  <span>by @${escapeHtml(name)}</span>
+                  ${totalBackingTags.join(' ')}
+                  ${backingStatus ? `<span style="color:var(--accent);font-weight:600">${backingStatus}</span>` : ''}
+                </div>
+                <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                  ${!isOwn && !myBacking ? `<button class="btn btn-primary btn-sm" style="font-size:0.72rem;padding:4px 12px;" onclick="handleBackWish('${w.id}', '${escapeHtml(w.title)}')">🪙 Back This Wish</button>` : ''}
+                  ${!isOwn && myBacking ? `<button class="btn-remove-backing" onclick="handleRemoveBacking('${w.id}')">✕ Remove Backing</button>` : ''}
+                  ${isOwn ? `<button class="btn btn-ghost btn-sm" style="font-size:0.75rem;color:var(--error);" onclick="deleteWish('${w.id}')">🗑️ Delete</button>` : ''}
+                  <button class="wish-comments-toggle" onclick="toggleWishComments('${w.id}')">💬 <span id="commentCount-${w.id}">Comments</span></button>
+                </div>
               </div>
-              <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
-                ${!isOwn && !myBacking ? `<button class="btn btn-primary btn-sm" style="font-size:0.72rem;padding:4px 12px;" onclick="handleBackWish('${w.id}', '${escapeHtml(w.title)}')">🪙 Back This Wish</button>` : ''}
-                ${!isOwn && myBacking ? `<button class="btn-remove-backing" onclick="handleRemoveBacking('${w.id}')">✕ Remove Backing</button>` : ''}
-                ${isOwn ? `<button class="btn btn-ghost btn-sm" style="font-size:0.75rem;color:var(--error);" onclick="deleteWish('${w.id}')">🗑️ Delete</button>` : ''}
+              <div class="vote-panel ${isVoted ? 'voted' : ''}" onclick="toggleVote('${w.id}')">
+                <div class="vote-icon">▲</div>
+                <div class="vote-count">${w.votesCount}</div>
               </div>
             </div>
-            <div class="vote-panel ${isVoted ? 'voted' : ''}" onclick="toggleVote('${w.id}')">
-              <div class="vote-icon">▲</div>
-              <div class="vote-count">${w.votesCount}</div>
+            <div class="wish-comments-panel" id="commentsPanel-${w.id}">
+              <div class="wish-comments-list" id="commentsList-${w.id}"><div class="wish-comment-empty">Loading…</div></div>
+              <div class="wish-comment-input-row">
+                <input type="text" id="commentInput-${w.id}" placeholder="Say something about this wish..." maxlength="1000" onkeydown="if(event.key==='Enter')postWishComment('${w.id}')">
+                <button class="btn btn-primary btn-sm" onclick="postWishComment('${w.id}')">Send</button>
+              </div>
             </div>
           </div>`;
       }).join('');
@@ -447,6 +470,81 @@
         await window.sb.from('wish_votes').insert({ wish_id: wishId, voter_id: currentUser.id });
       }
       await loadWishes();
+    };
+
+    // Comments
+    let openCommentsWishId = null;
+    let commentsChannel = null;
+
+    window.toggleWishComments = async function (wishId) {
+      const panel = document.getElementById(`commentsPanel-${wishId}`);
+      if (!panel) return;
+
+      const isOpening = !panel.classList.contains('open');
+
+      // Close any other open panel first
+      if (openCommentsWishId && openCommentsWishId !== wishId) {
+        const prev = document.getElementById(`commentsPanel-${openCommentsWishId}`);
+        if (prev) prev.classList.remove('open');
+      }
+      if (commentsChannel) { window.sb.removeChannel(commentsChannel); commentsChannel = null; }
+
+      panel.classList.toggle('open');
+      openCommentsWishId = panel.classList.contains('open') ? wishId : null;
+
+      if (isOpening) {
+        await loadWishComments(wishId);
+        commentsChannel = window.sb.channel(`wish-comments-${wishId}`)
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wish_comments', filter: `wish_id=eq.${wishId}` }, () => loadWishComments(wishId))
+          .subscribe();
+      }
+    };
+
+    async function loadWishComments(wishId) {
+      const { data, error } = await window.sb
+        .from('wish_comments')
+        .select('*, sender:user_profiles!wish_comments_user_id_fkey(username, display_name)')
+        .eq('wish_id', wishId)
+        .order('created_at', { ascending: true });
+
+      const list = document.getElementById(`commentsList-${wishId}`);
+      const countEl = document.getElementById(`commentCount-${wishId}`);
+      if (!list) return;
+
+      if (error || !data || data.length === 0) {
+        list.innerHTML = '<div class="wish-comment-empty">No comments yet. Be the first to say something.</div>';
+        if (countEl) countEl.textContent = 'Comments';
+        return;
+      }
+
+      if (countEl) countEl.textContent = `Comments (${data.length})`;
+
+      list.innerHTML = data.map(c => {
+        const sender = c.sender?.display_name || c.sender?.username || 'Member';
+        const time = new Date(c.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const isSelf = c.user_id === currentUser.id;
+        return `
+          <div class="wish-comment-card" style="${isSelf ? 'border-color:var(--accent)' : ''}">
+            <div class="wish-comment-meta"><strong>${escapeHtml(sender)}${isSelf ? ' (You)' : ''}</strong><span>${time}</span></div>
+            <div class="wish-comment-content">${escapeHtml(c.content)}</div>
+          </div>`;
+      }).join('');
+      list.scrollTop = list.scrollHeight;
+    }
+
+    window.postWishComment = async function (wishId) {
+      const input = document.getElementById(`commentInput-${wishId}`);
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      const { error } = await window.sb.from('wish_comments').insert({
+        wish_id: wishId, user_id: currentUser.id, content: text
+      });
+      if (error) {
+        input.value = text;
+        await showCustomAlert('Failed to send', error.message, true);
+      }
     };
 
     // Back a wish
