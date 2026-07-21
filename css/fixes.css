@@ -1,353 +1,47 @@
 /* ============================================
-   KINDRED GUILD — LAYOUT & Z-INDEX FIX
-   Fixes overlapping modals, banners, toasts,
-   and onboarding tooltips.
-   
-   Add this AFTER globals.css and modals_stylesheet.css:
-   <link rel="stylesheet" href="css/layout-fix.css">
+   KINDRED GUILD — GLOBAL FIXES
+   Responsive + overflow protection.
+   Include AFTER globals.css on every page.
    ============================================ */
 
-/* ── 1. Z-INDEX HIERARCHY ──────────────────────
-   Establish a clear stacking order:
-   
-   100   — Sticky site nav
-   500   — PWA install banner (fixed bottom)
-   1000  — Onboarding backdrop
-   1001  — Onboarding spotlight
-   1002  — Onboarding tooltip card
-   2000  — Modal overlay
-   3000  — Toast notifications
-   9999  — Emergency/override layer
-   ──────────────────────────────────────────── */
+/* ── 1. Z-INDEX HIERARCHY ─────────────────── */
+#site-nav, .glass-nav { z-index: 100; }
+#pwa-install-banner { z-index: 500; }
+.modal-overlay { z-index: 2000; }
+#toast-container { z-index: 3000; }
 
-/* Site nav — keep on top of content but below everything else */
-#site-nav,
-.glass-nav {
-  z-index: 100 !important;
-}
-
-/* PWA install banner — above nav, below modals */
-#pwa-install-banner {
-  z-index: 500 !important;
-}
-
-/* Onboarding system — above banner, below modals */
-.kg-onboard-vignette {
-  z-index: 1000 !important;
-}
-.kg-onboard-spotlight {
-  z-index: 1001 !important;
-}
-.kg-onboard-card {
-  z-index: 1002 !important;
-}
-
-/* Modal overlay — above onboarding */
-.modal-overlay {
-  z-index: 2000 !important;
-}
-
-/* Toast notifications — above everything */
-#toast-container {
-  z-index: 3000 !important;
-}
-
-/* ── 2. MODAL FIXES ──────────────────────────── */
-
-/* Prevent modal from overflowing screen */
-.modal-box {
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  margin: 20px !important;
-}
-
-/* Modal footer — prevent buttons from being cut off */
-.modal-footer {
-  position: sticky !important;
-  bottom: 0 !important;
-  background: inherit !important;
-  padding-top: 16px !important;
-  margin-top: 16px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Fix modal buttons wrapping weirdly on mobile */
-@media (max-width: 768px) {
-  .modal-footer {
-    flex-direction: column !important;
-    gap: 8px !important;
-  }
-  
-  .modal-btn {
-    width: 100% !important;
-    text-align: center !important;
-  }
-  
-  .modal-box {
-    padding: 20px 16px !important;
-    margin: 12px !important;
-    max-height: 85vh !important;
-  }
-}
-
-/* ── 3. TOAST FIXES ──────────────────────────── */
-
-/* Prevent toasts from being hidden behind banner */
-#toast-container {
-  bottom: 80px !important;  /* Above the PWA banner */
-  right: 20px !important;
-  max-width: 350px !important;
-}
-
-/* On mobile, stack toasts differently */
-@media (max-width: 768px) {
-  #toast-container {
-    bottom: 20px !important;
-    left: 12px !important;
-    right: 12px !important;
-    max-width: none !important;
-  }
-  
-  .toast {
-    font-size: 0.85rem !important;
-    padding: 12px 16px !important;
-  }
-}
-
-/* ── 4. QUEST BOARD CARD FIXES ───────────────── */
-
-/* Quest cards — prevent tags from overflowing */
-.quest-card {
-  overflow: hidden !important;
-}
-
-.card-tags {
-  overflow: hidden !important;
-  max-height: 60px !important;
-}
-
-/* Quest action buttons — prevent overlap */
-.quest-card .action-btn {
-  display: block !important;
-  text-align: center !important;
-  margin-top: 8px !important;
-}
-
-/* ── 5. GUILD HALL FIXES ─────────────────────── */
-
-/* Chat messages — prevent overflow */
-.guild-message {
-  overflow-wrap: break-word !important;
-  word-break: break-word !important;
-}
-
-/* Message input — sticky at bottom */
-.chat-input-area {
-  position: sticky !important;
-  bottom: 0 !important;
-  background: var(--surface) !important;
-  padding: 12px !important;
-  border-top: 1px solid var(--border) !important;
-  z-index: 10 !important;
-}
-
-/* ── 6. FAIRY WISHES FIXES ───────────────────── */
-
-/* Wish cards — prevent overflow */
-.wish-card {
-  overflow: hidden !important;
-}
-
-/* Back wish modal — ensure it fits on screen */
-.back-wish-modal {
-  max-height: 80vh !important;
-  overflow-y: auto !important;
-}
-
-/* ── 7. WORKER POSTS FIXES ───────────────────── */
-
-/* Worker cards — prevent overflow */
-.worker-card {
-  overflow: hidden !important;
-}
-
-/* ── 8. PROFILE PAGE FIXES ───────────────────── */
-
-/* Profile card — prevent overflow on mobile */
-.profile-card {
-  overflow: hidden !important;
-}
-
-/* Stats grid — responsive */
-.stats-grid {
-  overflow-x: auto !important;
-}
-
-/* ── 9. GENERAL OVERFLOW FIXES ───────────────── */
-
-/* Prevent any fixed/absolute element from blocking clicks */
-[style*="position: fixed"],
-[style*="position: absolute"] {
-  pointer-events: auto !important;
-}
-
-/* Ensure modals capture all clicks when open */
-.modal-overlay.active {
-  pointer-events: auto !important;
-}
-
-.modal-overlay.active ~ * {
-  pointer-events: none !important;
-}
-
-/* ── 10. MOBILE-SPECIFIC FIXES ───────────────── */
-
-@media (max-width: 768px) {
-  /* Prevent horizontal scroll */
-  body {
-    overflow-x: hidden !important;
-  }
-  
-  /* Fix floating elements overlapping */
-  .floating-btn,
-  .fab {
-    bottom: 80px !important;  /* Above PWA banner */
-  }
-  
-  /* Fix sticky headers */
-  .sticky-header {
-    position: sticky !important;
-    top: 64px !important;  /* Below site nav */
-    z-index: 50 !important;
-  }
-  
-  /* Fix page header actions wrapping */
-  .page-header .actions {
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-  }
-  
-  .page-header .actions .btn {
-    font-size: 0.75rem !important;
-    padding: 6px 10px !important;
-  }
-}
-
-/* ── 13. TEXT OVERFLOW SAFETY NET ────────────────
-   Root cause of "buttons/messages rendering outside the screen":
-   body has overflow-x:hidden globally, so any text without a
-   natural break point (long URL, long unbroken word) doesn't wrap —
-   it silently overflows past the viewport edge and gets clipped,
-   taking anything after it out of reach. Applies everywhere,
-   both mobile and desktop, since this isn't a viewport-width bug. */
-p, span, div, li, td, a, h1, h2, h3, h4, h5, h6,
-.dm-msg-bubble, .msg-content, .comment-text,
-.quest-description, .wish-description, .worker-description {
-  overflow-wrap: break-word !important;
-  word-break: break-word !important;
-}
-
-/* Grid chat layouts (DM, Guild Hall): a plain 1fr column still has an
-   implicit min-width equal to its content, so unbroken content can
-   force the whole grid wider than the viewport even with the rule
-   above. minmax(0, 1fr) removes that implicit floor. */
-.dm-layout {
-  grid-template-columns: 300px minmax(0, 1fr) !important;
-}
-.hall-layout {
-  grid-template-columns: 220px minmax(0, 1fr) !important;
-}
-@media (max-width: 768px) {
-  .dm-layout, .hall-layout {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-/* Prevent filter dropdowns from being cut off */
-.filter-bar {
-  overflow: visible !important;
-}
-
-.filter-bar select {
-  max-width: 100% !important;
-}
-
-/* ── 12. VIEW SELECTOR FIXES ─────────────────── */
-
-/* Fairy Wishes two-column layout + wish-card flex child: same min-width:auto
-   overflow pattern as the chat grids above. */
-.layout-split {
-  grid-template-columns: minmax(0, 1fr) 320px !important;
-}
-.wish-info {
-  min-width: 0 !important;
-}
-
-/* Horizontal scroll for tabs */
-.view-selector {
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  scrollbar-width: none !important;
-}
-
-.view-selector::-webkit-scrollbar {
-  display: none !important;
-}
-
-.view-tab {
-  flex-shrink: 0 !important;
-  white-space: nowrap !important;
-}
-/* ============================================
-   KINDRED GUILD — COMPREHENSIVE UI FIXES
-   Fixes overflow, layout, and responsive issues
-   across all pages on both mobile and desktop.
-   
-   Include AFTER globals.css and layout-fix.css:
-   <link rel="stylesheet" href="css/comprehensive-fixes.css">
-   ============================================ */
-
-/* ── 1. GLOBAL OVERFLOW PREVENTION ─────────── */
-
-/* Ensure nothing bleeds past viewport */
-html {
-  overflow-x: hidden;
-}
-
+/* ── 2. BODY & CONTAINER ──────────────────── */
 body {
   overflow-x: hidden;
-  max-width: 100vw;
 }
 
-/* Force all containers to respect viewport bounds */
 .container {
+  width: 100%;
+  max-width: var(--max-width, 1100px);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ── 3. GLOBAL TEXT WRAP ──────────────────── */
+p, span, div, li, td, a,
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── 4. INPUTS ────────────────────────────── */
+input, textarea, select {
   max-width: 100%;
-  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
-/* ── 2. SITE NAV RESPONSIVE FIXES ──────────── */
-
-/* Prevent nav items from overflowing on tablet */
-@media (max-width: 1024px) and (min-width: 768px) {
-  #site-nav .nav-brand span {
-    display: none !important;
-  }
-  
-  #site-nav nav a span {
-    font-size: 0.75rem;
-  }
+/* ── 5. IMAGES ────────────────────────────── */
+img {
+  max-width: 100%;
+  height: auto;
 }
 
-/* Mobile nav: ensure hamburger menu doesn't overflow */
-#mobile-menu {
-  max-height: 80vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ── 3. PAGE HEADER FIXES ──────────────────── */
-
-/* Page headers with action buttons: prevent wrapping off-screen */
+/* ── 6. PAGE HEADERS ──────────────────────── */
 .page-header,
 .header-bar {
   display: flex;
@@ -368,485 +62,127 @@ body {
   align-items: center;
 }
 
-/* On mobile, stack header actions below title */
-@media (max-width: 640px) {
-  .page-header,
-  .header-bar {
+/* ── 7. CHAT LAYOUTS ──────────────────────── */
+.dm-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 0;
+  height: calc(100vh - 120px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.hall-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 0;
+  height: calc(100vh - 80px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.dm-msg-bubble, .msg-content, .guild-message {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── 8. MODAL OVERFLOW ────────────────────── */
+.modal-box, .custom-modal {
+  max-height: 90vh;
+  max-width: calc(100vw - 40px);
+  overflow-y: auto;
+  margin: 20px;
+}
+
+/* ── 9. TABLES ────────────────────────────── */
+table {
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+@media (min-width: 768px) {
+  table { display: table; }
+}
+
+/* ── 10. SCROLLBAR ────────────────────────── */
+.view-selector, .section-tabs, .tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.view-selector::-webkit-scrollbar,
+.section-tabs::-webkit-scrollbar,
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.view-tab, .tab-btn, .tab {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── 11. MOBILE ───────────────────────────── */
+@media (max-width: 768px) {
+  .container { padding: 0 16px; }
+
+  .dm-layout, .hall-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .dm-sidebar, .channel-sidebar {
+    display: none;
+  }
+
+  .dm-sidebar.mobile-open, .channel-sidebar.mobile-open {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--surface);
+  }
+
+  .page-header, .header-bar {
     flex-direction: column;
     align-items: flex-start;
   }
-  
-  .page-header .actions,
-  .header-bar > div {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  
+
   .page-header .actions .btn,
   .header-bar .btn {
     padding: 6px 10px;
     font-size: 0.72rem;
   }
-}
 
-/* ── 4. QUEST BOARD FIXES ──────────────────── */
+  .layout-split {
+    grid-template-columns: 1fr;
+  }
 
-/* Quest grid: prevent cards from being too wide */
-.quest-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  max-width: 100%;
-}
+  .side-card {
+    position: static;
+  }
 
-/* Quest card content: prevent overflow */
-.quest-card {
-  overflow: hidden;
-  word-break: break-word;
-  max-width: 100%;
-}
-
-.quest-card .card-tags {
-  max-height: 50px;
-  overflow: hidden;
-}
-
-/* Filter bar: wrap properly */
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.filters select,
-.filters input {
-  max-width: 100%;
-  min-width: 0;
-}
-
-/* User bar: prevent overflow on mobile */
-.user-bar {
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-@media (max-width: 640px) {
-  .user-bar {
+  .modal-footer, .custom-modal-actions {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 8px;
   }
-}
 
-/* ── 5. DM / GUILD HALL CHAT FIXES ─────────── */
-
-/* Chat layouts: prevent content from pushing grid wider */
-.dm-layout,
-.hall-layout {
-  overflow: hidden;
-  max-width: 100%;
-}
-
-/* Chat messages: prevent long words/URLs from breaking layout */
-.dm-msg-bubble,
-.msg-content,
-.guild-message {
-  overflow-wrap: break-word;
-  word-break: break-word;
-  max-width: 100%;
-}
-
-/* Chat input: always visible and properly sized */
-.chat-input-area,
-.dm-input-area {
-  position: sticky;
-  bottom: 0;
-  background: var(--surface);
-  z-index: 10;
-  padding: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.chat-input-form input,
-.dm-input-form input {
-  min-width: 0; /* Allow flex shrink */
-  max-width: 100%;
-}
-
-/* On mobile, hide DM sidebar by default */
-@media (max-width: 768px) {
-  .dm-layout {
-    grid-template-columns: 1fr !important;
-    height: auto !important;
-  }
-  
-  .hall-layout {
-    grid-template-columns: 1fr !important;
-    height: auto !important;
-  }
-  
-  .dm-sidebar,
-  .channel-sidebar {
-    display: none;
-  }
-  
-  .dm-sidebar.mobile-open,
-  .channel-sidebar.mobile-open {
-    display: flex;
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-  }
-}
-
-/* ── 6. MODAL FIXES ────────────────────────── */
-
-/* All modals: prevent overflow */
-.modal-overlay,
-.custom-modal-overlay,
-.invite-modal,
-.group-create-overlay,
-.backing-modal {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.modal-box,
-.custom-modal,
-.invite-modal-box,
-.group-create-box {
-  max-height: 90vh;
-  max-width: calc(100vw - 40px);
-  overflow-y: auto;
-  word-break: break-word;
-}
-
-/* Modal actions: stack on mobile */
-@media (max-width: 480px) {
-  .custom-modal-actions,
-  .modal-actions,
-  .modal-footer {
-    flex-direction: column;
-  }
-  
-  .custom-modal-actions button,
-  .modal-actions button {
+  .modal-footer button,
+  .custom-modal-actions button {
     width: 100%;
   }
 }
 
-/* ── 7. FORM & INPUT FIXES ─────────────────── */
-
-/* Prevent inputs from exceeding container */
-input, textarea, select {
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-/* Inline forms: wrap properly */
-.inline-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.inline-form input,
-.inline-form select {
-  flex: 1;
-  min-width: 120px;
-}
-
-/* ── 8. TABLE FIXES ────────────────────────── */
-
-/* Tables: horizontal scroll on small screens */
-table {
-  display: block;
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* But allow normal table display on larger screens */
-@media (min-width: 768px) {
-  table {
-    display: table;
-  }
-}
-
-/* ── 9. STATS BAR FIXES ────────────────────── */
-
-.stats-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.stat-card {
-  flex: 1;
-  min-width: 100px;
-}
-
 @media (max-width: 480px) {
-  .stat-card {
-    min-width: 80px;
-    padding: 10px;
-  }
-  
-  .stat-card .value {
-    font-size: 1rem;
-  }
+  .container { padding: 0 12px; }
+  body { font-size: 14px; }
+  .btn { padding: 10px 16px; font-size: 0.85rem; }
+  .hero h1 { font-size: 1.6rem; }
+  .cta-group { flex-direction: column; }
+  .cta-group .btn { width: 100%; }
 }
-
-/* ── 10. WISHES PAGE FIXES ─────────────────── */
-
-/* Layout split: responsive */
-.layout-split {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 20px;
-  max-width: 100%;
-}
-
-@media (max-width: 768px) {
-  .layout-split {
-    grid-template-columns: 1fr;
-  }
-  
-  .side-card {
-    position: static;
-  }
-}
-
-/* Wish card: prevent overflow */
-.wish-card {
-  overflow: hidden;
-  word-break: break-word;
-}
-
-/* Wish comment input: responsive */
-.wish-comment-input-row {
-  display: flex;
-  gap: 8px;
-}
-
-.wish-comment-input-row input {
-  min-width: 0;
-  flex: 1;
-}
-
-/* ── 11. PROFILE PAGE FIXES ────────────────── */
-
-.profile-card {
-  overflow: hidden;
-  word-break: break-word;
-}
-
-.avatar-area {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
-}
-
-/* Tabs: horizontal scroll on mobile */
-.tabs {
-  display: flex;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  gap: 4px;
-}
-
-.tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.tab {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-/* ── 12. LEADERBOARD FIXES ─────────────────── */
-
-/* Prevent long usernames from breaking layout */
-.leaderboard-item,
-.lb-row {
-  overflow: hidden;
-}
-
-.leaderboard-item .name,
-.lb-row .name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
-}
-
-/* ── 13. COIN PURCHASE PAGE FIXES ──────────── */
-
-.coin-purchase-card {
-  overflow: hidden;
-  max-width: 100%;
-}
-
-.qr-container {
-  max-width: 200px;
-  margin: 0 auto;
-}
-
-.qr-container img {
-  max-width: 100%;
-  height: auto;
-}
-
-/* ── 14. ADMIN DASHBOARD FIXES ─────────────── */
-
-/* Admin tabs: scroll on mobile */
-.section-tabs {
-  display: flex;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  gap: 6px;
-  padding-bottom: 4px;
-}
-
-.section-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.tab-btn {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-/* Admin analytics grid: responsive */
-@media (max-width: 768px) {
-  .analytics-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── 15. ANNOUNCEMENTS DISPLAY ─────────────── */
-
-.announcement-banner {
-  background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.05));
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-.announcement-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--accent);
-}
-
-.announcement-banner .ann-title {
-  font-weight: 700;
-  color: var(--accent);
-  font-size: 0.95rem;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.announcement-banner .ann-content {
-  color: var(--text-dim);
-  font-size: 0.85rem;
-  line-height: 1.6;
-  padding-left: 28px;
-}
-
-.announcement-banner .ann-time {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  margin-top: 8px;
-  padding-left: 28px;
-}
-
-/* Announcement close button */
-.announcement-banner .ann-close {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 4px;
-  line-height: 1;
-}
-
-.announcement-banner .ann-close:hover {
-  color: var(--accent);
-}
-
-/* ── 16. FEEDBACK MODAL ────────────────────── */
-
-.feedback-modal {
-  max-width: 460px;
-}
-
-.feedback-modal .star-rating {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin: 16px 0;
-}
-
-.feedback-modal .star-rating .star {
-  font-size: 2rem;
-  cursor: pointer;
-  color: var(--border);
-  transition: color 0.15s, transform 0.15s;
-}
-
-.feedback-modal .star-rating .star:hover,
-.feedback-modal .star-rating .star.active {
-  color: var(--accent);
-  transform: scale(1.15);
-}
-
-.feedback-modal textarea {
-  width: 100%;
-  min-height: 80px;
-  resize: vertical;
-}
-
-/* ── 17. SCROLLBAR SAFETY ──────────────────── */
-
-/* Ensure custom scrollbars don't add width */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--surface-2) transparent;
-}
-
-/* ── 18. UTILITY CLASSES ───────────────────── */
-
-.text-break {
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.no-scroll-x {
-  overflow-x: hidden;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-.gap-sm { gap: 4px; }
-.gap-md { gap: 8px; }
-.gap-lg { gap: 16px; }
