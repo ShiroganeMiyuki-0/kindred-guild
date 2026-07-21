@@ -38,14 +38,20 @@
       justify-content: flex-start;
     }
     
-    .container {
+    /* IMPORTANT: Use .coin-purchase-card instead of .container.
+       site-nav.js injects Tailwind CDN on every page, and Tailwind defines
+       .container { max-width: 1280px } at xl breakpoint — which would
+       override our 480px max-width on desktop. Renaming the class to
+       .coin-purchase-card sidesteps the conflict entirely. */
+    .coin-purchase-card {
       max-width: 480px;
-      width: 100%;
+      width: calc(100% - 32px);  /* leaves 16px gutter on each side */
       background: var(--card);
       border-radius: 16px;
       padding: 32px;
       border: 1px solid var(--border);
-      margin: 40px 20px;         /* Adds symmetrical spacing below navbar */
+      margin: 24px auto;         /* centered, modest top/bottom spacing */
+      box-sizing: border-box;
     }
     
     h1 {
@@ -126,8 +132,10 @@
       margin-bottom: 16px;
     }
     .qr-wrap img {
-      width: 200px;
-      height: 200px;
+      width: 100%;
+      max-width: 180px;
+      height: auto;
+      aspect-ratio: 1 / 1;
       display: block;
     }
     .amount-due {
@@ -295,20 +303,9 @@
     .status-pending { background: rgba(255, 152, 0, 0.2); color: var(--warning); }
     .status-verified { background: rgba(76, 175, 80, 0.2); color: var(--success); }
 
-    /* PayPal block */
-    .paypal-card {
-      background: var(--bg);
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-      margin-bottom: 20px;
-      border: 1px solid var(--border);
-    }
-    .paypal-card h3 {
-      color: #0070ba; /* PayPal blue */
-      margin-bottom: 8px;
-      font-size: 1.1rem;
-    }
+    /* PayPal block — uses .payment-card above. The .paypal-card class was
+       previously defined but never used in the HTML (both UPI and PayPal
+       regions use <div class="payment-card">). Removed for cleanliness. */
     .paypal-tag {
       display: inline-block;
       font-size: 0.7rem;
@@ -434,11 +431,42 @@
       font-size: 0.75rem;
       line-height: 1.5;
     }
+    /* ------------------------------------------------------------------
+       Page-specific overrides for css/fixes.css
+       fixes.css adds body { padding-bottom: 80-120px } on every page to
+       reserve space for a fixed mobile bottom nav — but this page has
+       NO fixed bottom nav, so that padding creates 80-120px of dead
+       dark space below the last button. Zero it out here.
+    ------------------------------------------------------------------ */
+    body { padding-bottom: 0 !important; }
+
+    /* ------------------------------------------------------------------
+       Mobile responsiveness — shrink padding/margins so the primary CTA
+       (Pay with UPI / Open PayPal.me) is visible (or nearly visible)
+       above the fold on first load.
+    ------------------------------------------------------------------ */
+    @media (max-width: 480px) {
+      .coin-purchase-card {
+        padding: 20px 16px;
+        margin: 16px auto;
+        width: calc(100% - 24px);   /* 12px gutter each side */
+      }
+      h1 { font-size: 1.3rem; }
+      .subtitle { font-size: 0.82rem; margin-bottom: 16px; }
+      .balance-box { padding: 12px; margin-bottom: 16px; }
+      .balance-box span { font-size: 1.1rem; }
+      .payment-card { padding: 16px; margin-bottom: 16px; }
+      .utr-section { padding: 16px; margin-bottom: 12px; }
+      .btn { padding: 12px; font-size: 0.95rem; margin-bottom: 10px; }
+      .qr-wrap img { max-width: 160px; }
+      .payment-note { font-size: 0.95rem; }
+      .region-tab { font-size: 0.78rem; padding: 8px; }
+    }
   </style>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <div class="container">
+  <div class="coin-purchase-card">
     <h1>⚔️ Acquire Fairy Coins</h1>
     <p class="subtitle">Power up your guild account with Fairy Coins</p>
 
