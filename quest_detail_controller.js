@@ -487,3 +487,29 @@ async function loadRatingWidgetDetails() {
     ).join('');
   }
 }
+
+// Social sharing
+window.shareQuest = function(platform) {
+  const title = currentQuest?.title || 'Kindred Guild Quest';
+  const url = window.location.href;
+  const text = `Check out this task on Kindred Guild: "${title}" — `;
+  
+  switch(platform) {
+    case 'whatsapp':
+      window.open(`https://wa.me/?text=${encodeURIComponent(text + url)}`, '_blank');
+      break;
+    case 'twitter':
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+      break;
+    case 'telegram':
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+      break;
+    case 'copy':
+      navigator.clipboard.writeText(url).then(() => {
+        window.showToast('Link copied to clipboard!', 'success');
+      }).catch(() => {
+        window.showToast('Could not copy link', 'error');
+      });
+      break;
+  }
+};

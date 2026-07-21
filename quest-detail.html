@@ -116,6 +116,14 @@
         <span style="color:var(--text-dim);font-size:0.8rem;display:block;margin-bottom:6px">Need to cancel? Your locked coins will be refunded.</span>
         <button class="btn btn-error btn-sm" onclick="triggerCancelQuest()">❌ Cancel & Refund</button>
       </div>
+      <!-- Share buttons -->
+      <div id="shareBar" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:0.8rem;color:var(--text-dim);margin-right:4px">Share:</span>
+        <button onclick="shareQuest('whatsapp')" style="background:#25d366;color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.78rem;cursor:pointer;font-weight:600">💬 WhatsApp</button>
+        <button onclick="shareQuest('twitter')" style="background:#1da1f2;color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.78rem;cursor:pointer;font-weight:600">🐦 Twitter</button>
+        <button onclick="shareQuest('telegram')" style="background:#0088cc;color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:0.78rem;cursor:pointer;font-weight:600">✈️ Telegram</button>
+        <button onclick="shareQuest('copy')" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:20px;font-size:0.78rem;cursor:pointer;font-weight:600">📋 Copy Link</button>
+      </div>
     </div>
 
     <div id="workerProofPanel" class="action-panel" style="display:none">

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Platform Stats</title>
+  <meta name="description" content="Live platform statistics for Kindred Guild. See total members, quests posted, tasks completed, and community growth.">
+  <meta property="og:title" content="Kindred Guild — Live Platform Stats">
+  <meta property="og:description" content="Transparent metrics showing our community's growth and activity.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/png;base64,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">
+  <link rel="stylesheet" href="css/globals.css">
+  <link rel="stylesheet" href="css/layout-fix.css">
+  <link rel="stylesheet" href="css/comprehensive-fixes.css">
+  <style>
+    .stats-hero { text-align:center; padding:60px 20px 40px; }
+    .stats-hero h1 { font-size:2rem; color:var(--accent); margin-bottom:8px; }
+    .stats-hero p { color:var(--text-dim); max-width:500px; margin:0 auto; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; max-width:900px; margin:0 auto 40px; padding:0 20px; }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; text-align:center; transition:border-color 0.2s; }
+    .stat-card:hover { border-color:var(--accent); }
+    .stat-card .value { font-size:2.5rem; font-weight:800; color:var(--accent); line-height:1; margin-bottom:6px; }
+    .stat-card .label { font-size:0.8rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; }
+    .stat-card .sub { font-size:0.75rem; color:var(--text-muted); margin-top:4px; }
+    .section-title { text-align:center; font-size:1.5rem; color:var(--accent); margin-bottom:8px; }
+    .section-sub { text-align:center; color:var(--text-dim); margin-bottom:32px; max-width:500px; margin-left:auto; margin-right:auto; }
+    .leaderboard { max-width:600px; margin:0 auto 40px; padding:0 20px; }
+    .lb-item { display:flex; align-items:center; gap:14px; padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; transition:border-color 0.2s; }
+    .lb-item:hover { border-color:var(--accent); }
+    .lb-rank { width:32px; height:32px; background:var(--accent-glow); border:1px solid var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:700; color:var(--accent); flex-shrink:0; }
+    .lb-rank.gold { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#000; border-color:#ffd700; }
+    .lb-rank.silver { background:linear-gradient(135deg,#c0c0c0,#808080); color:#000; border-color:#c0c0c0; }
+    .lb-rank.bronze { background:linear-gradient(135deg,#cd7f32,#8b4513); color:#fff; border-color:#cd7f32; }
+    .lb-info { flex:1; }
+    .lb-name { font-weight:600; font-size:0.95rem; color:var(--text); }
+    .lb-detail { font-size:0.78rem; color:var(--text-dim); }
+    .lb-stat { text-align:right; }
+    .lb-stat .val { font-size:1.1rem; font-weight:700; color:var(--accent); }
+    .lb-stat .unit { font-size:0.7rem; color:var(--text-dim); }
+    .chart-container { max-width:700px; margin:0 auto 40px; padding:0 20px; }
+    .chart-bar { display:flex; align-items:flex-end; gap:4px; height:140px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+    .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .bar-fill { width:100%; background:linear-gradient(to top,var(--accent),rgba(212,175,55,0.4)); border-radius:4px 4px 0 0; min-height:2px; transition:height 0.5s ease; }
+    .bar-label { font-size:0.6rem; color:var(--text-dim); writing-mode:vertical-rl; transform:rotate(180deg); height:28px; overflow:hidden; }
+    .bar-value { font-size:0.65rem; color:var(--accent); font-weight:600; }
+    .cta-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; text-align:center; max-width:500px; margin:0 auto 60px; }
+    .cta-box h3 { color:var(--accent); margin-bottom:8px; }
+    .cta-box p { color:var(--text-dim); margin-bottom:16px; }
+    @media(max-width:640px) { .stats-hero h1 { font-size:1.5rem; } .stat-card .value { font-size:1.8rem; } }
+  </style>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <div class="stats-hero">
+    <h1>📊 Platform Stats</h1>
+    <p>Transparent, real-time metrics showing our community's growth and activity.</p>
+  </div>
+
+  <!-- Main stats -->
+  <div class="stats-grid" id="mainStats">
+    <div class="stat-card"><div class="value" id="sMembers">—</div><div class="label">Members</div></div>
+    <div class="stat-card"><div class="value" id="sQuests">—</div><div class="label">Quests Posted</div><div class="sub" id="sQuestsSub"></div></div>
+    <div class="stat-card"><div class="value" id="sCompleted">—</div><div class="label">Completed</div></div>
+    <div class="stat-card"><div class="value" id="sCoins">—</div><div class="label">Coins Earned</div></div>
+    <div class="stat-card"><div class="value" id="sMessages">—</div><div class="label">Messages</div></div>
+    <div class="stat-card"><div class="value" id="sWishes">—</div><div class="label">Wishes</div><div class="sub" id="sWishesSub"></div></div>
+  </div>
+
+  <!-- Quest type breakdown -->
+  <h2 class="section-title">Quest Types</h2>
+  <p class="section-sub">How tasks are distributed across payment types.</p>
+  <div class="chart-container" id="questTypeChart"></div>
+
+  <!-- Top contributors -->
+  <h2 class="section-title">Top Contributors</h2>
+  <p class="section-sub">Members who've completed the most quests.</p>
+  <div class="leaderboard" id="topContributors"></div>
+
+  <!-- Recent activity -->
+  <h2 class="section-title">Weekly Activity</h2>
+  <p class="section-sub">Quests posted per week over the last 12 weeks.</p>
+  <div class="chart-container" id="weeklyChart"></div>
+
+  <div class="cta-box">
+    <h3>Join the Community</h3>
+    <p>Every quest completed makes the community stronger.</p>
+    <a href="auth.html" class="btn btn-primary">Sign Up Free</a>
+    <a href="quest-board.html" class="btn btn-outline" style="margin-left:8px">Browse Quests</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script>
+    (async function() {
+      try {
+        // Fetch all stats in parallel
+        const [members, quests, completed, messages, wishes, wishVotes] = await Promise.all([
+          window.sb.from('user_profiles').select('user_id', { count: 'exact', head: true }),
+          window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('is_deleted', false),
+          window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+          window.sb.from('guild_messages').select('id', { count: 'exact', head: true }).eq('is_deleted', false),
+          window.sb.from('wishes').select('id', { count: 'exact', head: true }).eq('is_deleted', false).eq('status', 'active'),
+          window.sb.from('wish_votes').select('wish_id', { count: 'exact', head: true }),
+        ]);
+
+        const { data: coinData } = await window.sb.from('fairy_ledger').select('amount').eq('reason', 'quest_earning');
+        const totalCoins = coinData ? coinData.reduce((s, r) => s + (r.amount || 0), 0) : 0;
+
+        // Animate counters
+        function animate(id, target) {
+          const el = document.getElementById(id);
+          if (!el || !target) return;
+          let cur = 0;
+          const step = Math.max(1, Math.floor(target / 30));
+          const timer = setInterval(() => {
+            cur += step;
+            if (cur >= target) { cur = target; clearInterval(timer); }
+            el.textContent = cur >= 1000 ? (cur/1000).toFixed(1) + 'k' : cur;
+          }, 30);
+        }
+
+        animate('sMembers', members.count || 0);
+        animate('sQuests', quests.count || 0);
+        animate('sCompleted', completed.count || 0);
+        animate('sCoins', totalCoins);
+        animate('sMessages', messages.count || 0);
+        animate('sWishes', wishes.count || 0);
+
+        document.getElementById('sQuestsSub').textContent = `${quests.count || 0} total`;
+        document.getElementById('sWishesSub').textContent = `${wishVotes.count || 0} votes`;
+
+        // Quest type breakdown
+        const { data: typeData } = await window.sb.from('quests').select('payment_type').eq('is_deleted', false);
+        if (typeData) {
+          const types = { coins: 0, upi: 0, free: 0 };
+          typeData.forEach(q => { if (types[q.payment_type] !== undefined) types[q.payment_type]++; });
+          const total = typeData.length || 1;
+          const chart = document.getElementById('questTypeChart');
+          chart.innerHTML = `
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+              <div style="flex:1;min-width:150px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center">
+                <div style="font-size:2rem">🪙</div>
+                <div style="font-size:1.5rem;font-weight:700;color:#eab308">${types.coins}</div>
+                <div style="font-size:0.8rem;color:var(--text-dim)">Fairy Coins</div>
+                <div style="font-size:0.7rem;color:var(--text-muted)">${Math.round(types.coins/total*100)}% of all quests</div>
+              </div>
+              <div style="flex:1;min-width:150px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center">
+                <div style="font-size:2rem">₹</div>
+                <div style="font-size:1.5rem;font-weight:700;color:#f97316">${types.upi}</div>
+                <div style="font-size:0.8rem;color:var(--text-dim)">UPI Direct</div>
+                <div style="font-size:0.7rem;color:var(--text-muted)">${Math.round(types.upi/total*100)}% of all quests</div>
+              </div>
+              <div style="flex:1;min-width:150px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);text-align:center">
+                <div style="font-size:2rem">🎁</div>
+                <div style="font-size:1.5rem;font-weight:700;color:#10b981">${types.free}</div>
+                <div style="font-size:0.8rem;color:var(--text-dim)">Free</div>
+                <div style="font-size:0.7rem;color:var(--text-muted)">${Math.round(types.free/total*100)}% of all quests</div>
+              </div>
+            </div>`;
+        }
+
+        // Top contributors (users with most approved quests as worker)
+        const { data: topWorkers } = await window.sb
+          .from('quests')
+          .select('worker_id, worker:user_profiles!quests_worker_id_fkey(username, display_name, reputation_score, is_verified)')
+          .eq('status', 'approved')
+          .not('worker_id', 'is', null);
+
+        if (topWorkers) {
+          const workerCounts = {};
+          topWorkers.forEach(q => {
+            if (!q.worker_id) return;
+            if (!workerCounts[q.worker_id]) {
+              workerCounts[q.worker_id] = { ...q.worker, count: 0 };
+            }
+            workerCounts[q.worker_id].count++;
+          });
+          const sorted = Object.values(workerCounts).sort((a, b) => b.count - a.count).slice(0, 10);
+          
+          const container = document.getElementById('topContributors');
+          if (sorted.length > 0) {
+            container.innerHTML = sorted.map((w, i) => {
+              const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+              const name = w.display_name || w.username || 'Member';
+              const rep = w.reputation_score ? (w.reputation_score / 10).toFixed(1) : '—';
+              const verified = w.is_verified ? ' ✅' : '';
+              return `
+                <div class="lb-item">
+                  <div class="lb-rank ${rankClass}">${i + 1}</div>
+                  <div class="lb-info">
+                    <div class="lb-name">${escapeHtml(name)}${verified}</div>
+                    <div class="lb-detail">⭐ ${rep} reputation</div>
+                  </div>
+                  <div class="lb-stat">
+                    <div class="val">${w.count}</div>
+                    <div class="unit">quests</div>
+                  </div>
+                </div>`;
+            }).join('');
+          } else {
+            container.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px">No completed quests yet.</div>';
+          }
+        }
+
+        // Weekly activity chart
+        const { data: weeklyData } = await window.sb.rpc('admin_get_analytics');
+        if (weeklyData) {
+          const a = typeof weeklyData === 'string' ? JSON.parse(weeklyData) : weeklyData;
+          const weeks = a.users_by_week || [];
+          if (weeks.length > 0) {
+            const maxVal = Math.max(...weeks.map(w => w.count), 1);
+            const chart = document.getElementById('weeklyChart');
+            chart.innerHTML = `<div class="chart-bar">${weeks.map(w => {
+              const h = Math.max(4, (w.count / maxVal) * 100);
+              return `<div class="bar-col"><div class="bar-value">${w.count}</div><div class="bar-fill" style="height:${h}px"></div><div class="bar-label">${w.week}</div></div>`;
+            }).join('')}</div>`;
+          }
+        }
+
+      } catch(e) {
+        console.log('Stats error:', e);
+      }
+    })();
+  </script>
+  <script src="site-nav.js"></script>
+</body>
+</html>
