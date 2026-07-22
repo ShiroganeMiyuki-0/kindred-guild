@@ -123,7 +123,7 @@
         { name: 'Guild Charter', icon: 'fa-scroll', file: 'trust-and-safety.html' },
         { name: 'Quest Rules', icon: 'fa-book', file: 'quest-rules.html' },
         { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
-        { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
+        { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html', primary: true },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' },
         { name: 'Terms', icon: 'fa-file-contract', file: 'terms-of-service.html' },
         { name: 'Privacy', icon: 'fa-shield-halved', file: 'privacy-policy.html' }
