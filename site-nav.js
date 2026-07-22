@@ -50,6 +50,19 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+            overflow: visible;
+        }
+        /* Ensure the navbar flex row doesn't overflow and squish items */
+        .glass-nav .max-w-7xl > .relative {
+            min-width: 0;
+        }
+        .glass-nav nav {
+            flex-shrink: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .glass-nav nav a {
+            flex-shrink: 0;
         }
         .nav-item-active {
             color: #fbbf24 !important;
@@ -290,12 +303,12 @@
                         </nav>
                     </div>
 
-                    <!-- Center: Quick Action Pill Buttons (desktop lg+ only) -->
-                    <div class="hidden lg:flex lg:items-center lg:gap-1.5 absolute left-1/2 -translate-x-1/2">
+                    <!-- Center: Quick Action Pill Buttons (desktop xl+ only) -->
+                    <div class="hidden xl:flex xl:items-center xl:gap-1.5">
                         ${quickActionItems.map(item => {
                             const c = qaColors[item.color] || qaColors.amber;
                             const active = isItemActive(item.file);
-                            return `<a href="${getPath(item.file)}" title="${item.name}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 hover:scale-[1.03]" style="background:${c.bg};border-color:${active ? c.hoverBorder : c.border};color:${c.text}"><i class="fa-solid ${item.icon}"></i><span class="hidden xl:inline">${item.name}</span></a>`;
+                            return `<a href="${getPath(item.file)}" title="${item.name}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 hover:scale-[1.03] flex-shrink-0" style="background:${c.bg};border-color:${active ? c.hoverBorder : c.border};color:${c.text}"><i class="fa-solid ${item.icon}"></i><span class="hidden 2xl:inline">${item.name}</span></a>`;
                         }).join('')}
                     </div>
 
@@ -327,17 +340,12 @@
                 </div>
             </div>
 
-            <!-- Mobile quick-action strip (scrollable pills below navbar) -->
+            <!-- Mobile quick-action strip (primary items only, compact) -->
             <div class="md:hidden border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-sm" style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-                <div class="flex gap-1.5 px-3 py-2" style="white-space:nowrap;">
+                <div class="flex gap-1.5 px-3 py-1.5" style="white-space:nowrap;">
                     ${primaryItems.map(item => {
                         const active = isItemActive(item.file);
-                        return `<a href="${getPath(item.file)}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border flex-shrink-0 transition-all" style="${active ? 'background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#fbbf24' : 'background:rgba(30,41,59,0.5);border-color:#334155;color:#9ca3af'}"><i class="fa-solid ${item.icon} text-[10px]"></i>${item.name}</a>`;
-                    }).join('')}
-                    ${quickActionItems.map(item => {
-                        const c = qaColors[item.color] || qaColors.amber;
-                        const active = isItemActive(item.file);
-                        return `<a href="${getPath(item.file)}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border flex-shrink-0 transition-all" style="${active ? `background:${c.bg};border-color:${c.hoverBorder};color:${c.text}` : 'background:rgba(30,41,59,0.5);border-color:#334155;color:#9ca3af'}"><i class="fa-solid ${item.icon} text-[10px]"></i>${item.name}</a>`;
+                        return `<a href="${getPath(item.file)}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border flex-shrink-0 transition-all" style="${active ? 'background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#fbbf24' : 'background:rgba(30,41,59,0.5);border-color:#334155;color:#9ca3af'}"><i class="fa-solid ${item.icon} text-[10px]"></i>${item.name}</a>`;
                     }).join('')}
                 </div>
             </div>

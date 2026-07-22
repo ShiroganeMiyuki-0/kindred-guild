@@ -28,7 +28,7 @@
   <style>
     /* ---- Landing-specific styles ---- */
     .hero {
-      padding: 100px 20px 80px;
+      padding: 60px 20px 50px;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -88,7 +88,7 @@
     .hero .sub-tagline {
       font-size: 1rem;
       color: var(--text-muted);
-      margin-bottom: 40px;
+      margin-bottom: 28px;
     }
     .cta-group {
       display: flex;
@@ -361,13 +361,15 @@
 
     /* Mobile overrides */
     @media (max-width: 768px) {
-      .hero { padding: 80px 16px 60px; }
+      .hero { padding: 50px 16px 40px; }
       .hero h1 { font-size: 2rem; }
       .hero .tagline { font-size: 1.1rem; }
       .how-it-works, .features, .trust-section, .faq, .community { padding: 60px 16px; }
     }
     @media (max-width: 480px) {
       .hero h1 { font-size: 1.6rem; }
+      .hero .tagline { font-size: 0.95rem; }
+      .hero .sub-tagline { font-size: 0.85rem; margin-bottom: 20px; }
       .cta-group { flex-direction: column; }
       .cta-group .btn { width: 100%; }
       #liveStats > div { grid-template-columns: repeat(2, 1fr) !important; }
