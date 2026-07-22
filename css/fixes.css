@@ -50,11 +50,11 @@ body {
 @media (max-width: 767px) {
   #mobile-menu {
     position: fixed;
-    top: 56px;                /* below the 56px-tall navbar */
+    top: 96px;                /* below the 56px navbar + 40px quick-action strip */
     left: 0;
     right: 0;
     bottom: 0;
-    max-height: calc(100vh - 56px);
+    max-height: calc(100vh - 96px);
     overflow-y: auto;
     overscroll-behavior: contain;   /* prevents scroll chaining to body */
     -webkit-overflow-scrolling: touch;

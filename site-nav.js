@@ -93,6 +93,14 @@
 
     // 3. DEFINE MENU SCHEMES
     // Primary items = always visible on toolbar. Secondary items = inside ☰ hamburger dropdown.
+    // Quick action items = shown as pill buttons in the navbar (not hidden in hamburger).
+    const quickActionItems = [
+        { name: 'Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html', color: 'purple' },
+        { name: 'Workers', icon: 'fa-hammer', file: 'worker-post.html', color: 'emerald' },
+        { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html', color: 'amber' },
+        { name: 'Support', icon: 'fa-hand-holding-heart', file: 'donation.html', color: 'rose' },
+    ];
+
     const publicMenuItems = [
         { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html', primary: true },
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
@@ -123,11 +131,19 @@
         { name: 'Guild Charter', icon: 'fa-scroll', file: 'trust-and-safety.html' },
         { name: 'Quest Rules', icon: 'fa-book', file: 'quest-rules.html' },
         { name: 'Refer & Earn', icon: 'fa-gift', file: 'referral.html' },
-        { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html', primary: true },
+        { name: 'Buy Coins', icon: 'fa-coins', file: 'coin_purchase_ui.html' },
         { name: 'Donations', icon: 'fa-hand-holding-heart', file: 'donation.html' },
         { name: 'Terms', icon: 'fa-file-contract', file: 'terms-of-service.html' },
         { name: 'Privacy', icon: 'fa-shield-halved', file: 'privacy-policy.html' }
     ];
+
+    // Quick action button color map
+    const qaColors = {
+        purple: { bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.3)', text: '#c084fc', hoverBorder: 'rgba(168,85,247,0.5)' },
+        emerald: { bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)', text: '#34d399', hoverBorder: 'rgba(16,185,129,0.5)' },
+        amber: { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', text: '#fbbf24', hoverBorder: 'rgba(245,158,11,0.5)' },
+        rose: { bg: 'rgba(244,63,94,0.12)', border: 'rgba(244,63,94,0.3)', text: '#fb7185', hoverBorder: 'rgba(244,63,94,0.5)' },
+    };
 
     function isItemActive(file) {
         const currentPath = window.location.pathname.toLowerCase();
@@ -274,6 +290,15 @@
                         </nav>
                     </div>
 
+                    <!-- Center: Quick Action Pill Buttons (desktop lg+ only) -->
+                    <div class="hidden lg:flex lg:items-center lg:gap-1.5 absolute left-1/2 -translate-x-1/2">
+                        ${quickActionItems.map(item => {
+                            const c = qaColors[item.color] || qaColors.amber;
+                            const active = isItemActive(item.file);
+                            return `<a href="${getPath(item.file)}" title="${item.name}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 hover:scale-[1.03]" style="background:${c.bg};border-color:${active ? c.hoverBorder : c.border};color:${c.text}"><i class="fa-solid ${item.icon}"></i><span class="hidden xl:inline">${item.name}</span></a>`;
+                        }).join('')}
+                    </div>
+
                     <!-- Right: Hamburger + Actions -->
                     <div class="flex items-center gap-2">
                         <div class="hidden md:flex md:items-center md:gap-3">
@@ -299,6 +324,21 @@
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Mobile quick-action strip (scrollable pills below navbar) -->
+            <div class="md:hidden border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-sm" style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+                <div class="flex gap-1.5 px-3 py-2" style="white-space:nowrap;">
+                    ${primaryItems.map(item => {
+                        const active = isItemActive(item.file);
+                        return `<a href="${getPath(item.file)}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border flex-shrink-0 transition-all" style="${active ? 'background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#fbbf24' : 'background:rgba(30,41,59,0.5);border-color:#334155;color:#9ca3af'}"><i class="fa-solid ${item.icon} text-[10px]"></i>${item.name}</a>`;
+                    }).join('')}
+                    ${quickActionItems.map(item => {
+                        const c = qaColors[item.color] || qaColors.amber;
+                        const active = isItemActive(item.file);
+                        return `<a href="${getPath(item.file)}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border flex-shrink-0 transition-all" style="${active ? `background:${c.bg};border-color:${c.hoverBorder};color:${c.text}` : 'background:rgba(30,41,59,0.5);border-color:#334155;color:#9ca3af'}"><i class="fa-solid ${item.icon} text-[10px]"></i>${item.name}</a>`;
+                    }).join('')}
                 </div>
             </div>
 
