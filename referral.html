@@ -5,9 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kindred Guild — Refer & Earn</title>
-  <meta name="description" content="Invite friends to Kindred Guild and earn Fairy Coins. Both of you get 25 FC bonus!">
+  <meta name="description" content="Invite friends to Kindred Guild and grow the community. More members means more tasks for everyone.">
   <meta property="og:title" content="Kindred Guild — Refer & Earn">
-  <meta property="og:description" content="Invite friends and earn 25 Fairy Coins each. Share your unique referral code.">
+  <meta property="og:description" content="Invite friends and grow the Kindred Guild community. More members, more tasks, more opportunities.">
   <meta property="og:image" content="https://kindredguild.org/og-image.png">
   <meta property="og:url" content="https://kindredguild.org/referral.html">
   <meta property="og:type" content="website">
@@ -53,7 +53,7 @@
 
     <div class="hero-card">
       <h3>Invite Friends, Earn Coins</h3>
-      <p>Share your unique referral code with friends. When they sign up and complete their first quest, <strong style="color:var(--accent)">you both earn bonus coins!</strong></p>
+      <p>Share your unique referral code with friends. When they sign up, <strong style="color:var(--accent)">the community grows — more members means more tasks and more work for everyone.</strong></p>
       <div class="code-display">
         <div class="label">Your Referral Code</div>
         <div class="code" id="referralCode">Loading...</div>
@@ -100,8 +100,8 @@
         </div>
         <div class="how-step">
           <div class="num">3</div>
-          <h4>Both Earn Coins</h4>
-          <p>When they complete their first quest, you both get bonus Fairy Coins!</p>
+          <h4>Community Grows</h4>
+          <p>More members means more tasks, more workers, and a stronger guild for everyone</p>
         </div>
       </div>
     </div>
@@ -127,7 +127,7 @@
       document.getElementById('shareLink').value = shareUrl;
 
       // Set social share links
-      const shareText = encodeURIComponent(`Join me on Kindred Guild — a community task board where people help each other! Use my referral code ${code} and we both get 25 Fairy Coins free. ${shareUrl}`);
+      const shareText = encodeURIComponent(`Join me on Kindred Guild — a community task board where people help each other! Use my referral code ${code} to sign up. ${shareUrl}`);
       document.getElementById('whatsappShare').href = `https://wa.me/?text=${shareText}`;
       document.getElementById('twitterShare').href = `https://twitter.com/intent/tweet?text=${shareText}`;
       document.getElementById('telegramShare').href = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${shareText}`;
