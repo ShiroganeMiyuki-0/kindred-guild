@@ -106,12 +106,23 @@
   // Shared: require auth — redirects to auth.html if not logged in
   // Returns the user object or null
   window.requireAuth = async function () {
-    const { data: { user } } = await window.sb.auth.getUser();
-    if (!user) {
-      window.location.href = 'auth.html';
+    if (!window.sb?.auth) {
+      window.showToast?.('The account service is unavailable. Check your connection and reload.', 'error', 5000);
       return null;
     }
-    return user;
+    try {
+      const { data: { user }, error } = await window.sb.auth.getUser();
+      if (error) throw error;
+      if (!user) {
+        window.location.href = 'auth.html';
+        return null;
+      }
+      return user;
+    } catch (error) {
+      console.error('[Kindred Guild] Authentication check failed:', error);
+      window.showToast?.('We could not verify your session. Please try again.', 'error', 5000);
+      return null;
+    }
   };
 
   // Shared: get current user profile
@@ -155,4 +166,36 @@
     }
     setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, durationMs);
   };
+
+  // Shared connectivity monitor. It is intentionally lightweight and does not
+  // block the app: users can continue browsing cached/public pages offline,
+  // while write actions can clearly explain why they cannot complete.
+  function installConnectivityMonitor() {
+    const ensureBanner = () => {
+      let banner = document.getElementById('kg-connectivity-banner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'kg-connectivity-banner';
+        banner.setAttribute('role', 'status');
+        banner.setAttribute('aria-live', 'polite');
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100000;padding:8px 16px;text-align:center;font-size:.82rem;font-weight:700;letter-spacing:.01em;transform:translateY(-100%);transition:transform .2s ease;';
+        document.body.appendChild(banner);
+      }
+      return banner;
+    };
+    const render = (online) => {
+      const banner = ensureBanner();
+      banner.textContent = online ? 'Connection restored. You can continue using Kindred Guild.' : 'You are offline. Changes will not be saved until your connection returns.';
+      banner.style.background = online ? 'rgba(16,185,129,.96)' : 'rgba(180,83,9,.97)';
+      banner.style.color = '#fff';
+      banner.style.transform = online ? 'translateY(-100%)' : 'translateY(0)';
+      if (online) setTimeout(() => { banner.style.transform = 'translateY(-100%)'; }, 3500);
+    };
+    window.addEventListener('offline', () => render(false));
+    window.addEventListener('online', () => render(true));
+    if (!navigator.onLine) render(false);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installConnectivityMonitor);
+  else installConnectivityMonitor();
+
 })();
