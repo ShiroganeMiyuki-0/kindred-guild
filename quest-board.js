@@ -42,9 +42,26 @@ const searchInput = document.getElementById('searchInput');
   const { data: bmData } = await window.sb.rpc('get_bookmarked_quest_ids');
   bookmarkedIds = (bmData || []).map(r => r.quest_id);
 
+  await loadLatestGrantNotice();
   loadQuests();
   renderPresetTags();
 })();
+
+async function loadLatestGrantNotice() {
+  const notice = document.getElementById('latestGrantNotice');
+  if (!notice || !window.sb) return;
+  const { data: granted, error } = await window.sb
+    .from('wishes')
+    .select('title, description, created_at')
+    .eq('status', 'granted')
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error || !granted?.length) return;
+  const wish = granted[0];
+  notice.innerHTML = `<div><strong>Guild update: a community wish was granted</strong><p>“${escapeHtml(wish.title)}” has moved from the wishes board into the Guild’s completed commitments. <a href="fairy-wishes.html">View wishes</a></p></div><span aria-hidden="true">✓</span>`;
+  notice.classList.add('visible');
+}
 
 function renderPresetTags() {
   const cloud = document.getElementById('tagCloud');
@@ -221,7 +238,7 @@ function renderQuests() {
     const tagsHtml = quest.tags?.length ? `<div class="card-tags">${quest.tags.map(t => `<span class="card-tag" onclick="event.stopPropagation();toggleTagFilter('${t}')">${t}</span>`).join('')}</div>` : '';
 
     const rankBadge = quest.min_rank ? `<span class="rank-requirement">🏆 Min Rank: <span class="rank-badge rank-${quest.min_rank}" style="width:20px;height:20px;font-size:0.65rem;">${quest.min_rank}</span></span>` : '';
-    const posterBadge = quest.poster?.is_admin ? '<span style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:2px 6px;border-radius:4px;font-weight:900;font-size:0.6rem;margin-left:4px;">👑 GM</span>' : '';
+    const posterBadge = quest.poster?.is_admin ? '<span style="background:rgba(56,189,248,.14);color:#38bdf8;border:1px solid rgba(56,189,248,.35);padding:2px 6px;border-radius:4px;font-weight:800;font-size:.6rem;margin-left:4px;">OFFICIAL GUILD QUEST</span><span style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:2px 6px;border-radius:4px;font-weight:900;font-size:0.6rem;margin-left:4px;">👑 GM</span>' : '';
 
     // Trust badges
     let trustBadges = '';

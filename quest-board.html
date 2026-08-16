@@ -233,7 +233,12 @@
       color: var(--text-dim);
       grid-column: 1 / -1;
     }
-    .empty-state h2 { color: var(--accent); margin-bottom: 8px; font-size: 1.2rem; }
+    .empty-state h2 { color:var(--accent); margin-bottom:8px; font-size:1.2rem; }
+    .guild-announcement { display:none; background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(16,185,129,.08)); border:1px solid rgba(212,175,55,.45); border-radius:var(--radius); padding:14px 16px; margin-bottom:20px; }
+    .guild-announcement.visible { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+    .guild-announcement strong { color:var(--accent); display:block; margin-bottom:4px; }
+    .guild-announcement p { color:var(--text-dim); font-size:.88rem; line-height:1.5; margin:0; }
+    .guild-announcement a { white-space:nowrap; font-weight:700; }
   </style>
 <meta property="og:title" content="Kindred Guild — Quest Board">
   <meta property="og:description" content="Browse and accept community tasks. Free or paid. Protected by escrow.">
@@ -260,6 +265,8 @@
       </div>
       <div class="coins" id="coinBalanceContainer">💰 <span id="coinBalance">--</span> FC</div>
     </div>
+
+    <div id="latestGrantNotice" class="guild-announcement" role="status" aria-live="polite"></div>
 
     <div class="filters-section">
       <div class="search-row">

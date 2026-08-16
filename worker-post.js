@@ -104,6 +104,7 @@ function renderWorkerPosts() {
     const payBadge = post.preferred_payment === 'coins' ? '🪙 Coins' : post.preferred_payment === 'upi' ? '₹ UPI' : post.preferred_payment === 'free' ? '🎁 Free' : 'Any';
     const minText = post.min_reward > 0 ? `Min: ${post.min_reward}` : 'Flexible';
     const tagsHtml = post.tags?.length ? `<div class="card-tags">${post.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>` : '';
+    const sourceBadge = post.user?.is_admin ? '<span style="background:rgba(56,189,248,.14);color:#38bdf8;border:1px solid rgba(56,189,248,.35);padding:2px 6px;border-radius:4px;font-weight:800;font-size:.6rem;margin-right:4px;">OFFICIAL GUILD LISTING</span>' : '';
 
     const btn = isOwn
       ? `<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="editWorkerPost('${post.id}')">Edit</button><button class="btn btn-error btn-sm" onclick="deleteWorkerPost('${post.id}')">Delete</button></div>`
@@ -114,7 +115,7 @@ function renderWorkerPosts() {
         <div>
           <span class="badge badge-coins">${payBadge}</span>
           <h3 style="margin:8px 0 4px">${escapeHtml(post.title)}</h3>
-          <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">${post.user?.is_admin ? '<span style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:2px 6px;border-radius:4px;font-weight:900;font-size:0.6rem;margin-right:4px;">👑 GM</span>' : (post.user?.rank ? '<span class="rank-badge rank-' + post.user.rank + '" style="width:18px;height:18px;font-size:0.6rem;margin-right:4px;">' + post.user.rank + '</span>' : '')}by <a href="profile.html?username=${post.user?.username}">${escapeHtml(name)}</a>${verified} ⭐ ${rep}</div>
+          <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:8px">${sourceBadge}${post.user?.is_admin ? '<span style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;padding:2px 6px;border-radius:4px;font-weight:900;font-size:0.6rem;margin-right:4px;">👑 GM</span>' : (post.user?.rank ? '<span class="rank-badge rank-' + post.user.rank + '" style="width:18px;height:18px;font-size:0.6rem;margin-right:4px;">' + post.user.rank + '</span>' : '')}by <a href="profile.html?username=${post.user?.username}">${escapeHtml(name)}</a>${verified} ⭐ ${rep}</div>
           <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:12px">${escapeHtml(post.description)}</div>
           ${tagsHtml}
         </div>

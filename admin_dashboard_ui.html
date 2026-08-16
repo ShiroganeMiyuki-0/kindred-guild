@@ -748,7 +748,7 @@
               ${(a.users_by_week || []).map(w => {
                 const maxVal = Math.max(...(a.users_by_week || []).map(x => x.count), 1);
                 const h = Math.max(8, (w.count / maxVal) * 100);
-                return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:0.65rem;color:var(--accent)">${w.count}</div><div style="width:100%;height:${h}px;background:var(--accent);border-radius:4px 4px 0 0;opacity:0.8"></div><div style="font-size:0.55rem;color:var(--text-dim);writing-mode:vertical-rl;transform:rotate(180deg);height:30px;overflow:hidden">${w.week}</div></div>`;
+                return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:0.65rem;color:var(--accent)">${w.count}</div><div style="width:100%;height:${h}px;background:var(--accent);border-radius:4px 4px 0 0;opacity:0.8"></div><div style="font-size:0.6rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;height:30px;line-height:30px;text-align:center">${w.week}</div></div>`;
               }).join('')}
             </div>
           </div>
