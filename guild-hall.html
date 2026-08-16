@@ -70,6 +70,18 @@
     .chat-input-form input:focus { border-color:var(--accent); }
     .chat-input-form button { padding:10px 18px; }
 
+    /* Mobile-safe page header: keep the title readable and let actions wrap below it. */
+    .hall-page-header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:16px; }
+    .hall-page-header h2 { min-width:0; white-space:nowrap; }
+    .hall-page-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; min-width:0; }
+    .hall-page-actions .btn { white-space:nowrap; }
+    @media(max-width:768px) {
+      .hall-page-header { flex-direction:column; align-items:stretch; gap:12px; }
+      .hall-page-header h2 { font-size:1.25rem!important; }
+      .hall-page-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); justify-content:stretch; }
+      .hall-page-actions .btn { width:100%; text-align:center; overflow:hidden; text-overflow:ellipsis; }
+    }
+
     .chat-notice { text-align:center; padding:30px; color:var(--text-dim); font-size:0.85rem; }
     .system-msg { text-align:center; font-size:0.75rem; color:var(--text-dim); padding:6px 0; opacity:0.7; }
     .deleted-msg { font-style:italic; color:var(--text-dim); opacity:0.5; font-size:0.8rem; }
@@ -78,9 +90,9 @@
 </head>
 <body>
   <div class="container">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <div class="hall-page-header">
       <h2 style="color:var(--accent); font-size:1.4rem;">🏰 Guild Hall</h2>
-      <div style="display:flex;gap:8px;">
+      <div class="hall-page-actions">
         <a href="index.html" class="btn btn-ghost btn-sm">🏠 Home</a>
         <a href="quest-board.html" class="btn btn-ghost btn-sm">⚔️ Quest Board</a>
         <a href="dm.html" class="btn btn-ghost btn-sm">💬 Messages</a>
