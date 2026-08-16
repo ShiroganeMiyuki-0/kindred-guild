@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kindred Guild — The World We Build Together</title>
+  <meta name="description" content="Enter Kindred Guild: a member-shaped world for helping, belonging, and deciding what gets built next.">
+  <link rel="stylesheet" href="css/globals.css">
+  <style>
+    :root { --world-max: 1080px; }
+    body { background: var(--bg); }
+    .world-hero { position:relative; overflow:hidden; padding:88px 20px 72px; background:radial-gradient(circle at 50% -10%,rgba(212,175,55,.2),transparent 55%),linear-gradient(180deg,#0d0b13 0%,var(--bg) 100%); border-bottom:1px solid var(--border); }
+    .world-hero-inner,.world-shell { max-width:var(--world-max); margin:0 auto; }
+    .world-kicker { color:var(--accent); font-size:.76rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+    .world-hero h1 { max-width:800px; margin:14px 0 16px; font-size:clamp(2.2rem,5vw,4.5rem); line-height:1.02; letter-spacing:-.03em; color:var(--text); }
+    .world-hero h1 span { color:var(--accent); }
+    .world-hero p { max-width:700px; color:var(--text-dim); font-size:1.1rem; line-height:1.7; }
+    .world-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+    .world-note { margin-top:18px; color:var(--text-muted); font-size:.86rem; }
+    .world-note strong { color:var(--text-dim); }
+    .world-section { padding:64px 20px; }
+    .world-section.alt { background:var(--surface); border-block:1px solid var(--border); }
+    .world-section h2 { margin:0 0 10px; color:var(--text); font-size:clamp(1.6rem,3vw,2.4rem); }
+    .world-intro { max-width:680px; color:var(--text-dim); line-height:1.7; }
+    .world-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:28px; }
+    .world-card { padding:24px; background:rgba(255,255,255,.025); border:1px solid var(--border); border-radius:var(--radius); }
+    .world-card:hover { border-color:rgba(212,175,55,.55); transform:translateY(-2px); transition:.2s ease; }
+    .world-card .sigil { font-size:1.8rem; margin-bottom:14px; }
+    .world-card h3 { margin:0 0 8px; color:var(--accent); font-size:1.1rem; }
+    .world-card p { margin:0 0 16px; color:var(--text-dim); line-height:1.55; font-size:.92rem; }
+    .world-card a { color:var(--text); font-weight:700; }
+    .founding-board { display:grid; grid-template-columns:1.3fr .7fr; gap:24px; align-items:stretch; margin-top:30px; }
+    .founding-panel { padding:26px; border:1px solid rgba(212,175,55,.28); border-radius:var(--radius); background:linear-gradient(135deg,rgba(212,175,55,.1),rgba(255,255,255,.02)); }
+    .founding-panel h3 { margin:0 0 10px; color:var(--accent); }
+    .founding-panel p { color:var(--text-dim); line-height:1.65; }
+    .ritual-list { display:grid; gap:10px; margin:18px 0 0; padding:0; list-style:none; }
+    .ritual-list li { display:flex; gap:10px; align-items:flex-start; color:var(--text-dim); line-height:1.45; }
+    .ritual-list b { color:var(--accent); min-width:24px; }
+    .world-quote { margin:28px 0 0; padding:18px 20px; border-left:3px solid var(--accent); background:rgba(0,0,0,.16); color:var(--text-dim); line-height:1.65; }
+    @media(max-width:760px){ .world-hero{padding:56px 16px 48px}.world-section{padding:48px 16px}.world-grid,.founding-board{grid-template-columns:1fr}.world-card{padding:20px}.world-actions .btn{width:100%;text-align:center} }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="world-hero">
+      <div class="world-hero-inner">
+        <div class="world-kicker">The living world of Kindred Guild</div>
+        <h1>A guild is not a website. It is a place where <span>people become known.</span></h1>
+        <p>Kindred Guild is a member-shaped world for helping one another, building trust, meeting friends, and deciding together what should exist next. Quests are our economy. The Guild Hall is our social life. Fairy Wishes are our shared direction.</p>
+        <div class="world-actions">
+          <a class="btn btn-primary" href="quest-board.html">Enter through a Quest</a>
+          <a class="btn btn-outline" href="guild-hall.html">Meet the Guild</a>
+          <a class="btn btn-outline" href="fairy-wishes.html">See Fairy Wishes</a>
+        </div>
+        <div class="world-note"><strong>Founding Season:</strong> the Guild is still small. Early members are not an audience; they are the people who shape its customs.</div>
+      </div>
+    </section>
+
+    <section class="world-section">
+      <div class="world-shell">
+        <h2>Three ways to belong</h2>
+        <p class="world-intro">You do not need to understand every system before joining. Start with the role that feels natural, then let your place in the Guild grow through real participation.</p>
+        <div class="world-grid">
+          <article class="world-card"><div class="sigil">⚔️</div><h3>Help someone</h3><p>Accept a quest, offer a skill, or complete a small act of mutual aid. Contribution is how reputation begins.</p><a href="quest-board.html">Browse quests →</a></article>
+          <article class="world-card"><div class="sigil">🏰</div><h3>Find your people</h3><p>Enter the Guild Hall, introduce yourself, ask for advice, and become more than a username on a task.</p><a href="guild-hall.html">Enter the Guild Hall →</a></article>
+          <article class="world-card"><div class="sigil">✨</div><h3>Shape what comes next</h3><p>Support a Fairy Wish, propose an idea, and help decide what the Guild should build or celebrate next.</p><a href="fairy-wishes.html">Explore Fairy Wishes →</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="world-section alt">
+      <div class="world-shell">
+        <h2>Founding Season</h2>
+        <p class="world-intro">A small community can still feel alive when its members can see continuity: what was done, who helped, what was decided, and what is waiting for the next person.</p>
+        <div class="founding-board">
+          <div class="founding-panel"><h3>The first customs are being written now.</h3><p>Kindred Guild is built by one person today, but it is not meant to be shaped by one person forever. Early members have an unusual responsibility: their kindness, humor, standards, and wishes become the first traditions of the Guild.</p><div class="world-quote">Arrive with curiosity. Help someone. Leave a trace of kindness. Invite the next person in.</div></div>
+          <div class="founding-panel"><h3>Start small. Make it real.</h3><ul class="ritual-list"><li><b>01</b><span>Complete one honest quest.</span></li><li><b>02</b><span>Welcome one new member.</span></li><li><b>03</b><span>Support one community wish.</span></li><li><b>04</b><span>Help shape one Guild custom.</span></li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="world-section">
+      <div class="world-shell">
+        <h2>The Guild Arena</h2>
+        <p class="world-intro">Anime Motion Fighter is the Arena: a place for members to meet, compete, laugh, and create shared stories. It begins simply—hands and feet, hits and blocks, one camera, one rematch—but it belongs to the same world.</p>
+        <div class="world-actions"><a class="btn btn-primary" href="https://github.com/ShiroganeMiyuki-0/anime-motion-fighter" target="_blank" rel="noreferrer">Visit the Arena Project</a><a class="btn btn-outline" href="trust-and-safety.html">Read the Guild Charter</a></div>
+      </div>
+    </section>
+  </main>
+  <script src="js/supabase-client.js"></script>
+  <script src="site-nav.js"></script>
+</body>
+</html>

@@ -113,6 +113,13 @@
     .announcement-banner .ann-time { color:var(--text-muted); font-size:.7rem; margin-top:9px; }
     .hero-cta-note { margin-top:16px; font-size:.85rem; color:var(--text-muted); }
     .hero-cta-note a { color:var(--accent); font-weight:700; }
+    .world-invite { padding:48px 20px; background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(255,255,255,.015)); border-block:1px solid var(--border); }
+    .world-invite-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:28px; }
+    .world-invite-kicker { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .world-invite h2 { margin:8px 0; color:var(--text); font-size:clamp(1.35rem,3vw,2rem); }
+    .world-invite p { max-width:650px; margin:0; color:var(--text-dim); line-height:1.6; }
+    @media(max-width:640px){ .world-invite-inner{flex-direction:column;align-items:flex-start}.world-invite .btn{width:100%;text-align:center} }
+    .hero-cta-note a { color:var(--accent); font-weight:700; }
     .stats-strip { padding:40px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
     .stats-strip-inner { max-width:800px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:20px; text-align:center; }
     .stat-item { padding:12px 8px; border-radius:var(--radius-sm); }
@@ -427,7 +434,7 @@
         <a href="quest-board.html" class="btn btn-primary">Browse Tasks</a>
         <a href="quest-post.html" class="btn btn-outline">Post a Task</a>
       </div>
-      <p class="hero-cta-note">New to the Guild? <a href="getting-started.html">See how it works</a> · <a href="worker-post.html">Offer your skills</a></p>
+      <p class="hero-cta-note">New to the Guild? <a href="getting-started.html">See how it works</a> · <a href="worker-post.html">Offer your skills</a> · <a href="guild-world.html">Explore the world</a></p>
     </div>
   </section>
 
@@ -438,6 +445,18 @@
       <div class="stat-item"><div id="statQuests" class="stat-value">—</div><div class="stat-label">Quests Posted</div></div>
       <div class="stat-item"><div id="statCompleted" class="stat-value">—</div><div class="stat-label">Tasks Completed</div></div>
       <div class="stat-item"><div id="statCoins" class="stat-value">—</div><div class="stat-label">Coins Earned</div></div>
+    </div>
+  </section>
+
+  <!-- MEMBER-SHAPED WORLD ENTRY -->
+  <section class="world-invite" aria-labelledby="worldInviteTitle">
+    <div class="world-invite-inner">
+      <div>
+        <span class="world-invite-kicker">More than a task board</span>
+        <h2 id="worldInviteTitle">Help shape the Guild you want to belong to.</h2>
+        <p>Kindred Guild is a member-built world with an economy of quests, a social life in the Guild Hall, and Fairy Wishes that let members influence what comes next.</p>
+      </div>
+      <a class="btn btn-outline" href="guild-world.html">Explore the Guild World</a>
     </div>
   </section>
 
