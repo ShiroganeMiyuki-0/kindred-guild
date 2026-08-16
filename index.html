@@ -104,6 +104,32 @@
       0%, 100% { box-shadow: 0 4px 20px rgba(212,175,55,0.3); }
       50% { box-shadow: 0 4px 30px rgba(212,175,55,0.5); }
     }
+    #announcementsArea { max-width:900px !important; padding:16px 20px 0 !important; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; }
+    .announcement-banner { position:relative; min-height:116px; padding:16px 42px 14px 16px; background:linear-gradient(135deg,rgba(212,175,55,.11),rgba(255,255,255,.025)); border:1px solid rgba(212,175,55,.28); border-radius:var(--radius); box-shadow:0 12px 28px rgba(0,0,0,.16); }
+    .announcement-banner .ann-close { position:absolute; top:9px; right:10px; width:26px; height:26px; border:1px solid var(--border); border-radius:50%; background:transparent; color:var(--text-muted); cursor:pointer; }
+    .announcement-banner .ann-close:hover { color:var(--text); border-color:var(--accent); }
+    .announcement-banner .ann-title { color:var(--accent); font-weight:800; font-size:.92rem; line-height:1.35; margin-bottom:6px; }
+    .announcement-banner .ann-content { color:var(--text-dim); font-size:.82rem; line-height:1.45; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    .announcement-banner .ann-time { color:var(--text-muted); font-size:.7rem; margin-top:9px; }
+    .hero-cta-note { margin-top:16px; font-size:.85rem; color:var(--text-muted); }
+    .hero-cta-note a { color:var(--accent); font-weight:700; }
+    .stats-strip { padding:40px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
+    .stats-strip-inner { max-width:800px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:20px; text-align:center; }
+    .stat-item { padding:12px 8px; border-radius:var(--radius-sm); }
+    .stat-item .stat-value { font-size:2rem; font-weight:800; color:var(--accent); }
+    .stat-item .stat-label { font-size:.8rem; color:var(--text-dim); margin-top:4px; }
+    @media(max-width:640px){
+      .hero{padding:44px 16px 40px;}
+      .hero-logo{width:92px;height:92px;margin-bottom:12px;}
+      .hero h1{font-size:2rem;letter-spacing:1px;}
+      .hero .tagline{font-size:1.05rem;}
+      .hero .sub-tagline{font-size:.9rem;margin-bottom:22px;}
+      .hero-cta-note{font-size:.8rem;}
+      .stats-strip{padding:24px 12px;}
+      .stats-strip-inner{grid-template-columns:repeat(2,1fr);gap:8px;}
+      .stat-item{background:rgba(255,255,255,.02);}
+      .stat-item .stat-value{font-size:1.5rem;}
+    }
 
     /* Animated stars background */
     .hero-stars {
@@ -399,39 +425,26 @@
       <p class="sub-tagline">Free tasks. Paid tasks. Protected by escrow. Built on trust.</p>
       <div class="cta-group">
         <a href="quest-board.html" class="btn btn-primary">Browse Tasks</a>
-        <a href="cinematic.html" class="btn btn-outline">🎬 The Story</a>
-        <a href="guild-hall.html" class="btn btn-outline">🏰 Enter Guild Hall</a>
-        <a href="auth.html" class="btn btn-outline">Sign Up Free</a>
+        <a href="quest-post.html" class="btn btn-outline">Post a Task</a>
       </div>
+      <p class="hero-cta-note">New to the Guild? <a href="getting-started.html">See how it works</a> · <a href="worker-post.html">Offer your skills</a></p>
     </div>
   </section>
 
   <!-- LIVE STATS COUNTER -->
-  <section id="liveStats" style="padding:40px 20px;background:var(--surface);border-bottom:1px solid var(--border)">
-    <div style="max-width:800px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center">
-      <div>
-        <div id="statMembers" style="font-size:2rem;font-weight:800;color:var(--accent)">—</div>
-        <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">Guild Members</div>
-      </div>
-      <div>
-        <div id="statQuests" style="font-size:2rem;font-weight:800;color:var(--accent)">—</div>
-        <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">Quests Posted</div>
-      </div>
-      <div>
-        <div id="statCompleted" style="font-size:2rem;font-weight:800;color:var(--accent)">—</div>
-        <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">Tasks Completed</div>
-      </div>
-      <div>
-        <div id="statCoins" style="font-size:2rem;font-weight:800;color:var(--accent)">—</div>
-        <div style="font-size:0.8rem;color:var(--text-dim);margin-top:4px">Coins Earned</div>
-      </div>
+  <section id="liveStats" class="stats-strip">
+    <div class="stats-strip-inner">
+      <div class="stat-item"><div id="statMembers" class="stat-value">—</div><div class="stat-label">Guild Members</div></div>
+      <div class="stat-item"><div id="statQuests" class="stat-value">—</div><div class="stat-label">Quests Posted</div></div>
+      <div class="stat-item"><div id="statCompleted" class="stat-value">—</div><div class="stat-label">Tasks Completed</div></div>
+      <div class="stat-item"><div id="statCoins" class="stat-value">—</div><div class="stat-label">Coins Earned</div></div>
     </div>
   </section>
 
   <!-- RECENT QUESTS PREVIEW -->
   <section id="recentQuests" style="padding:60px 20px;max-width:900px;margin:0 auto">
     <h2 style="text-align:center;font-size:1.8rem;color:var(--accent);margin-bottom:8px">Live Quest Board</h2>
-    <p style="text-align:center;color:var(--text-dim);margin-bottom:32px;font-size:1rem">Real tasks posted by real people. Sign up to accept or post your own.</p>
+    <p style="text-align:center;color:var(--text-dim);margin-bottom:32px;font-size:1rem">See current opportunities from the Guild community. Sign in when you’re ready to accept or post a task.</p>
     <div id="recentQuestsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
     <div style="text-align:center;margin-top:32px">
       <a href="quest-board.html" class="btn btn-primary">View All Quests</a>

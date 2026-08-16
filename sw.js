@@ -8,9 +8,10 @@
 // network once something is cached.
 // Bumped to v3 after removing the non-existent /css/layout-fix.css reference
 // that was causing caches.addAll() to reject and break SW install entirely.
-const CACHE_NAME = 'kindred-guild-v4';
+const CACHE_NAME = 'kindred-guild-v5';
 const STATIC_ASSETS = [
   '/',
+  '/index.html',
   '/css/globals.css',
   '/css/fixes.css',
   '/js/supabase-client.js',

@@ -202,9 +202,17 @@ textarea { min-height: 100px; resize: vertical; }
    on every page. Standard Tailwind .hidden has no !important for the same reason. */
 .hidden { display: none; }
 
+/* ---- Product quality defaults ---- */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+button, a, select, input, textarea { -webkit-tap-highlight-color: transparent; }
+button { font-family: inherit; }
+h1, h2, h3, h4, p, label, .card, .quest-card { overflow-wrap: anywhere; }
+.card h3, .quest-card h3 { line-height: 1.35; }
+img { max-width: 100%; height: auto; }
+
 /* ============================================
    MOBILE RESPONSIVE
-   ============================================ */
+============================================ */
 
 /* Tablet */
 @media (max-width: 768px) {
@@ -218,10 +226,16 @@ textarea { min-height: 100px; resize: vertical; }
 
   /* Header actions: wrap and shrink */
   .header .actions,
-  .header-bar {
+  .header-bar,
+  .page-header .actions {
     flex-wrap: wrap;
     gap: 8px;
   }
+  .page-header { align-items: flex-start; }
+  .page-header h1 { font-size: 1.25rem; line-height: 1.3; }
+  .user-bar { align-items: flex-start; }
+  .user-bar .user-info { min-width: 0; }
+  .user-bar .coins { white-space: nowrap; }
 
   /* Smaller buttons on mobile */
   .btn { padding: 10px 16px; font-size: 0.85rem; }
