@@ -112,6 +112,8 @@
     .announcement-banner .ann-content { color:var(--text-dim); font-size:.82rem; line-height:1.45; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
     .announcement-banner .ann-time { color:var(--text-muted); font-size:.7rem; margin-top:9px; }
     .hero-cta-note { margin-top:16px; font-size:.85rem; color:var(--text-muted); }
+    .founding-badge { display:inline-flex; align-items:center; gap:8px; margin-bottom:16px; padding:7px 12px; border:1px solid rgba(212,175,55,.38); border-radius:999px; background:rgba(212,175,55,.08); color:var(--accent); font-size:.7rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    .founding-badge-dot { width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); }
     .hero-cta-note a { color:var(--accent); font-weight:700; }
     .world-invite { padding:48px 20px; background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(255,255,255,.015)); border-block:1px solid var(--border); }
     .world-invite-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:28px; }
@@ -425,8 +427,10 @@
   <!-- HERO -->
   <section class="hero">
     <div class="hero-stars" id="heroStars"></div>
-    <div class="hero-content">
-      <img src="logo.png" alt="Kindred Guild" class="hero-logo">
+          <div class="hero-content">
+        <div class="founding-badge" aria-label="Founding Season: early members help shape the Guild"><span class="founding-badge-dot" aria-hidden="true"></span>Founding Season · shaped by members</div>
+        <img src="logo.png" alt="Kindred Guild" class="hero-logo">
+
       <h1>Kindred Guild</h1>
       <p class="tagline">Need help with something? Post it. Someone in your community will step up.</p>
       <p class="sub-tagline">Free tasks. Paid tasks. Protected by escrow. Built on trust.</p>
