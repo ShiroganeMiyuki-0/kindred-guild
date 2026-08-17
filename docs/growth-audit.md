@@ -43,3 +43,11 @@ The authenticated Worker Board Contact action now targets the worker’s user ID
 ## Contact-loop browser verification
 
 The public Worker Board still shows the offer-skills invitation and onboarding copy after the contact-flow repair. Anonymous cards remain intentionally labeled Join to Contact; authenticated Contact now routes into the existing DM conversation flow rather than quest creation.
+
+## Notifications follow-through improvement
+
+A quiet notification inbox now explains that nothing needs attention yet and offers two useful next actions: browse quests or say hello in the Guild Hall. Query failures are distinguished from a genuinely quiet inbox and include a retry path.
+
+## Notifications browser verification
+
+The first browser reload exposed a stale shared-auth script that still produced the old session-error toast. After versioning the helper, the public page now shows “Your Guild bell is waiting,” explains when notifications appear, offers Join the Guild and Visit the Hall, and no longer shows a contradictory session error.

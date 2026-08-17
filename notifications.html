@@ -47,7 +47,7 @@
       </div>
     </div>
 
-    <div class="notif-list" id="notifList">
+    <div class="notif-list" id="notifList" role="status" aria-live="polite">
       <div class="empty-state">Loading notifications...</div>
     </div>
     <div id="loadMoreNotifs" style="text-align:center;margin-top:16px;display:none">
@@ -56,12 +56,27 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js"></script>
+  <script src="js/supabase-client.js?v=public-notifications-20260817"></script>
   <script>
     (async function init() {
-      await window.requireAuth();
+      const user = await window.requireAuth({ silent: true, redirect: false });
+      if (!user) {
+        renderPublicNotificationsGate();
+        return;
+      }
       await loadNotifications();
     })();
+
+    function renderPublicNotificationsGate() {
+      const container = document.getElementById('notifList');
+      container.innerHTML = '<div class="empty-state"><strong>Your Guild bell is waiting.</strong><p style="margin:8px 0 14px">Notifications appear after someone replies, accepts a quest, backs a wish, or completes a shared moment. Join the Guild to receive them.</p><a class="btn btn-primary btn-sm" href="auth.html">Join the Guild</a> <a class="btn btn-ghost btn-sm" href="guild-hall.html">Visit the Hall</a></div>';
+      const messagesLink = document.querySelector('a[href="dm.html"]');
+      if (messagesLink) { messagesLink.href = 'auth.html'; messagesLink.textContent = '🔐 Join to Message'; }
+      const markRead = document.querySelector('button[onclick="markAllRead()"]');
+      if (markRead) markRead.disabled = true;
+      const refresh = document.querySelector('button[onclick="loadNotifications()"]');
+      if (refresh) refresh.style.display = 'none';
+    }
 
     const typeIcons = {
       quest_accepted: { icon: '🤝', cls: 'quest' },
@@ -82,10 +97,15 @@
       container.innerHTML = '<div class="empty-state">Loading...</div>';
       notifOffset = 0; notifDone = false;
 
-      const { data } = await window.sb.from('notifications').select('*').order('created_at', { ascending: false }).range(0, NOTIF_PAGE - 1);
+      const { data, error } = await window.sb.from('notifications').select('*').order('created_at', { ascending: false }).range(0, NOTIF_PAGE - 1);
 
+      if (error) {
+        container.innerHTML = '<div class="empty-state"><strong>The Guild bell is quiet for now.</strong><p style="margin:8px 0 14px">We could not refresh it this time. Try again, or continue where people are already gathering.</p><button class="btn btn-ghost btn-sm" onclick="loadNotifications()">Try Again</button> <a class="btn btn-primary btn-sm" href="quest-board.html">Browse Quests</a></div>';
+        document.getElementById('loadMoreNotifs').style.display = 'none';
+        return;
+      }
       if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty-state">No notifications yet. They\'ll appear here when something happens!</div>';
+        container.innerHTML = '<div class="empty-state"><strong>Nothing needs your attention yet.</strong><p style="margin:8px 0 14px">Your next Guild moment may begin with a small request, a helpful skill, or a conversation.</p><a class="btn btn-primary btn-sm" href="quest-board.html">Browse Quests</a> <a class="btn btn-ghost btn-sm" href="guild-hall.html">Say Hello</a></div>';
         document.getElementById('loadMoreNotifs').style.display = 'none';
         return;
       }
