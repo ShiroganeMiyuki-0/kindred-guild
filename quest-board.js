@@ -58,6 +58,8 @@ function renderPublicBoardPreview() {
   const balanceEl = document.getElementById('coinBalance');
   if (nameEl) nameEl.textContent = 'Visitor preview';
   if (balanceEl) balanceEl.textContent = '—';
+  const postLink = document.querySelector('.page-header .actions a[href="quest-post.html"]');
+  if (postLink) { postLink.href = 'auth.html'; postLink.textContent = 'Join to Post a Task'; }
   ['view-active','view-posted','view-completed','view-bookmarked','view-expired'].forEach(id => {
     const tab = document.getElementById(id);
     if (!tab) return;

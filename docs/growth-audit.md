@@ -19,3 +19,7 @@ The unauthenticated Guild Hall initially showed a generic “We could not verify
 ## Quest Board verification
 
 The public Quest Board had the same communication failure as the Guild Hall: it forced authentication, showed “Loading...,” and displayed a session-error toast to visitors. The board now loads in visitor-preview mode. It labels the visitor honestly, keeps the Available view public, disables member-only views with an explanation, shows granted-wish activity when available, and provides a human empty-board invitation or a join-to-accept action for public quests. Both the shared auth helper and Quest Board controller are cache-busted so the real browser loads the new behavior. Fresh browser verification showed “Visitor preview,” disabled member-only tabs, and no session-error toast.
+
+## Latest public-board verification
+
+After the data request settled, the live Quest Board showed “The board is waiting for its next story,” explained that no open public quests are currently available, and offered “Join the Guild” and “See How the Guild Works.” The header displayed “Join to Post a Task,” the visitor label remained visible, member-only tabs remained disabled with join explanations, and the granted-wish update was visible. No session-error toast appeared.
