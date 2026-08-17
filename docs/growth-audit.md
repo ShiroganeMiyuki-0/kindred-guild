@@ -23,3 +23,7 @@ The public Quest Board had the same communication failure as the Guild Hall: it 
 ## Latest public-board verification
 
 After the data request settled, the live Quest Board showed “The board is waiting for its next story,” explained that no open public quests are currently available, and offered “Join the Guild” and “See How the Guild Works.” The header displayed “Join to Post a Task,” the visitor label remained visible, member-only tabs remained disabled with join explanations, and the granted-wish update was visible. No session-error toast appeared.
+
+## Homepage public-quest verification
+
+The homepage empty-state now offers “Browse the Quest Board,” “Join to Post the First Quest,” and “Say Hello in the Hall.” The live preview also renders public quest cards as links to the Quest Board rather than sending every visitor directly to authentication. The first-screen path chooser remains visible and human-readable.

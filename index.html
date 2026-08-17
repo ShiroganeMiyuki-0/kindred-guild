@@ -830,7 +830,7 @@
 
         const grid = document.getElementById('recentQuestsGrid');
         if (!quests || quests.length === 0) {
-          grid.innerHTML = `<div class="quest-empty"><strong>The board is waiting for its next story.</strong><p>There are no public quests to browse yet. Post the first request, offer a skill, or enter the Hall and tell the Guild what would make it useful to you.</p><a href="quest-post.html" class="btn btn-primary">Post the First Quest</a> <a href="guild-hall.html" class="btn btn-outline">Say Hello in the Hall</a></div>`;
+          grid.innerHTML = `<div class="quest-empty"><strong>The board is waiting for its next story.</strong><p>There are no public quests to browse yet. Post the first request, offer a skill, or enter the Hall and tell the Guild what would make it useful to you.</p><a href="quest-board.html" class="btn btn-primary">Browse the Quest Board</a> <a href="auth.html" class="btn btn-outline">Join to Post the First Quest</a> <a href="guild-hall.html" class="btn btn-outline">Say Hello in the Hall</a></div>`;
           return;
         }
 
@@ -847,7 +847,7 @@
           const desc = q.description.length > 100 ? q.description.substring(0, 100) + '...' : q.description;
 
           return `
-            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color 0.2s;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="window.location='auth.html'">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color 0.2s;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="window.location='quest-board.html'">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
                 <span style="background:${badgeBg};color:${badgeColor};padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:700">${badge}</span>
                 <span style="font-size:0.7rem;color:var(--text-dim)">${timeStr}</span>
@@ -859,7 +859,7 @@
         }).join('');
       } catch(e) {
         const grid = document.getElementById('recentQuestsGrid');
-        if (grid) grid.innerHTML = `<div class="quest-empty"><strong>The board is taking a quiet moment.</strong><p>We could not load the public quest board right now. You can still start the conversation by posting a request or visiting the Guild Hall.</p><a href="quest-post.html" class="btn btn-primary">Start a Quest</a> <a href="guild-hall.html" class="btn btn-outline">Visit the Hall</a></div>`;
+        if (grid) grid.innerHTML = `<div class="quest-empty"><strong>The board is taking a quiet moment.</strong><p>We could not load the public quest board right now. You can still start the conversation by posting a request or visiting the Guild Hall.</p><a href="quest-board.html" class="btn btn-primary">Browse the Quest Board</a> <a href="auth.html" class="btn btn-outline">Join to Start a Quest</a> <a href="guild-hall.html" class="btn btn-outline">Visit the Hall</a></div>`;
         console.log('Recent quests error:', e);
       }
     })();
