@@ -65,7 +65,7 @@
 
   // ── Worker Posts ──
   const workerPostMilestones = {
-    form: { id: 'workerForm', target: '.post-form, #workerTitle', title: '🛡️ Post Your Availability', intro: 'List yourself as a worker! Add a title, description, tags (like #design, #coding), preferred payment type, and minimum reward. Quest posters can find and hire you.' },
+    form: { id: 'workerForm', target: '.post-form, #workerTitle', title: '🛡️ Offer Your Skills', intro: 'Browse the people already offering help. Join the Guild when you are ready to post your own availability or contact someone.' },
     search: { id: 'workerSearch', target: '#workerSearchInput, #workerPaymentFilter', title: '🔍 Find Workers', intro: 'Search workers by name, skill, or tag. Filter by payment type to find workers that match your needs.' }
   };
 

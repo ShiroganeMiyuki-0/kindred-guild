@@ -27,3 +27,7 @@ After the data request settled, the live Quest Board showed “The board is wait
 ## Homepage public-quest verification
 
 The homepage empty-state now offers “Browse the Quest Board,” “Join to Post the First Quest,” and “Say Hello in the Hall.” The live preview also renders public quest cards as links to the Quest Board rather than sending every visitor directly to authentication. The first-screen path chooser remains visible and human-readable.
+
+## Worker Board verification
+
+The public Worker Board now loads without a session-error path. It labels the visitor preview, replaces the protected posting form with “Offer a skill to the Guild,” provides “Join to Offer Your Skills,” and renders existing worker listings with “Join to Contact.” The onboarding overlay was updated to use the same language rather than describing a form the visitor cannot use.

@@ -22,14 +22,27 @@ function showMessage(text, type) { messageEl.textContent = text; messageEl.class
 function clearMessage() { messageEl.className = 'message'; messageEl.textContent = ''; }
 
 (async function init() {
-  const user = await window.requireAuth();
-  if (!user) return;
+  const user = await window.requireAuth({ silent: true, redirect: false });
+  if (!user) {
+    renderPublicWorkerPreview();
+    loadWorkerPosts();
+    return;
+  }
   currentUser = user;
 
   const profile = await window.getUserProfile(user.id);
   document.getElementById('userName').textContent = profile?.display_name || profile?.username || 'Member';
   loadWorkerPosts();
 })();
+
+function renderPublicWorkerPreview() {
+  const nameEl = document.getElementById('userName');
+  if (nameEl) nameEl.textContent = 'Visitor preview';
+  const form = document.querySelector('.post-form');
+  if (form) {
+    form.innerHTML = '<h3>Offer a skill to the Guild</h3><p>Browse the people already offering help. Join the Guild when you are ready to post your own availability or contact someone.</p><a href="auth.html" class="btn btn-primary">Join to Offer Your Skills</a>';
+  }
+}
 
 function parseAndFormatTags(raw) {
   if (!raw) return [];
@@ -108,7 +121,9 @@ function renderWorkerPosts() {
 
     const btn = isOwn
       ? `<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="editWorkerPost('${post.id}')">Edit</button><button class="btn btn-error btn-sm" onclick="deleteWorkerPost('${post.id}')">Delete</button></div>`
-      : `<button class="btn btn-primary btn-sm" onclick="contactWorker('${post.id}','${escapeHtml(name)}')">Contact</button>`;
+      : currentUser
+        ? `<button class="btn btn-primary btn-sm" onclick="contactWorker('${post.id}','${escapeHtml(name)}')">Contact</button>`
+        : `<a href="auth.html" class="btn btn-primary btn-sm">Join to Contact</a>`;
 
     return `
       <div class="card" style="display:flex;flex-direction:column;justify-content:space-between">
