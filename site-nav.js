@@ -243,7 +243,7 @@
         const secondaryLinksHtml = secondaryItems.map(item => {
             const activeClass = isItemActive(item.file) ? 'text-amber-400 bg-amber-500/10 font-bold' : 'text-gray-300 hover:bg-slate-800 hover:text-amber-300';
             return `
-                <a href="${getPath(item.file)}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition duration-150 rounded-md ${activeClass}">
+                <a role="menuitem" href="${getPath(item.file)}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition duration-150 rounded-md ${activeClass}">
                     <i class="fa-solid ${item.icon} w-4 text-center text-xs"></i>
                     <span>${item.name}</span>
                 </a>
@@ -360,10 +360,10 @@
 
                         <!-- Hamburger for secondary nav items (desktop + tablet only) -->
                         <div class="relative hidden md:flex md:items-center" id="more-menu-wrapper">
-                            <button type="button" id="more-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-haspopup="true" aria-expanded="false" title="More pages">
+                            <button type="button" id="more-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-haspopup="true" aria-controls="more-menu-dropdown" aria-expanded="false" aria-label="Open more pages" title="More pages">
                                 <i class="fa-solid fa-bars text-lg" id="more-menu-icon"></i>
                             </button>
-                            <div id="more-menu-dropdown" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black/50 py-2 z-[200] backdrop-blur-md">
+                            <div id="more-menu-dropdown" role="menu" aria-label="More pages" aria-hidden="true" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black/50 py-2 z-[200] backdrop-blur-md">
                                 <div class="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">More Pages</div>
                                 ${secondaryLinksHtml}
                             </div>
@@ -371,7 +371,7 @@
 
                         <!-- Mobile hamburger (shows all items) -->
                         <div class="md:hidden flex items-center">
-                            <button type="button" id="mobile-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-controls="mobile-menu" aria-expanded="false">
+                            <button type="button" id="mobile-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-controls="mobile-menu" aria-expanded="false" aria-label="Open navigation menu">
                                 <span class="sr-only">Open menu</span>
                                 <i id="hamburger-icon" class="fa-solid fa-bars text-lg"></i>
                             </button>
@@ -391,7 +391,7 @@
             </div>
 
             <!-- Mobile dropdown (all items) -->
-            <div class="hidden md:hidden" id="mobile-menu">
+            <div class="hidden md:hidden" id="mobile-menu" role="dialog" aria-label="Guild navigation" aria-hidden="true">
                 <div class="pt-2 pb-3 space-y-1 bg-slate-950/95 border-b border-slate-800 backdrop-blur-md">
                     ${mobileLinks}
                     ${mobileAdminLink}
@@ -669,14 +669,20 @@
                 document.body.style.width = '100%';
 
                 mobileMenu.classList.remove('hidden');
+                mobileMenu.setAttribute('aria-hidden', 'false');
                 icon.classList.remove('fa-bars');
                 icon.classList.add('fa-xmark');
                 toggleBtn.setAttribute('aria-expanded', 'true');
+                toggleBtn.setAttribute('aria-label', 'Close navigation menu');
+                requestAnimationFrame(() => mobileMenu.querySelector('a, button')?.focus());
             } else {
                 mobileMenu.classList.add('hidden');
+                mobileMenu.setAttribute('aria-hidden', 'true');
                 icon.classList.remove('fa-xmark');
                 icon.classList.add('fa-bars');
                 toggleBtn.setAttribute('aria-expanded', 'false');
+                toggleBtn.setAttribute('aria-label', 'Open navigation menu');
+                if (mobileMenu.contains(document.activeElement)) toggleBtn.focus();
 
                 // Unlock the body and restore scroll position
                 document.body.classList.remove('mobile-menu-open');
@@ -749,30 +755,30 @@
         const moreIcon = document.getElementById('more-menu-icon');
 
         if (moreToggle && moreDropdown) {
+            const setMoreOpen = (open, restoreFocus = false) => {
+                const liveToggle = document.getElementById('more-menu-toggle');
+                const liveDropdown = document.getElementById('more-menu-dropdown');
+                const liveIcon = document.getElementById('more-menu-icon');
+                if (!liveToggle || !liveDropdown || !liveIcon) return;
+                liveDropdown.classList.toggle('hidden', !open);
+                liveDropdown.setAttribute('aria-hidden', String(!open));
+                liveIcon.classList.toggle('fa-bars', !open);
+                liveIcon.classList.toggle('fa-xmark', open);
+                liveToggle.setAttribute('aria-expanded', String(open));
+                liveToggle.setAttribute('aria-label', open ? 'Close more pages' : 'Open more pages');
+                if (open) requestAnimationFrame(() => liveDropdown.querySelector('[role="menuitem"]')?.focus());
+                else if (restoreFocus) liveToggle.focus();
+            };
             moreToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const isHidden = moreDropdown.classList.contains('hidden');
-                if (isHidden) {
-                    moreDropdown.classList.remove('hidden');
-                    moreIcon.classList.remove('fa-bars');
-                    moreIcon.classList.add('fa-xmark');
-                    moreToggle.setAttribute('aria-expanded', 'true');
-                } else {
-                    moreDropdown.classList.add('hidden');
-                    moreIcon.classList.remove('fa-xmark');
-                    moreIcon.classList.add('fa-bars');
-                    moreToggle.setAttribute('aria-expanded', 'false');
-                }
+                setMoreOpen(moreDropdown.classList.contains('hidden'));
             });
 
             // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
                 const wrapper = document.getElementById('more-menu-wrapper');
                 if (wrapper && !wrapper.contains(e.target)) {
-                    moreDropdown.classList.add('hidden');
-                    moreIcon.classList.remove('fa-xmark');
-                    moreIcon.classList.add('fa-bars');
-                    moreToggle.setAttribute('aria-expanded', 'false');
+                    setMoreOpen(false);
                 }
             });
 
@@ -783,21 +789,13 @@
                 const toggle = document.getElementById('more-menu-toggle');
                 const icon = document.getElementById('more-menu-icon');
                 if (!dropdown || dropdown.classList.contains('hidden')) return;
-                dropdown.classList.add('hidden');
-                icon?.classList.remove('fa-xmark');
-                icon?.classList.add('fa-bars');
-                toggle?.setAttribute('aria-expanded', 'false');
+                setMoreOpen(false, true);
             });
 
             // Close dropdown when a link inside is clicked
-            moreDropdown.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    moreDropdown.classList.add('hidden');
-                    moreIcon.classList.remove('fa-xmark');
-                    moreIcon.classList.add('fa-bars');
-                    moreToggle.setAttribute('aria-expanded', 'false');
+                moreDropdown.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => setMoreOpen(false));
                 });
-            });
         }
 
         // Logout handlers

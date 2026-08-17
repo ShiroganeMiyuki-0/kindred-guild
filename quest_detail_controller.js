@@ -125,7 +125,10 @@ function renderQuestUI() {
   else document.getElementById('rewardContainer').style.display = 'none';
 
   const d = new Date(q.deadline);
-  document.getElementById('deadlineStr').innerHTML = `<strong>${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong> ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+  const deadlineEl = document.getElementById('deadlineStr');
+  deadlineEl.textContent = Number.isNaN(d.getTime())
+    ? 'Deadline not available'
+    : d.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
   // Reset panels
   ['workerProofPanel', 'posterAppraisalPanel', 'disputePanel', 'ratingPanel', 'abandonContainer', 'cancelContainer'].forEach(id => {
@@ -195,8 +198,26 @@ function renderQuestUI() {
 
 // Proof file staging
 window.handleQueueFiles = function (input) {
+  const maxFiles = 5;
+  const maxBytes = 25 * 1024 * 1024;
+  const allowed = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'application/pdf', 'text/plain']);
   if (input.files) {
-    for (let i = 0; i < input.files.length; i++) stagedProofFiles.push(input.files[i]);
+    for (let i = 0; i < input.files.length; i++) {
+      const file = input.files[i];
+      if (stagedProofFiles.length >= maxFiles) {
+        showAlert(`You can submit up to ${maxFiles} proof files.`, 'warning');
+        break;
+      }
+      if (file.size > maxBytes) {
+        showAlert(`${file.name} is larger than 25 MB.`, 'warning');
+        continue;
+      }
+      if (file.type && !allowed.has(file.type)) {
+        showAlert(`${file.name} has an unsupported file type. Use an image, video, PDF, or text file.`, 'warning');
+        continue;
+      }
+      stagedProofFiles.push(file);
+    }
     input.value = '';
     renderStagedFilesList();
   }
@@ -254,17 +275,29 @@ window.uploadProofFiles = async function () {
   }
 };
 
+function safeProofUrl(rawUrl) {
+  try {
+    const url = new URL(rawUrl, window.location.href);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function renderProofFileGrid() {
   const container = document.getElementById('multiProofViewer');
-  const urls = currentQuest.proof_urls || [];
+  const urls = [...(currentQuest.proof_urls || [])];
   if (urls.length === 0 && currentQuest.proof_url) urls.push(currentQuest.proof_url);
   if (urls.length === 0) { container.innerHTML = '<p style="color:var(--error)">No files uploaded.</p>'; return; }
 
-  container.innerHTML = urls.map((url, i) => {
-    const isImg = /\.(jpeg|jpg|gif|png|webp)/i.test(url);
-    const isVid = /\.(mp4|webm|ogg|mov)/i.test(url);
-    const preview = isImg ? `<img src="${url}">` : isVid ? `<video src="${url}" controls muted></video>` : `<div class="proof-tile-doc">📄</div>`;
-    return `<div class="proof-tile">${preview}<div class="proof-tile-info"><a href="${url}" target="_blank">🔗 File ${i + 1}</a></div></div>`;
+  container.innerHTML = urls.map((rawUrl, i) => {
+    const url = safeProofUrl(rawUrl);
+    if (!url) return `<div class="proof-tile"><div class="proof-tile-doc">⚠️</div><div class="proof-tile-info">Unavailable file</div></div>`;
+    const safeUrl = escapeHtml(url);
+    const isImg = /\.(jpeg|jpg|gif|png|webp)(?:$|[?#])/i.test(url);
+    const isVid = /\.(mp4|webm|ogg|mov)(?:$|[?#])/i.test(url);
+    const preview = isImg ? `<img src="${safeUrl}" alt="Proof file ${i + 1}" loading="lazy">` : isVid ? `<video src="${safeUrl}" controls muted preload="metadata"></video>` : `<div class="proof-tile-doc">📄</div>`;
+    return `<div class="proof-tile">${preview}<div class="proof-tile-info"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">🔗 File ${i + 1}</a></div></div>`;
   }).join('');
 }
 
@@ -339,7 +372,9 @@ window.triggerDisputeResolution = async function (action) {
 };
 
 window.approveWorkerDetail = async function (approved) {
-  if (!confirm(approved ? 'Approve this worker?' : 'Reject this worker?')) return;
+  if (!await showCustomConfirm(approved ? 'Approve worker' : 'Reject worker', approved ? 'Approve this worker for the quest?' : 'Reject this worker application?')) return;
+  if (window.__kgWorkerDecisionBusy) return;
+  window.__kgWorkerDecisionBusy = true;
 
   const { data: result, error } = await window.sb.rpc('poster_approve_worker', {
     p_quest_id: currentQuest.id,
@@ -347,11 +382,12 @@ window.approveWorkerDetail = async function (approved) {
     p_approved: approved
   });
 
-  if (error) { showAlert('Failed: ' + error.message, 'error'); return; }
-  if (result && !result.success) { showAlert(result.error, 'error'); return; }
+  if (error) { window.__kgWorkerDecisionBusy = false; showAlert('Failed: ' + error.message, 'error'); return; }
+  if (result && !result.success) { window.__kgWorkerDecisionBusy = false; showAlert(result.error, 'error'); return; }
 
+  if (approved && currentQuest?.worker_id) window.sendNotification('worker_approved', currentQuest.worker_id, currentQuest.id);
   showAlert(approved ? 'Worker approved!' : 'Worker rejected.', 'success');
-  setTimeout(() => refreshQuestData(), 1500);
+  setTimeout(() => { window.__kgWorkerDecisionBusy = false; refreshQuestData(); }, 1500);
 };
 
 // Comments
