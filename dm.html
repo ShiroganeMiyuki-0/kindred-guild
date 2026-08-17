@@ -258,7 +258,8 @@
           <div>
             <h4>${escapeHtml(activeConv?.is_group ? (activeConv?.name || 'Group Chat') : (activeConv?.other_display_name || activeConv?.other_username || 'Unknown'))}</h4>
           </div>
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <a href="trust-and-safety.html" class="btn btn-ghost btn-xs" title="Read safety and dispute guidance">Safety</a>
             ${activeConv?.is_group ? '<button class="btn btn-ghost btn-xs" onclick="showInvite()">👥 Add Member</button>' : ''}
             <button class="btn btn-ghost btn-xs" onclick="toggleDmSidebar()" style="display:none;" id="dmMobileBtn">☰</button>
           </div>

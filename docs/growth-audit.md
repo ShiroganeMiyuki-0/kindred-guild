@@ -56,3 +56,8 @@ The first browser reload exposed a stale shared-auth script that still produced 
 ## Worker Board contact context
 
 The Worker Board contact action now carries its origin into Messages as a non-sensitive `source=worker-board` context. The DM page uses that context to show a short, human prompt: mention the task or skill that caught the visitor’s attention, then ask what a good next step would be. It does not send an automatic message or imply a commitment. This makes the transition from “I found someone who may help” to “I can start a respectful conversation” more understandable while preserving user control.
+
+
+## Safety at the moment of coordination
+
+The Quest Workspace now keeps a visible “Safety & disputes” link beside the member navigation, and Messages keeps a “Safety” link in the active conversation header. These links place the Guild Charter and dispute guidance next to the moments when members coordinate, exchange proof, approve work, or decide whether to continue. The change is intentionally additive and does not pretend that a link alone replaces moderation or dispute handling.
