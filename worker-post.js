@@ -122,7 +122,7 @@ function renderWorkerPosts() {
     const btn = isOwn
       ? `<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="editWorkerPost('${post.id}')">Edit</button><button class="btn btn-error btn-sm" onclick="deleteWorkerPost('${post.id}')">Delete</button></div>`
       : currentUser
-        ? `<button class="btn btn-primary btn-sm" onclick="contactWorker('${post.id}','${escapeHtml(name)}')">Contact</button>`
+        ? `<button class="btn btn-primary btn-sm" onclick="contactWorker('${post.user_id}','${escapeHtml(name)}')">Contact</button>`
         : `<a href="auth.html" class="btn btn-primary btn-sm">Join to Contact</a>`;
 
     return `
@@ -180,7 +180,6 @@ window.deleteWorkerPost = async function (postId) {
   loadWorkerPosts();
 };
 
-window.contactWorker = function (postId, name) {
-  // Open quest-post with pre-filled context
-  window.location.href = 'quest-post.html?worker=' + encodeURIComponent(postId);
+window.contactWorker = function (userId, name) {
+  window.location.href = 'dm.html?contact=' + encodeURIComponent(userId) + '&name=' + encodeURIComponent(name || 'Member');
 };

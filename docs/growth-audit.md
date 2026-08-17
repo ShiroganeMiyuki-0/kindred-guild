@@ -35,3 +35,11 @@ The public Worker Board now loads without a session-error path. It labels the vi
 ## Original everyday-quest and join-gate verification
 
 The Quest Post page now shows 11 starting points, including Quick Favor, Community Setup, and Study Buddy. Anonymous visitors see “Visitor preview,” a clear explanation that posting requires membership, “Join to Post a Task,” and “Browse the Quest Board,” with no session-error toast. The onboarding copy matches the new experience.
+
+## Response-loop audit
+
+The authenticated Worker Board Contact action now targets the worker’s user ID and opens the existing DM system instead of redirecting to quest creation. The DM page accepts the contact target, creates or opens the conversation, and then removes the query from the address bar. Anonymous visitors continue to see Join to Contact.
+
+## Contact-loop browser verification
+
+The public Worker Board still shows the offer-skills invitation and onboarding copy after the contact-flow repair. Anonymous cards remain intentionally labeled Join to Contact; authenticated Contact now routes into the existing DM conversation flow rather than quest creation.
