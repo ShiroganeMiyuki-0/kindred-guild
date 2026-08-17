@@ -18,8 +18,14 @@ const sortBy = document.getElementById('sortBy');
 const searchInput = document.getElementById('searchInput');
 
 (async function init() {
-  const user = await window.requireAuth();
-  if (!user) return;
+  const user = await window.requireAuth({ silent: true, redirect: false });
+  if (!user) {
+    renderPublicBoardPreview();
+    await loadLatestGrantNotice();
+    loadQuests();
+    renderPresetTags();
+    return;
+  }
   currentUser = user;
 
   const profile = await window.getUserProfile(user.id);
@@ -46,6 +52,22 @@ const searchInput = document.getElementById('searchInput');
   loadQuests();
   renderPresetTags();
 })();
+
+function renderPublicBoardPreview() {
+  const nameEl = document.getElementById('userName');
+  const balanceEl = document.getElementById('coinBalance');
+  if (nameEl) nameEl.textContent = 'Visitor preview';
+  if (balanceEl) balanceEl.textContent = '—';
+  ['view-active','view-posted','view-completed','view-bookmarked','view-expired'].forEach(id => {
+    const tab = document.getElementById(id);
+    if (!tab) return;
+    tab.disabled = true;
+    tab.setAttribute('aria-disabled', 'true');
+    tab.title = 'Join the Guild to use this view';
+    tab.style.opacity = '0.45';
+    tab.style.cursor = 'not-allowed';
+  });
+}
 
 async function loadLatestGrantNotice() {
   const notice = document.getElementById('latestGrantNotice');
@@ -217,11 +239,17 @@ function formatDate(dateStr) {
 
 function renderQuests() {
   if (quests.length === 0) {
-    questGrid.innerHTML = `
+    questGrid.innerHTML = currentUser ? `
       <div class="empty-state">
         <h2>No Tasks Found</h2>
         <p>Try different filters, or post a new task.</p>
         <a href="quest-post.html" class="btn btn-primary" style="margin-top:12px">Post a Task</a>
+      </div>` : `
+      <div class="empty-state">
+        <h2>The board is waiting for its next story.</h2>
+        <p>There are no open public quests right now. Join the Guild to accept the next one, offer a skill, or post the first request.</p>
+        <a href="auth.html" class="btn btn-primary" style="margin-top:12px">Join the Guild</a>
+        <a href="guild-world.html" class="btn btn-outline" style="margin-top:12px">See How the Guild Works</a>
       </div>`;
     return;
   }
@@ -255,7 +283,9 @@ function renderQuests() {
         ? `<button class="action-btn" onclick="repostQuest('${quest.id}')" style="background:var(--accent);color:#000;font-weight:700;">🔄 Re-post This Quest</button>`
         : `<span class="action-btn" style="opacity:0.5;cursor:default">⏰ Expired</span>`;
     } else if (quest.status === 'open') {
-      actionBtn = isOwn
+      if (!currentUser) {
+        actionBtn = `<a href="auth.html" class="action-btn">Join to Accept This Quest</a>`;
+      } else actionBtn = isOwn
         ? `<a href="quest-edit.html?id=${quest.id}" class="action-btn own">✏️ Edit / Cancel</a>`
         : `<button class="action-btn" onclick="acceptQuest('${quest.id}')">Accept This Task</button>`;
     } else if (quest.status === 'pending_acceptance' && isOwn) {

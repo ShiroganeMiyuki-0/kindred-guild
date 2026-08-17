@@ -15,3 +15,7 @@ The existing “Live Quest Board” has no open public quests despite many histo
 ## Guild Hall verification
 
 The unauthenticated Guild Hall initially showed a generic “We could not verify your session” toast over an otherwise empty chat surface. That contradicted the homepage invitation to join the conversation. The Hall now uses an optional silent, non-redirecting auth check for public visitors, renders a welcoming preview card with the prompt “What would make Kindred Guild useful to you this week?”, disables the composer with an honest “Join the Guild to write here” label, and offers direct links to join or learn more. A cache-busted shared helper URL was added so browsers do not retain the old error behavior. Fresh browser verification showed the preview and no session-error toast.
+
+## Quest Board verification
+
+The public Quest Board had the same communication failure as the Guild Hall: it forced authentication, showed “Loading...,” and displayed a session-error toast to visitors. The board now loads in visitor-preview mode. It labels the visitor honestly, keeps the Available view public, disables member-only views with an explanation, shows granted-wish activity when available, and provides a human empty-board invitation or a join-to-accept action for public quests. Both the shared auth helper and Quest Board controller are cache-busted so the real browser loads the new behavior. Fresh browser verification showed “Visitor preview,” disabled member-only tabs, and no session-error toast.
