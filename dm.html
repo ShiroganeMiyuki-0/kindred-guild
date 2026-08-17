@@ -161,6 +161,7 @@
     let activeConv = null;
     let dmSubscription = null;
     let searchTimeout = null;
+    let contactSource = null;
 
     (async function init() {
       const user = await window.requireAuth();
@@ -168,6 +169,7 @@
       currentUser = user;
       await loadConversations();
       const params = new URLSearchParams(window.location.search);
+      contactSource = params.get('source');
       const contactUserId = params.get('contact');
       if (contactUserId && contactUserId !== currentUser.id) {
         const { data: convId, error } = await window.sb.rpc('get_or_create_dm', { p_other_user_id: contactUserId });
@@ -263,8 +265,9 @@
         </div>
         <div class="dm-messages" id="dmMessages"><div style="text-align:center;color:var(--text-dim);padding:20px;">Loading...</div></div>
         <div class="dm-input-area">
+          ${contactSource === 'worker-board' ? '<div style="font-size:.78rem;color:var(--text-dim);margin-bottom:8px;line-height:1.4;">You came from the Worker Board. A useful first note is simple: mention the task or skill that caught your eye, then ask what a good next step would be.</div>' : ''}
           <form class="dm-input-form" onsubmit="event.preventDefault();sendDmMessage()">
-            <input type="text" id="dmInput" placeholder="Type a message..." maxlength="2000" autocomplete="off">
+            <input type="text" id="dmInput" placeholder="Start with a clear, respectful note..." maxlength="2000" autocomplete="off">
             <button type="submit" class="btn btn-primary">Send</button>
           </form>
         </div>`;

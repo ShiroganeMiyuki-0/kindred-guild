@@ -51,3 +51,8 @@ A quiet notification inbox now explains that nothing needs attention yet and off
 ## Notifications browser verification
 
 The first browser reload exposed a stale shared-auth script that still produced the old session-error toast. After versioning the helper, the public page now shows “Your Guild bell is waiting,” explains when notifications appear, offers Join the Guild and Visit the Hall, and no longer shows a contradictory session error.
+
+
+## Worker Board contact context
+
+The Worker Board contact action now carries its origin into Messages as a non-sensitive `source=worker-board` context. The DM page uses that context to show a short, human prompt: mention the task or skill that caught the visitor’s attention, then ask what a good next step would be. It does not send an automatic message or imply a commitment. This makes the transition from “I found someone who may help” to “I can start a respectful conversation” more understandable while preserving user control.

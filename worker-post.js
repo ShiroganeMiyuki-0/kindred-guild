@@ -181,5 +181,5 @@ window.deleteWorkerPost = async function (postId) {
 };
 
 window.contactWorker = function (userId, name) {
-  window.location.href = 'dm.html?contact=' + encodeURIComponent(userId) + '&name=' + encodeURIComponent(name || 'Member');
+  window.location.href = 'dm.html?contact=' + encodeURIComponent(userId) + '&name=' + encodeURIComponent(name || 'Member') + '&source=worker-board';
 };
