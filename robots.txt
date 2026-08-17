@@ -1,3 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /auth.html
+Disallow: /profile.html
+Disallow: /dm.html
+Disallow: /notifications.html
+Disallow: /admin_dashboard_ui.html
+Disallow: /coin_purchase_ui.html
+
 Sitemap: https://kindredguild.org/sitemap.xml

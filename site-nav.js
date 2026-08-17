@@ -18,6 +18,33 @@
         return `${rootPrefix}${filename}`;
     }
 
+    // Keep Google-facing URLs stable across query strings, www variants, and
+    // deployment previews. Private/account pages are explicitly noindex.
+    function ensureSeoMetadata() {
+        const file = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        const canonicalPath = (!file || file === 'index.html') ? '/' : `/${file}`;
+        const canonicalUrl = `https://kindredguild.org${canonicalPath}`;
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) {
+            canonical = document.createElement('link');
+            canonical.rel = 'canonical';
+            document.head.appendChild(canonical);
+        }
+        canonical.href = canonicalUrl;
+
+        const privateFiles = new Set(['auth.html','profile.html','dm.html','notifications.html','admin_dashboard_ui.html','coin_purchase_ui.html']);
+        if (privateFiles.has(file)) {
+            let robots = document.querySelector('meta[name="robots"]');
+            if (!robots) {
+                robots = document.createElement('meta');
+                robots.name = 'robots';
+                document.head.appendChild(robots);
+            }
+            robots.content = 'noindex,follow';
+        }
+    }
+    ensureSeoMetadata();
+
     // 2. SELF-HEALING TAILWIND & FONTAWESOME INJECTION
     if (!document.querySelector('link[href*="font-awesome"]')) {
         const faLink = document.createElement('link');
@@ -63,6 +90,17 @@
         }
         .glass-nav nav a {
             flex-shrink: 0;
+        }
+        #more-menu-dropdown {
+            max-height: min(72vh, 560px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        #more-menu-dropdown a {
+            white-space: nowrap;
+        }
+        @media (max-width: 1024px) {
+            #more-menu-dropdown { right: 0; width: min(280px, calc(100vw - 24px)); }
         }
         .nav-item-active {
             color: #fbbf24 !important;
@@ -736,6 +774,19 @@
                     moreIcon.classList.add('fa-bars');
                     moreToggle.setAttribute('aria-expanded', 'false');
                 }
+            });
+
+            // Close dropdown on Escape as well as outside click.
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+                const dropdown = document.getElementById('more-menu-dropdown');
+                const toggle = document.getElementById('more-menu-toggle');
+                const icon = document.getElementById('more-menu-icon');
+                if (!dropdown || dropdown.classList.contains('hidden')) return;
+                dropdown.classList.add('hidden');
+                icon?.classList.remove('fa-xmark');
+                icon?.classList.add('fa-bars');
+                toggle?.setAttribute('aria-expanded', 'false');
             });
 
             // Close dropdown when a link inside is clicked
