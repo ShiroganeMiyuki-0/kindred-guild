@@ -19,15 +19,15 @@
   const questBoardMilestones = {
     welcome: { id: 'welcome', target: '.container, main, body', title: '⚔️ Welcome to the Quest Board!', intro: 'This is where tasks are posted. Browse available quests, accept one, and earn Fairy Coins by completing it. Or post your own task and get help!' },
     coins: { id: 'coins', target: '#coinBalanceContainer, #coinBalance', title: '🪙 Your Coin Pouch', intro: 'Fairy Coins (FC) are the internal currency. Earn them by completing tasks, spend them to post paid tasks. Buy more via UPI if needed.' },
-    postBtn: { id: 'postBtn', target: 'a[href="quest-post.html"]', title: '📜 Post a Task', intro: 'Click here to post a new task. Choose from 8 quick templates, set a reward (coins, UPI, or free), and a deadline.' },
+    postBtn: { id: 'postBtn', target: 'a[href="quest-post.html"]', title: '📜 Post a Task', intro: 'Click here to post a new task. Choose from 11 quick templates—from professional work to small community favors—then set a reward (coins, UPI, or free) and a deadline.' },
     bookmarkTab: { id: 'bookmarkTab', target: '#view-bookmarked', title: '🔖 Bookmarks', intro: 'Save quests you\'re interested in with the bookmark button. They\'ll appear here so you can find them later.' },
     filters: { id: 'filters', target: '.filter-bar, #filterType', title: '🔍 Filters & Search', intro: 'Filter by payment type (coins/UPI/free), sort by deadline or pay, and search by title or tags. Use tag badges to filter by skill.' }
   };
 
   // ── Quest Post ──
   const questPostMilestones = {
-    templates: { id: 'templates', target: '.card:has(button[onclick*="applyTemplate"]), h3:has(+ div > button[onclick*="applyTemplate"])', title: '📋 Quick Templates', intro: 'Pick a template to pre-fill your task! Choose from Logo Design, Website, Content Writing, Data Entry, Social Media, Tutoring, Errand, or Bug Fix. Edit the pre-filled text to match your needs.' },
-    form: { id: 'form', target: '#questForm', title: '✍️ Post Your Task', intro: 'Set a title, description, tags, payment type, reward, and deadline. The 10% fee is locked upfront alongside your reward. Hit Post Task when ready!' }
+    templates: { id: 'templates', target: '.card:has(button[onclick*="applyTemplate"]), h3:has(+ div > button[onclick*="applyTemplate"])', title: '📋 Quick Templates', intro: 'Members can choose from 11 starting points, from professional work to small community favors. Edit the pre-filled text so the request sounds like you.' },
+    form: { id: 'form', target: '#questForm', title: '✍️ Make the Request Real', intro: 'When you are a member, this is where you describe the help you need, choose how to reward it, and agree on a deadline. Visitors can join or browse the public board first.' }
   };
 
   // ── Fairy Wishes ──

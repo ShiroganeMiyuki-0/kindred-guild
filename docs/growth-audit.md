@@ -31,3 +31,7 @@ The homepage empty-state now offers “Browse the Quest Board,” “Join to Pos
 ## Worker Board verification
 
 The public Worker Board now loads without a session-error path. It labels the visitor preview, replaces the protected posting form with “Offer a skill to the Guild,” provides “Join to Offer Your Skills,” and renders existing worker listings with “Join to Contact.” The onboarding overlay was updated to use the same language rather than describing a form the visitor cannot use.
+
+## Original everyday-quest and join-gate verification
+
+The Quest Post page now shows 11 starting points, including Quick Favor, Community Setup, and Study Buddy. Anonymous visitors see “Visitor preview,” a clear explanation that posting requires membership, “Join to Post a Task,” and “Browse the Quest Board,” with no session-error toast. The onboarding copy matches the new experience.

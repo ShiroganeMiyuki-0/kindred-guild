@@ -71,6 +71,21 @@ const QUEST_TEMPLATES = {
     title: 'Bug Fix — [Project/Feature]',
     description: 'Found a bug that needs fixing. Will provide error logs, steps to reproduce, and codebase access. Must be familiar with the tech stack.',
     tags: ['#bugfix', '#coding', '#debug']
+  },
+  quickfavor: {
+    title: 'Quick Favor — [What Would Help]',
+    description: 'I need a small, clearly described favor from someone in the Guild. Please tell me when you can help, what you need from me, and when the favor will be complete.',
+    tags: ['#quick-favor', '#help', '#community']
+  },
+  community: {
+    title: 'Help Set Up [Community Activity]',
+    description: 'Looking for one or more members to help prepare a small community activity, meetup, study circle, or online gathering. Agree on the plan and responsibilities before starting.',
+    tags: ['#community', '#organizing', '#teamwork']
+  },
+  studypal: {
+    title: 'Study Buddy for [Subject or Goal]',
+    description: 'Looking for a patient study partner for [subject or goal]. We can compare notes, set a short session plan, and help each other stay accountable without sharing private information.',
+    tags: ['#study', '#learning', '#accountability']
   }
 };
 
@@ -94,8 +109,11 @@ function clearMessage() {
 }
 
 (async function init() {
-  const user = await window.requireAuth();
-  if (!user) return;
+  const user = await window.requireAuth({ silent: true, redirect: false });
+  if (!user) {
+    renderPublicQuestGate();
+    return;
+  }
   currentUser = user;
 
   const profile = await window.getUserProfile(user.id);
@@ -114,6 +132,14 @@ function clearMessage() {
   deadlineDateInput.value = now.toISOString().slice(0, 10);
   deadlineTimeInput.value = now.toTimeString().slice(0, 5);
 })();
+
+function renderPublicQuestGate() {
+  const userName = document.getElementById('userName');
+  if (userName) userName.textContent = 'Visitor preview';
+  const form = document.getElementById('questForm');
+  if (form) form.innerHTML = '<div class="country-blend-card" style="margin-top:0"><h4>🏰 Your first Guild request</h4><p>Posting a quest is a member action because payments, deadlines, and approvals need a real person behind them. Join when you are ready; you can browse the public board first.</p><a href="auth.html" class="btn btn-primary">Join to Post a Task</a> <a href="quest-board.html" class="btn btn-ghost">Browse the Quest Board</a></div>';
+  document.querySelector('.card:has(#questForm)')?.scrollIntoView({ block: 'center' });
+}
 
 window.selectPayment = function (type) {
   selectedType = type;
