@@ -418,12 +418,29 @@
       opacity: 0.3;
       margin: 0;
     }
+    .guild-pulse { padding: 54px 20px; background: linear-gradient(135deg, rgba(255,255,255,.025), rgba(212,175,55,.07)); border-block: 1px solid var(--border); }
+    .guild-pulse-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+    .guild-pulse-kicker { color: var(--accent); font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .guild-pulse h2 { margin: 8px 0 10px; color: var(--text); font-size: clamp(1.4rem, 3vw, 2rem); }
+    .guild-pulse-intro { max-width: 650px; margin: 0 auto 24px; color: var(--text-dim); line-height: 1.6; }
+    .guild-path-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: left; }
+    .guild-path { display: block; min-height: 118px; padding: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); text-decoration: none; color: inherit; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
+    .guild-path:hover, .guild-path:focus-visible { transform: translateY(-3px); border-color: var(--accent); background: rgba(212,175,55,.08); outline: none; }
+    .guild-path strong { display: block; margin-bottom: 7px; color: var(--text); }
+    .guild-path span { display: block; color: var(--text-dim); font-size: .84rem; line-height: 1.45; }
+    .guild-pulse-note { margin: 18px 0 0; color: var(--text-muted); font-size: .82rem; }
+    .guild-pulse-note a { color: var(--accent); font-weight: 700; }
+    .quest-empty { grid-column: 1 / -1; padding: 28px; border: 1px dashed var(--accent); border-radius: var(--radius); background: rgba(212,175,55,.06); text-align: center; }
+    .quest-empty strong { display: block; color: var(--text); margin-bottom: 8px; }
+    .quest-empty p { max-width: 560px; margin: 0 auto 16px; color: var(--text-dim); line-height: 1.55; }
+    @media(max-width:760px){ .guild-path-grid{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:480px){ .guild-path-grid{grid-template-columns:1fr} .guild-path{min-height:auto} }
   </style>
 </head>
 <body>
 
   <!-- ANNOUNCEMENTS -->
-  <section id="announcementsArea" style="max-width:800px;margin:0 auto;padding:20px 20px 0;"></section>
+  <section id="announcementsArea" aria-live="polite" style="max-width:800px;margin:0 auto;padding:20px 20px 0;"></section>
 
   <!-- HERO -->
   <section class="hero">
@@ -440,6 +457,22 @@
         <a href="quest-post.html" class="btn btn-outline">Post a Task</a>
       </div>
       <p class="hero-cta-note">New to the Guild? <a href="getting-started.html">See how it works</a> · <a href="worker-post.html">Offer your skills</a> · <a href="guild-world.html">Explore the world</a></p>
+    </div>
+  </section>
+
+  <!-- CONVERSATION STARTER -->
+  <section class="guild-pulse" aria-labelledby="guildPulseTitle">
+    <div class="guild-pulse-inner">
+      <span class="guild-pulse-kicker">Start with one honest sentence</span>
+      <h2 id="guildPulseTitle">What brought you to the Guild?</h2>
+      <p class="guild-pulse-intro">You do not need to understand everything before joining. Choose the path that sounds most like you, and the Guild gives you a place to begin.</p>
+      <div class="guild-path-grid">
+        <a class="guild-path" href="quest-post.html"><strong>I need help</strong><span>Turn a real problem into a quest and invite someone to help.</span></a>
+        <a class="guild-path" href="worker-post.html"><strong>I can help</strong><span>Offer a skill, a few hours, or practical support to another member.</span></a>
+        <a class="guild-path" href="fairy-wishes.html"><strong>I have an idea</strong><span>See what members want next and add your voice to the Guild’s direction.</span></a>
+        <a class="guild-path" href="guild-hall.html"><strong>I want to meet people</strong><span>Step into the Hall, ask a question, and find the conversation already happening.</span></a>
+      </div>
+      <p class="guild-pulse-note">Not sure where to begin? <a href="getting-started.html">Read the one-minute guide</a> or <a href="auth.html">create a free account</a>.</p>
     </div>
   </section>
 
@@ -470,7 +503,7 @@
   <section id="recentQuests" style="padding:60px 20px;max-width:900px;margin:0 auto">
     <h2 style="text-align:center;font-size:1.8rem;color:var(--accent);margin-bottom:8px">Live Quest Board</h2>
     <p style="text-align:center;color:var(--text-dim);margin-bottom:32px;font-size:1rem">See what members are asking for and offering. Join when you find something useful.</p>
-    <div id="recentQuestsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
+    <div id="recentQuestsGrid" aria-live="polite" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
     <div style="text-align:center;margin-top:32px">
       <a href="quest-board.html" class="btn btn-primary">View All Quests</a>
       <a href="auth.html" class="btn btn-outline" style="margin-left:8px">Sign Up to Accept</a>
@@ -732,8 +765,8 @@
     (async function() {
       try {
         const { data: anns } = await window.sb.rpc('get_active_announcements', { p_limit: 3 });
+        const area = document.getElementById('announcementsArea');
         if (anns && anns.length > 0) {
-          const area = document.getElementById('announcementsArea');
           area.innerHTML = anns.map(a => {
             const icon = a.priority === 'urgent' ? '🚨' : a.priority === 'important' ? '⚠️' : '📢';
             const time = new Date(a.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -745,8 +778,14 @@
                 <div class="ann-time">Posted ${time}</div>
               </div>`;
           }).join('');
+        } else {
+          area.innerHTML = `<div class="announcement-banner" role="status"><div class="ann-title">📜 Founding Season dispatch</div><div class="ann-content">The Guild is still small enough for every early member to be heard. Bring one useful request, one skill, or one idea for what should exist next.</div><div class="ann-time"><a href="guild-world.html">See how the world is being shaped</a></div></div>`;
         }
-      } catch(e) { console.log('Announcements load error:', e); }
+      } catch(e) {
+        const area = document.getElementById('announcementsArea');
+        if (area) area.innerHTML = `<div class="announcement-banner" role="status"><div class="ann-title">📜 The Guild is listening</div><div class="ann-content">We are in the founding season. If the Guild feels quiet, that is an invitation to start the first useful conversation.</div><div class="ann-time"><a href="auth.html">Join the founding members</a></div></div>`;
+        console.log('Announcements load error:', e);
+      }
     })();
 
     // Live stats counter
@@ -789,9 +828,13 @@
           .order('created_at', { ascending: false })
           .limit(6);
 
-        if (!quests || quests.length === 0) return;
-
         const grid = document.getElementById('recentQuestsGrid');
+        if (!quests || quests.length === 0) {
+          grid.innerHTML = `<div class="quest-empty"><strong>The board is waiting for its next story.</strong><p>There are no public quests to browse yet. Post the first request, offer a skill, or enter the Hall and tell the Guild what would make it useful to you.</p><a href="quest-post.html" class="btn btn-primary">Post the First Quest</a> <a href="guild-hall.html" class="btn btn-outline">Say Hello in the Hall</a></div>`;
+          return;
+        }
+
+        
         grid.innerHTML = quests.map(q => {
           const badge = q.payment_type === 'coins' ? '🪙 ' + q.coin_amount + ' FC' : q.payment_type === 'upi' ? '₹' + q.upi_amount : '🎁 Free';
           const badgeBg = q.payment_type === 'coins' ? 'rgba(234,179,8,0.12)' : q.payment_type === 'upi' ? 'rgba(249,115,22,0.12)' : 'rgba(16,185,129,0.12)';
@@ -814,7 +857,11 @@
               <div style="font-size:0.75rem;color:var(--text-muted)">by ${escapeHtml(poster)}${verified}</div>
             </div>`;
         }).join('');
-      } catch(e) { console.log('Recent quests error:', e); }
+      } catch(e) {
+        const grid = document.getElementById('recentQuestsGrid');
+        if (grid) grid.innerHTML = `<div class="quest-empty"><strong>The board is taking a quiet moment.</strong><p>We could not load the public quest board right now. You can still start the conversation by posting a request or visiting the Guild Hall.</p><a href="quest-post.html" class="btn btn-primary">Start a Quest</a> <a href="guild-hall.html" class="btn btn-outline">Visit the Hall</a></div>`;
+        console.log('Recent quests error:', e);
+      }
     })();
   </script>
 </body>
