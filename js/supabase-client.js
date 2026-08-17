@@ -105,22 +105,24 @@
 
   // Shared: require auth — redirects to auth.html if not logged in
   // Returns the user object or null
-  window.requireAuth = async function () {
+  window.requireAuth = async function (options = {}) {
+    const silent = options.silent === true;
+    const redirect = options.redirect !== false;
     if (!window.sb?.auth) {
-      window.showToast?.('The account service is unavailable. Check your connection and reload.', 'error', 5000);
+      if (!silent) window.showToast?.('The account service is unavailable. Check your connection and reload.', 'error', 5000);
       return null;
     }
     try {
       const { data: { user }, error } = await window.sb.auth.getUser();
       if (error) throw error;
       if (!user) {
-        window.location.href = 'auth.html';
+        if (redirect) window.location.href = 'auth.html';
         return null;
       }
       return user;
     } catch (error) {
       console.error('[Kindred Guild] Authentication check failed:', error);
-      window.showToast?.('We could not verify your session. Please try again.', 'error', 5000);
+      if (!silent) window.showToast?.('We could not verify your session. Please try again.', 'error', 5000);
       return null;
     }
   };

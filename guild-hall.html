@@ -83,6 +83,10 @@
     }
 
     .chat-notice { text-align:center; padding:30px; color:var(--text-dim); font-size:0.85rem; }
+    .hall-join-card { max-width:560px; margin:auto; padding:26px; text-align:center; background:linear-gradient(135deg,rgba(212,175,55,.1),rgba(255,255,255,.025)); border:1px solid rgba(212,175,55,.3); border-radius:var(--radius); }
+    .hall-join-card h3 { margin:0 0 8px; color:var(--accent); font-size:1.05rem; }
+    .hall-join-card p { margin:0 auto 16px; max-width:440px; color:var(--text-dim); line-height:1.55; font-size:.86rem; }
+    .hall-join-card .hall-prompt { margin:14px auto 18px; padding:10px 12px; border-left:2px solid var(--accent); background:rgba(255,255,255,.03); color:var(--text); font-size:.84rem; text-align:left; }
     .system-msg { text-align:center; font-size:0.75rem; color:var(--text-dim); padding:6px 0; opacity:0.7; }
     .deleted-msg { font-style:italic; color:var(--text-dim); opacity:0.5; font-size:0.8rem; }
   </style>
@@ -179,7 +183,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js"></script>
+  <script src="js/supabase-client.js?v=public-preview-20260817"></script>
   <script>
     let currentUser = null;
     let currentProfile = null;
@@ -193,8 +197,12 @@
 
     // Init
     (async function init() {
-      const user = await window.requireAuth();
-      if (!user) return;
+      loadGuildAnnouncements();
+      const user = await window.requireAuth({ silent: true, redirect: false });
+      if (!user) {
+        showPublicHallPreview();
+        return;
+      }
       currentUser = user;
       currentProfile = await window.getUserProfile(user.id);
       isAdmin = currentProfile?.is_admin || false;
@@ -209,8 +217,19 @@
         await selectChannel(channels[0].id);
       }
       subscribeToMessages();
-      loadGuildAnnouncements();
     })();
+
+    function showPublicHallPreview() {
+      const messagesEl = document.getElementById('chatMessages');
+      const input = document.getElementById('messageInput');
+      const send = document.querySelector('.chat-input-form button');
+      document.getElementById('chatChannelDesc').textContent = 'A public preview of the Guild conversation';
+      messagesEl.innerHTML = `<div class="hall-join-card"><h3>🏰 The Hall is waiting for your voice</h3><p>This is where members ask small questions, share progress, and find people to build with. You can look around first—no pressure.</p><div class="hall-prompt">“What would make Kindred Guild useful to you this week?”</div><a class="btn btn-primary" href="auth.html">Join the conversation</a> <a class="btn btn-outline" href="guild-world.html">Learn about the Guild</a></div>`;
+      input.disabled = true;
+      input.placeholder = 'Join the Guild to write here';
+      send.disabled = true;
+      send.setAttribute('aria-disabled', 'true');
+    }
 
     // Load announcements
     async function loadGuildAnnouncements() {
