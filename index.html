@@ -118,6 +118,13 @@
     .world-invite { padding:48px 20px; background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(255,255,255,.015)); border-block:1px solid var(--border); }
     .world-invite-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:28px; }
     .world-invite-kicker { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .stats-strip { padding:40px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
+    .stats-strip-inner { max-width:800px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:20px; text-align:center; }
+    .stat-item { padding:12px 8px; border-radius:var(--radius-sm); }
+    .stat-item .stat-value { font-size:2rem; font-weight:800; color:var(--accent); }
+    .stat-item .stat-label { font-size:.8rem; color:var(--text-dim); margin-top:4px; }
+    .admin-stats-heading { max-width:620px; margin:0 auto 14px; padding:0 16px; text-align:center; color:var(--text-dim); font-size:0.82rem; line-height:1.45; }
+    .admin-stats-heading strong { display:block; color:var(--accent); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; margin-bottom:4px; }
     .world-invite h2 { margin:8px 0; color:var(--text); font-size:clamp(1.35rem,3vw,2rem); }
     .world-invite p { max-width:650px; margin:0; color:var(--text-dim); line-height:1.6; }
     @media(max-width:640px){ .world-invite-inner{flex-direction:column;align-items:flex-start}.world-invite .btn{width:100%;text-align:center} }
@@ -129,6 +136,10 @@
       .hero .tagline{font-size:1.05rem;}
       .hero .sub-tagline{font-size:.9rem;margin-bottom:22px;}
       .hero-cta-note{font-size:.8rem;}
+      .stats-strip{padding:24px 12px;}
+      .stats-strip-inner{grid-template-columns:repeat(2,1fr);gap:8px;}
+      .stat-item{background:rgba(255,255,255,.02);}
+      .stat-item .stat-value{font-size:1.5rem;}
     }
 
     /* Animated stars background */
@@ -465,6 +476,17 @@
     </div>
   </section>
 
+  <!-- ADMIN-ONLY ACTIVITY -->
+  <section id="adminStats" class="stats-strip" aria-label="Administrator Guild activity" hidden>
+    <p class="admin-stats-heading"><strong>Administrator view</strong>Private activity context for Guild operations.</p>
+    <div class="stats-strip-inner">
+      <div class="stat-item"><div id="statMembers" class="stat-value">—</div><div class="stat-label">Guild Members</div></div>
+      <div class="stat-item"><div id="statQuests" class="stat-value">—</div><div class="stat-label">Quests Posted</div></div>
+      <div class="stat-item"><div id="statCompleted" class="stat-value">—</div><div class="stat-label">Tasks Completed</div></div>
+      <div class="stat-item"><div id="statCoins" class="stat-value">—</div><div class="stat-label">Coins Earned</div></div>
+    </div>
+  </section>
+
   <!-- MEMBER-SHAPED WORLD ENTRY -->
   <section class="world-invite" aria-labelledby="worldInviteTitle">
     <div class="world-invite-inner">
@@ -765,6 +787,47 @@
         console.log('Announcements load error:', e);
       }
     })();
+
+    // Keep activity numbers out of the public homepage. Only an authenticated
+    // administrator receives the profile-gated queries and sees this section.
+    (async function() {
+      const section = document.getElementById('adminStats');
+      if (!section || !window.requireAuth || !window.getUserProfile) return;
+      try {
+        const user = await window.requireAuth({ silent: true, redirect: false });
+        if (!user) return;
+        const profile = await window.getUserProfile(user.id);
+        if (!profile?.is_admin) return;
+
+        section.hidden = false;
+        section.setAttribute('aria-hidden', 'false');
+        const [members, quests, completed, coins] = await Promise.all([
+          window.sb.from('user_profiles').select('user_id', { count: 'exact', head: true }),
+          window.sb.from('quests').select('id', { count: 'exact', head: true }),
+          window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+          window.sb.from('fairy_ledger').select('amount').eq('reason', 'quest_earning')
+        ]);
+        const totalCoins = coins.data ? coins.data.reduce((sum, row) => sum + (row.amount || 0), 0) : 0;
+        animateAdminCounter('statMembers', members.count || 0);
+        animateAdminCounter('statQuests', quests.count || 0);
+        animateAdminCounter('statCompleted', completed.count || 0);
+        animateAdminCounter('statCoins', totalCoins);
+      } catch (error) {
+        console.log('Admin stats load error:', error);
+      }
+    })();
+
+    function animateAdminCounter(id, target) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      let current = 0;
+      const step = Math.max(1, Math.floor(target / 40));
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(timer); }
+        el.textContent = current >= 1000 ? (current / 1000).toFixed(1) + 'k' : current;
+      }, 30);
+    }
 
     // Load recent quests preview (no auth required)
     (async function() {
