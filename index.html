@@ -789,7 +789,8 @@
     })();
 
     // Keep activity numbers out of the public homepage. Only an authenticated
-    // administrator receives the profile-gated queries and sees this section.
+    // administrator can pass both the profile gate and the database-side RPC
+    // authorization check that returns the summary.
     (async function() {
       const section = document.getElementById('adminStats');
       if (!section || !window.requireAuth || !window.getUserProfile) return;
@@ -799,19 +800,17 @@
         const profile = await window.getUserProfile(user.id);
         if (!profile?.is_admin) return;
 
+        const { data: stats, error: statsError } = await window.sb.rpc('get_admin_activity_stats');
+        if (statsError) throw statsError;
+        const summary = Array.isArray(stats) ? stats[0] : stats;
+        if (!summary) throw new Error('No administrator activity summary returned.');
+
         section.hidden = false;
         section.setAttribute('aria-hidden', 'false');
-        const [members, quests, completed, coins] = await Promise.all([
-          window.sb.from('user_profiles').select('user_id', { count: 'exact', head: true }),
-          window.sb.from('quests').select('id', { count: 'exact', head: true }),
-          window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
-          window.sb.from('fairy_ledger').select('amount').eq('reason', 'quest_earning')
-        ]);
-        const totalCoins = coins.data ? coins.data.reduce((sum, row) => sum + (row.amount || 0), 0) : 0;
-        animateAdminCounter('statMembers', members.count || 0);
-        animateAdminCounter('statQuests', quests.count || 0);
-        animateAdminCounter('statCompleted', completed.count || 0);
-        animateAdminCounter('statCoins', totalCoins);
+        animateAdminCounter('statMembers', summary.member_count || 0);
+        animateAdminCounter('statQuests', summary.quest_count || 0);
+        animateAdminCounter('statCompleted', summary.completed_count || 0);
+        animateAdminCounter('statCoins', summary.coins_earned || 0);
       } catch (error) {
         console.log('Admin stats load error:', error);
       }
