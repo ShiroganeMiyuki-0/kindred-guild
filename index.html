@@ -122,11 +122,6 @@
     .world-invite p { max-width:650px; margin:0; color:var(--text-dim); line-height:1.6; }
     @media(max-width:640px){ .world-invite-inner{flex-direction:column;align-items:flex-start}.world-invite .btn{width:100%;text-align:center} }
     .hero-cta-note a { color:var(--accent); font-weight:700; }
-    .stats-strip { padding:40px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
-    .stats-strip-inner { max-width:800px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:20px; text-align:center; }
-    .stat-item { padding:12px 8px; border-radius:var(--radius-sm); }
-    .stat-item .stat-value { font-size:2rem; font-weight:800; color:var(--accent); }
-    .stat-item .stat-label { font-size:.8rem; color:var(--text-dim); margin-top:4px; }
     @media(max-width:640px){
       .hero{padding:44px 16px 40px;}
       .hero-logo{width:92px;height:92px;margin-bottom:12px;}
@@ -134,10 +129,6 @@
       .hero .tagline{font-size:1.05rem;}
       .hero .sub-tagline{font-size:.9rem;margin-bottom:22px;}
       .hero-cta-note{font-size:.8rem;}
-      .stats-strip{padding:24px 12px;}
-      .stats-strip-inner{grid-template-columns:repeat(2,1fr);gap:8px;}
-      .stat-item{background:rgba(255,255,255,.02);}
-      .stat-item .stat-value{font-size:1.5rem;}
     }
 
     /* Animated stars background */
@@ -407,10 +398,8 @@
       .hero .sub-tagline { font-size: 0.85rem; margin-bottom: 20px; }
       .cta-group { flex-direction: column; }
       .cta-group .btn { width: 100%; }
-      #liveStats > div { grid-template-columns: repeat(2, 1fr) !important; }
     }
 
-    .early-guild-note { max-width:620px; margin:0 auto 14px; padding:0 16px; text-align:center; color:var(--text-dim); font-size:0.82rem; line-height:1.45; }
     /* Gradient divider between sections */
     .section-divider {
       height: 1px;
@@ -473,17 +462,6 @@
         <a class="guild-path" href="guild-hall.html"><strong>I want to meet people</strong><span>Step into the Hall, ask a question, and find the conversation already happening.</span></a>
       </div>
       <p class="guild-pulse-note">Not sure where to begin? <a href="getting-started.html">Read the one-minute guide</a> or <a href="auth.html">create a free account</a>.</p>
-    </div>
-  </section>
-
-  <!-- LIVE STATS COUNTER -->
-  <section id="liveStats" class="stats-strip" aria-label="Early Guild activity">
-    <p class="early-guild-note">The Guild is in its founding season. Every quest, helper, and wish helps shape what comes next.</p>
-    <div class="stats-strip-inner">
-      <div class="stat-item"><div id="statMembers" class="stat-value">—</div><div class="stat-label">Guild Members</div></div>
-      <div class="stat-item"><div id="statQuests" class="stat-value">—</div><div class="stat-label">Quests Posted</div></div>
-      <div class="stat-item"><div id="statCompleted" class="stat-value">—</div><div class="stat-label">Tasks Completed</div></div>
-      <div class="stat-item"><div id="statCoins" class="stat-value">—</div><div class="stat-label">Coins Earned</div></div>
     </div>
   </section>
 
@@ -787,35 +765,6 @@
         console.log('Announcements load error:', e);
       }
     })();
-
-    // Live stats counter
-    (async function() {
-      try {
-        const [members, quests, completed, coins] = await Promise.all([
-          window.sb.from('user_profiles').select('user_id', { count: 'exact', head: true }),
-          window.sb.from('quests').select('id', { count: 'exact', head: true }),
-          window.sb.from('quests').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
-          window.sb.from('fairy_ledger').select('amount').eq('reason', 'quest_earning')
-        ]);
-        const totalCoins = coins.data ? coins.data.reduce((s, r) => s + (r.amount || 0), 0) : 0;
-        animateCounter('statMembers', members.count || 0);
-        animateCounter('statQuests', quests.count || 0);
-        animateCounter('statCompleted', completed.count || 0);
-        animateCounter('statCoins', totalCoins);
-      } catch(e) { console.log('Stats load error:', e); }
-    })();
-
-    function animateCounter(id, target) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      let current = 0;
-      const step = Math.max(1, Math.floor(target / 40));
-      const timer = setInterval(() => {
-        current += step;
-        if (current >= target) { current = target; clearInterval(timer); }
-        el.textContent = current >= 1000 ? (current/1000).toFixed(1) + 'k' : current;
-      }, 30);
-    }
 
     // Load recent quests preview (no auth required)
     (async function() {
