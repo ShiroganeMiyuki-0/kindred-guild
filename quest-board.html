@@ -239,6 +239,13 @@
     .guild-announcement strong { color:var(--accent); display:block; margin-bottom:4px; }
     .guild-announcement p { color:var(--text-dim); font-size:.88rem; line-height:1.5; margin:0; }
     .guild-announcement a { white-space:nowrap; font-weight:700; }
+    .board-status { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:-8px 0 14px; min-height:28px; color:var(--text-dim); font-size:.82rem; }
+    .board-status strong { color:var(--text); }
+    .board-status .status-context { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+    .board-status .status-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border:1px solid var(--border); border-radius:999px; background:var(--surface-2); color:var(--text-dim); }
+    .board-status .status-clear { border:0; background:none; color:var(--accent); cursor:pointer; font:inherit; font-weight:700; padding:3px 0; }
+    .board-status .status-clear:hover { text-decoration:underline; }
+    @media(max-width:640px){ .board-status{align-items:flex-start; flex-direction:column; gap:6px;} }
   </style>
 <meta property="og:title" content="Kindred Guild — Quest Board">
   <meta property="og:description" content="Browse and accept community tasks. Free or paid. Protected by escrow.">
@@ -297,6 +304,10 @@
         <button class="btn btn-ghost btn-sm" onclick="resetFilters()">Clear</button>
         <button class="btn btn-ghost btn-sm" onclick="loadQuests()">Refresh</button>
       </div>
+    </div>
+
+    <div id="boardStatus" class="board-status" role="status" aria-live="polite" aria-atomic="true">
+      <div class="status-context"><strong>Loading quests…</strong></div>
     </div>
 
     <div class="quest-grid" id="questGrid">

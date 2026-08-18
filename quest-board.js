@@ -16,6 +16,41 @@ const questGrid = document.getElementById('questGrid');
 const filterType = document.getElementById('filterType');
 const sortBy = document.getElementById('sortBy');
 const searchInput = document.getElementById('searchInput');
+const boardStatus = document.getElementById('boardStatus');
+
+function currentViewLabel() {
+  const labels = { open: 'Available', my_active: 'My Active', my_posted: 'My Posted', my_completed: 'Completed', bookmarked: 'Bookmarked', expired: 'Expired' };
+  return labels[currentView] || 'Quest Board';
+}
+
+function activeBoardFilters() {
+  const filters = [];
+  if (searchInput?.value.trim()) filters.push(`Search: “${escapeHtml(searchInput.value.trim())}”`);
+  if (activeTagFilter) filters.push(`Tag: ${escapeHtml(activeTagFilter)}`);
+  if (filterType?.value && filterType.value !== 'all') {
+    const option = filterType.options[filterType.selectedIndex];
+    filters.push(option ? escapeHtml(option.textContent.trim()) : escapeHtml(filterType.value));
+  }
+  return filters;
+}
+
+function updateBoardStatus(state = {}) {
+  if (!boardStatus) return;
+  if (state.loading) {
+    boardStatus.innerHTML = '<div class="status-context"><strong>Loading quests…</strong><span>Finding the latest opportunities.</span></div>';
+    return;
+  }
+  if (state.error) {
+    boardStatus.innerHTML = '<div class="status-context"><strong>Quest board unavailable.</strong><span>Try refreshing in a moment.</span></div>';
+    return;
+  }
+  const filters = activeBoardFilters();
+  const count = quests.length;
+  const noun = count === 1 ? 'quest' : 'quests';
+  const chips = filters.map(filter => `<span class="status-chip">${filter}</span>`).join('');
+  const clear = filters.length ? '<button class="status-clear" type="button" onclick="resetFilters()">Clear filters</button>' : '';
+  boardStatus.innerHTML = `<div class="status-context"><strong>${count} ${noun}</strong><span>in ${currentViewLabel()}</span>${chips}</div>${clear}`;
+}
 
 (async function init() {
   const user = await window.requireAuth({ silent: true, redirect: false });
@@ -142,7 +177,8 @@ window.switchView = function (viewName) {
 };
 
 async function loadQuests() {
-  questGrid.innerHTML = '<div class="empty-state"><h2>Loading...</h2></div>';
+  updateBoardStatus({ loading: true });
+  questGrid.innerHTML = '<div class="empty-state"><h2>Loading...</h2><p>Finding the latest opportunities…</p></div>';
 
   let query = window.sb
     .from('quests')
@@ -161,7 +197,7 @@ async function loadQuests() {
   } else if (currentView === 'my_completed') {
     query = query.eq('status', 'approved');
   } else if (currentView === 'bookmarked') {
-    if (bookmarkedIds.length === 0) { quests = []; renderQuests(); return; }
+    if (bookmarkedIds.length === 0) { quests = []; updateBoardStatus(); renderQuests(); return; }
     query = query.in('id', bookmarkedIds);
   } else if (currentView === 'expired') {
     query = query.eq('status', 'expired').eq('is_deleted', false);
@@ -179,7 +215,8 @@ async function loadQuests() {
   const { data, error } = await query;
 
   if (error) {
-    questGrid.innerHTML = `<div class="empty-state"><h2>Error loading board</h2><p>${error.message}</p></div>`;
+    updateBoardStatus({ error: true });
+    questGrid.innerHTML = `<div class="empty-state"><h2>We could not load the board.</h2><p>${escapeHtml(error.message || 'Please try again.')}</p><button class="btn btn-outline" style="margin-top:12px" onclick="loadQuests()">Try Again</button></div>`;
     return;
   }
 
@@ -211,6 +248,7 @@ async function loadQuests() {
     });
   }
 
+  updateBoardStatus();
   renderQuests();
 }
 
@@ -241,17 +279,17 @@ function formatDate(dateStr) {
 
 function renderQuests() {
   if (quests.length === 0) {
+    const hasFilters = activeBoardFilters().length > 0;
     questGrid.innerHTML = currentUser ? `
       <div class="empty-state">
-        <h2>No Tasks Found</h2>
-        <p>Try different filters, or post a new task.</p>
-        <a href="quest-post.html" class="btn btn-primary" style="margin-top:12px">Post a Task</a>
+        <h2>${hasFilters ? 'No quests match those filters.' : 'No quests here yet.'}</h2>
+        <p>${hasFilters ? 'Try clearing a filter or searching for a different kind of help.' : 'Post a new task and give the Guild its next story.'}</p>
+        ${hasFilters ? '<button class="btn btn-outline" style="margin-top:12px" onclick="resetFilters()">Clear Filters</button>' : '<a href="quest-post.html" class="btn btn-primary" style="margin-top:12px">Post a Task</a>'}
       </div>` : `
       <div class="empty-state">
-        <h2>The board is waiting for its next story.</h2>
-        <p>There are no open public quests right now. Join the Guild to accept the next one, offer a skill, or post the first request.</p>
-        <a href="auth.html" class="btn btn-primary" style="margin-top:12px">Join the Guild</a>
-        <a href="guild-world.html" class="btn btn-outline" style="margin-top:12px">See How the Guild Works</a>
+        <h2>${hasFilters ? 'No public quests match those filters.' : 'The board is waiting for its next story.'}</h2>
+        <p>${hasFilters ? 'Clear the filters to see the full public preview.' : 'There are no open public quests right now. Join the Guild to accept the next one, offer a skill, or post the first request.'}</p>
+        ${hasFilters ? '<button class="btn btn-outline" style="margin-top:12px" onclick="resetFilters()">Clear Filters</button>' : '<a href="auth.html" class="btn btn-primary" style="margin-top:12px">Join the Guild</a><a href="guild-world.html" class="btn btn-outline" style="margin-top:12px">See How the Guild Works</a>'}
       </div>`;
     return;
   }
