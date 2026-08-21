@@ -241,6 +241,7 @@
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
         { name: 'Getting Started', icon: 'fa-book-open', file: 'getting-started.html' },
         { name: 'Guild World', icon: 'fa-globe', file: 'guild-world.html' },
+        { name: 'Motion Duel Arena', icon: 'fa-gamepad', file: 'motion-duel-arena.html' },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
         { name: 'Leaderboard', icon: 'fa-trophy', file: 'leaderboard.html' },
         { name: 'Activity', icon: 'fa-newspaper', file: 'activity.html' },
@@ -259,6 +260,7 @@
         { name: 'Post Quest', icon: 'fa-circle-plus', file: 'quest-post.html', primary: true },
         { name: 'Getting Started', icon: 'fa-book-open', file: 'getting-started.html' },
         { name: 'Guild World', icon: 'fa-globe', file: 'guild-world.html' },
+        { name: 'Motion Duel Arena', icon: 'fa-gamepad', file: 'motion-duel-arena.html' },
         { name: 'Find People', icon: 'fa-magnifying-glass', file: 'search.html' },
         { name: 'Friends & Groups', icon: 'fa-user-group', file: 'friends.html' },
         { name: 'Fairy Wishes', icon: 'fa-wand-magic-sparkles', file: 'fairy-wishes.html' },
@@ -535,6 +537,7 @@
         const pageNavLinks = [
             { name: 'Quest Board', icon: '⚔️', file: 'quest-board.html' },
             { name: 'Guild Hall', icon: '🏰', file: 'guild-hall.html' },
+            { name: 'Motion Duel Arena', icon: '🎮', file: 'motion-duel-arena.html' },
             { name: 'Messages', icon: '💬', file: 'dm.html' },
             { name: 'Find People', icon: '🔍', file: 'search.html' },
             { name: 'Friends', icon: '👥', file: 'friends.html' },
