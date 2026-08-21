@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kindred Guild — Guild Commons</title>
+  <meta name="description" content="A gentle community corner for introductions, kindred prompts, and small buddy quests.">
+  <link rel="stylesheet" href="css/globals.css">
+  <link rel="stylesheet" href="css/fixes.css">
+  <style>
+    :root{--commons-cream:#f6e9c8;--commons-ink:#201a2a;--commons-plum:#33243e;--commons-rose:#b86b73;--commons-sage:#7e9b87;}
+    body{background:linear-gradient(180deg,#17131e 0%,#211925 38%,#17131e 100%);color:var(--text);min-height:100vh;}
+    .commons-shell{max-width:1180px;margin:0 auto;padding:24px 20px 72px;}
+    .commons-hero{position:relative;overflow:hidden;padding:clamp(26px,5vw,58px);border:1px solid rgba(212,175,55,.25);border-radius:24px;background:radial-gradient(circle at 85% 12%,rgba(184,107,115,.28),transparent 35%),radial-gradient(circle at 8% 90%,rgba(126,155,135,.20),transparent 34%),linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.025));box-shadow:0 22px 60px rgba(0,0,0,.24);}
+    .commons-hero:after{content:"";position:absolute;width:220px;height:220px;right:-60px;bottom:-110px;border:1px solid rgba(246,233,200,.18);border-radius:50%;box-shadow:0 0 0 18px rgba(246,233,200,.04),0 0 0 36px rgba(246,233,200,.025);pointer-events:none;}
+    .commons-kicker{display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;}
+    .commons-kicker:before{content:"";width:26px;height:1px;background:var(--accent);}
+    .commons-hero h1{max-width:720px;margin:14px 0 10px;color:var(--commons-cream);font-family:Georgia,serif;font-size:clamp(2rem,5vw,4.3rem);line-height:1.02;letter-spacing:-.03em;}
+    .commons-hero p{max-width:680px;margin:0;color:#d9ced9;font-size:1.02rem;line-height:1.7;}
+    .commons-hero-note{margin-top:18px!important;color:#bcaeba!important;font-size:.86rem!important;}
+    .commons-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:18px;margin-top:18px;align-items:start;}
+    .commons-card{min-width:0;padding:22px;border:1px solid rgba(255,255,255,.10);border-radius:18px;background:rgba(28,22,36,.82);box-shadow:0 14px 32px rgba(0,0,0,.16);}
+    .commons-card.wide{grid-column:1/-1;}
+    .commons-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:16px;}
+    .commons-card h2{margin:0;color:var(--commons-cream);font-family:Georgia,serif;font-size:1.55rem;line-height:1.15;}
+    .commons-card-intro{margin:5px 0 0;color:#bcaeba;font-size:.88rem;line-height:1.5;}
+    .commons-badge{flex:0 0 auto;padding:5px 9px;border:1px solid rgba(212,175,55,.25);border-radius:999px;color:var(--accent);font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+    .circle-list,.prompt-response-list,.buddy-list{display:grid;gap:10px;}
+    .circle-item,.prompt-response,.buddy-item{min-width:0;padding:13px;border-radius:13px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);}
+    .circle-top,.response-top,.buddy-top{display:flex;align-items:center;gap:10px;min-width:0;}
+    .commons-avatar{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,rgba(212,175,55,.35),rgba(184,107,115,.28));color:var(--commons-cream);font-weight:800;overflow:hidden;}
+    .commons-avatar img{width:100%;height:100%;object-fit:cover;}
+    .commons-name{min-width:0;overflow-wrap:anywhere;color:var(--commons-cream);font-weight:700;}
+    .commons-handle{color:#9f8fa3;font-size:.74rem;}
+    .circle-hello,.response-text,.buddy-description{margin:9px 0 0;color:#d8cdd9;font-size:.88rem;line-height:1.55;overflow-wrap:anywhere;}
+    .circle-looking{margin:8px 0 0;padding-left:10px;border-left:2px solid rgba(126,155,135,.65);color:#b8cdbd;font-size:.78rem;line-height:1.45;overflow-wrap:anywhere;}
+    .commons-form{display:grid;gap:9px;margin-top:14px;}
+    .commons-form[hidden],#welcomeEditor[hidden],#buddyEditor[hidden]{display:none!important;}
+    .commons-form label{color:#bcaeba;font-size:.76rem;font-weight:700;letter-spacing:.03em;}
+    .commons-form input,.commons-form textarea{width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.13);border-radius:10px;background:rgba(11,9,16,.7);color:var(--commons-cream);padding:10px 11px;font:inherit;outline:none;resize:vertical;}
+    .commons-form input:focus,.commons-form textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(212,175,55,.10);}
+    .commons-form textarea{min-height:82px;}
+    .commons-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:2px;}
+    .commons-button{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:9px 14px;border:1px solid rgba(212,175,55,.45);border-radius:10px;background:linear-gradient(135deg,#d5b44a,#b88a37);color:#211a1d;font-weight:800;cursor:pointer;transition:transform .16s ease,filter .16s ease;}
+    .commons-button:hover{filter:brightness(1.08);transform:translateY(-1px);}
+    .commons-button.secondary{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#dfd4df;}
+    .commons-button:disabled{cursor:not-allowed;opacity:.55;transform:none;}
+    .commons-link{color:var(--accent);font-weight:700;text-decoration:none;}
+    .commons-link:hover{text-decoration:underline;}
+    .commons-empty{padding:18px;border:1px dashed rgba(212,175,55,.35);border-radius:12px;color:#bcaeba;font-size:.86rem;line-height:1.55;text-align:center;}
+    .commons-auth-note{margin-top:12px;color:#9f8fa3;font-size:.78rem;line-height:1.45;}
+    .prompt-quote{margin:5px 0 16px;color:var(--commons-cream);font-family:Georgia,serif;font-size:1.28rem;line-height:1.35;}
+    .prompt-meta{color:#9f8fa3;font-size:.75rem;}
+    .buddy-item{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;}
+    .buddy-item-main{min-width:0;}
+    .buddy-title{margin:0;color:var(--commons-cream);font-size:1rem;line-height:1.35;overflow-wrap:anywhere;}
+    .buddy-note{margin:8px 0 0;color:#9fbea5;font-size:.76rem;line-height:1.4;overflow-wrap:anywhere;}
+    .buddy-join{flex:0 0 auto;min-height:34px;padding:7px 10px;border-radius:9px;border:1px solid rgba(126,155,135,.55);background:rgba(126,155,135,.15);color:#c9e0ce;font-weight:800;cursor:pointer;}
+    .buddy-join:hover{background:rgba(126,155,135,.25);}
+    .commons-status{min-height:18px;color:#bcaeba;font-size:.78rem;}
+    .commons-status.error{color:#ed9a9a;}.commons-status.success{color:#b7d6bc;}
+    @media(max-width:860px){.commons-grid{grid-template-columns:1fr;}.commons-card.wide{grid-column:auto;}}
+    @media(max-width:520px){.commons-shell{padding:14px 12px 54px;}.commons-card{padding:16px;}.commons-card-head{display:block;}.commons-badge{display:inline-block;margin-top:10px;}.buddy-item{display:block;}.buddy-join{margin-top:12px;width:100%;}.commons-hero h1{font-size:2.3rem;}.commons-hero p{font-size:.92rem;}}
+    @media(prefers-reduced-motion:reduce){.commons-button{transition:none;}.commons-button:hover{transform:none;}}
+  </style>
+</head>
+<body>
+  <main class="commons-shell">
+    <section class="commons-hero" aria-labelledby="commonsTitle">
+      <span class="commons-kicker">A softer corner of the Guild</span>
+      <h1 id="commonsTitle">Come as you are. Find one good next step.</h1>
+      <p>The Commons is for small introductions, thoughtful prompts, and two-person quests that do not need to become a performance. Look around quietly, say hello when you are ready, or invite someone into a tiny shared adventure.</p>
+      <p class="commons-hero-note">No rankings. No pressure to be interesting. Just a place to meet the people behind the quests.</p>
+    </section>
+
+    <section class="commons-grid" aria-label="Guild Commons features">
+      <article class="commons-card" aria-labelledby="circleTitle">
+        <div class="commons-card-head"><div><h2 id="circleTitle">Welcome Circle</h2><p class="commons-card-intro">A few honest sentences make the Guild feel inhabited.</p></div><span class="commons-badge">Say hello</span></div>
+        <div id="welcomeList" class="circle-list" aria-live="polite"><div class="commons-empty">Loading the latest hellos…</div></div>
+        <div id="welcomeEditor" hidden>
+          <form id="welcomeForm" class="commons-form">
+            <div><label for="welcomeHello">A little about you</label><textarea id="welcomeHello" maxlength="280" placeholder="I am learning…, making…, or hoping to…"></textarea></div>
+            <div><label for="welcomeLookingFor">What would feel useful here?</label><input id="welcomeLookingFor" maxlength="120" placeholder="A gentle place to begin"></div>
+            <div class="commons-actions"><button class="commons-button" type="submit">Share my hello</button><span id="welcomeStatus" class="commons-status" aria-live="polite"></span></div>
+          </form>
+        </div>
+        <p id="welcomeAuthNote" class="commons-auth-note">Want to add your voice? <a class="commons-link" href="auth.html">Create a free account</a>.</p>
+      </article>
+
+      <article class="commons-card" aria-labelledby="promptTitle">
+        <div class="commons-card-head"><div><h2 id="promptTitle">Kindred Prompt</h2><p class="commons-card-intro">One question, answered at your own pace.</p></div><span class="commons-badge">No perfect answer</span></div>
+        <div id="promptContent" aria-live="polite"><div class="commons-empty">Finding a gentle question…</div></div>
+        <form id="promptForm" class="commons-form" hidden>
+          <label for="promptResponse">Your response</label><textarea id="promptResponse" maxlength="500" placeholder="A sentence is enough. You can also just read along."></textarea>
+          <div class="commons-actions"><button class="commons-button" type="submit">Add my thought</button><span id="promptStatus" class="commons-status" aria-live="polite"></span></div>
+        </form>
+        <p id="promptAuthNote" class="commons-auth-note">Reading is welcome. <a class="commons-link" href="auth.html">Sign in</a> when you want to add a thought.</p>
+      </article>
+
+      <article class="commons-card wide" aria-labelledby="buddyTitle">
+        <div class="commons-card-head"><div><h2 id="buddyTitle">Buddy Quests</h2><p class="commons-card-intro">Small invitations for two people: swap feedback, learn together, or make something kind.</p></div><span class="commons-badge">Two people, no rush</span></div>
+        <div id="buddyList" class="buddy-list" aria-live="polite"><div class="commons-empty">Looking for gentle invitations…</div></div>
+        <div id="buddyEditor" hidden>
+          <form id="buddyForm" class="commons-form">
+            <div><label for="buddyQuestTitle">What would you like to do together?</label><input id="buddyQuestTitle" maxlength="100" placeholder="Swap feedback on a small project"></div>
+            <div><label for="buddyQuestDescription">Tell a future buddy what to expect</label><textarea id="buddyQuestDescription" maxlength="600" placeholder="I can share…, and I would love help with…"></textarea></div>
+            <div><label for="buddyQuestTime">Time note</label><input id="buddyQuestTime" maxlength="120" value="No rush — agree on a time together"></div>
+            <div class="commons-actions"><button class="commons-button" type="submit">Offer a buddy quest</button><span id="buddyStatus" class="commons-status" aria-live="polite"></span></div>
+          </form>
+        </div>
+        <p id="buddyAuthNote" class="commons-auth-note">Have a small idea? <a class="commons-link" href="auth.html">Join the Guild</a> to offer one.</p>
+      </article>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js?v=warmth-20260821"></script>
+  <script>
+    let currentUser = null;
+    let currentPrompt = null;
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+    }
+    function initials(name) { return String(name || 'Member').trim().charAt(0).toUpperCase() || 'M'; }
+    function personName(item) { return item.display_name || item.username || 'Member'; }
+    function avatar(item) { return item.avatar_url ? `<img src="${escapeHtml(item.avatar_url)}" alt="">` : escapeHtml(initials(personName(item))); }
+    function authMessage() { window.location.href = 'auth.html'; }
+    function setStatus(id, message, type='') { const el = document.getElementById(id); if (el) { el.textContent = message; el.className = `commons-status ${type}`; } }
+
+    function renderWelcome(items) {
+      const list = document.getElementById('welcomeList');
+      if (!items?.length) { list.innerHTML = '<div class="commons-empty">The Circle is waiting for its first few hellos. You could be one of them.</div>'; return; }
+      list.innerHTML = items.map(item => `<div class="circle-item"><div class="circle-top"><div class="commons-avatar">${avatar(item)}</div><div><div class="commons-name">${escapeHtml(personName(item))}</div><div class="commons-handle">@${escapeHtml(item.username || 'kindred')}</div></div></div><p class="circle-hello">${escapeHtml(item.hello)}</p><p class="circle-looking">Looking for: ${escapeHtml(item.looking_for)}</p></div>`).join('');
+    }
+
+    async function loadWelcome() {
+      const { data, error } = await window.sb.rpc('get_welcome_circle', { p_limit: 12 });
+      if (error) { document.getElementById('welcomeList').innerHTML = '<div class="commons-empty">The Circle is resting for a moment. Please try again soon.</div>'; return; }
+      renderWelcome(data || []);
+    }
+
+    async function loadPrompt() {
+      const { data, error } = await window.sb.rpc('get_kindred_prompt');
+      const wrap = document.getElementById('promptContent');
+      if (error || !data?.[0]) { wrap.innerHTML = '<div class="commons-empty">No prompt is waiting today. The quiet is welcome too.</div>'; return; }
+      currentPrompt = data[0];
+      wrap.innerHTML = `<p class="prompt-quote">“${escapeHtml(currentPrompt.prompt_text)}”</p><p class="prompt-meta">${currentPrompt.response_count || 0} kindred thought${currentPrompt.response_count === 1 ? '' : 's'} shared</p><div id="promptResponses" class="prompt-response-list" style="margin-top:14px"><div class="commons-empty">Loading thoughts…</div></div>`;
+      await loadPromptResponses();
+    }
+
+    async function loadPromptResponses() {
+      if (!currentPrompt) return;
+      const { data } = await window.sb.rpc('get_kindred_prompt_responses', { p_prompt_id: currentPrompt.id, p_limit: 12 });
+      const list = document.getElementById('promptResponses');
+      if (!list) return;
+      if (!data?.length) { list.innerHTML = '<div class="commons-empty">Be the first person to answer, or simply leave the prompt here for later.</div>'; return; }
+      list.innerHTML = data.map(item => `<div class="prompt-response"><div class="response-top"><div class="commons-avatar">${avatar(item)}</div><div><div class="commons-name">${escapeHtml(personName(item))}</div><div class="commons-handle">${new Date(item.created_at).toLocaleDateString([], {month:'short',day:'numeric'})}</div></div></div><p class="response-text">${escapeHtml(item.response_text)}</p></div>`).join('');
+    }
+
+    function renderBuddyQuests(items) {
+      const list = document.getElementById('buddyList');
+      if (!items?.length) { list.innerHTML = '<div class="commons-empty">No buddy quests yet. Offer a tiny invitation when something comes to mind.</div>'; return; }
+      list.innerHTML = items.map(item => `<div class="buddy-item"><div class="buddy-item-main"><h3 class="buddy-title">${escapeHtml(item.title)}</h3><p class="buddy-description">${escapeHtml(item.description)}</p><p class="buddy-note">${escapeHtml(item.time_note)} · hosted by ${escapeHtml(item.host_name || item.host_username || 'a kindred member')}</p></div><button class="buddy-join" type="button" data-join-buddy="${escapeHtml(item.id)}">Join gently</button></div>`).join('');
+      list.querySelectorAll('[data-join-buddy]').forEach(btn => btn.addEventListener('click', () => joinBuddyQuest(btn.dataset.joinBuddy)));
+    }
+
+    async function loadBuddyQuests() {
+      const { data, error } = await window.sb.rpc('get_buddy_quests', { p_limit: 12 });
+      if (error) { document.getElementById('buddyList').innerHTML = '<div class="commons-empty">Buddy quests are taking a short rest. Please try again soon.</div>'; return; }
+      renderBuddyQuests(data || []);
+    }
+
+    async function saveWelcome(event) {
+      event.preventDefault();
+      if (!currentUser) return authMessage();
+      setStatus('welcomeStatus', 'Saving…');
+      const { error } = await window.sb.rpc('save_welcome_intro', { p_hello: document.getElementById('welcomeHello').value, p_looking_for: document.getElementById('welcomeLookingFor').value });
+      if (error) { setStatus('welcomeStatus', error.message || 'Could not save that hello.', 'error'); return; }
+      setStatus('welcomeStatus', 'Your hello is now in the Circle.', 'success');
+      document.getElementById('welcomeHello').value = '';
+      await loadWelcome();
+    }
+
+    async function respondToPrompt(event) {
+      event.preventDefault();
+      if (!currentUser) return authMessage();
+      if (!currentPrompt) return;
+      setStatus('promptStatus', 'Sharing…');
+      const { error } = await window.sb.rpc('respond_to_kindred_prompt', { p_prompt_id: currentPrompt.id, p_response: document.getElementById('promptResponse').value });
+      if (error) { setStatus('promptStatus', error.message || 'Could not share that thought.', 'error'); return; }
+      setStatus('promptStatus', 'Your thought joined the circle.', 'success');
+      document.getElementById('promptResponse').value = '';
+      await loadPrompt();
+    }
+
+    async function createBuddyQuest(event) {
+      event.preventDefault();
+      if (!currentUser) return authMessage();
+      setStatus('buddyStatus', 'Opening the invitation…');
+      const { error } = await window.sb.rpc('create_buddy_quest', { p_title: document.getElementById('buddyQuestTitle').value, p_description: document.getElementById('buddyQuestDescription').value, p_time_note: document.getElementById('buddyQuestTime').value });
+      if (error) { setStatus('buddyStatus', error.message || 'Could not offer that quest.', 'error'); return; }
+      setStatus('buddyStatus', 'Your buddy quest is open.', 'success');
+      document.getElementById('buddyForm').reset();
+      document.getElementById('buddyQuestTime').value = 'No rush — agree on a time together';
+      await loadBuddyQuests();
+    }
+
+    async function joinBuddyQuest(id) {
+      if (!currentUser) return authMessage();
+      const { error } = await window.sb.rpc('join_buddy_quest', { p_buddy_quest_id: id });
+      if (error) { setStatus('buddyStatus', error.message || 'That invitation could not be joined.', 'error'); return; }
+      setStatus('buddyStatus', 'You joined a buddy quest. A notification is on its way.', 'success');
+      await loadBuddyQuests();
+    }
+
+    function applyAuthState() {
+      const signedIn = Boolean(currentUser);
+      document.getElementById('welcomeEditor').hidden = !signedIn;
+      document.getElementById('promptForm').hidden = !signedIn;
+      document.getElementById('buddyEditor').hidden = !signedIn;
+      document.getElementById('welcomeAuthNote').hidden = signedIn;
+      document.getElementById('promptAuthNote').hidden = signedIn;
+      document.getElementById('buddyAuthNote').hidden = signedIn;
+    }
+
+    (async function init() {
+      currentUser = await window.requireAuth({ silent: true, redirect: false });
+      applyAuthState();
+      await Promise.all([loadWelcome(), loadPrompt(), loadBuddyQuests()]);
+      document.getElementById('welcomeForm').addEventListener('submit', saveWelcome);
+      document.getElementById('promptForm').addEventListener('submit', respondToPrompt);
+      document.getElementById('buddyForm').addEventListener('submit', createBuddyQuest);
+    })();
+  </script>
+  <script src="site-nav.js"></script>
+</body>
+</html>

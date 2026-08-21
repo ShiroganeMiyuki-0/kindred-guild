@@ -239,6 +239,7 @@
     const publicMenuItems = [
         { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html', primary: true },
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
+        { name: 'Guild Commons', icon: 'fa-people-roof', file: 'guild-commons.html' },
         { name: 'Getting Started', icon: 'fa-book-open', file: 'getting-started.html' },
         { name: 'Guild World', icon: 'fa-globe', file: 'guild-world.html' },
         { name: 'Motion Duel Arena', icon: 'fa-gamepad', file: 'motion-duel-arena.html' },
@@ -256,6 +257,7 @@
     const privateMenuItems = [
         { name: 'Quest Board', icon: 'fa-chess-board', file: 'quest-board.html', primary: true },
         { name: 'Guild Hall', icon: 'fa-chess-rook', file: 'guild-hall.html', primary: true },
+        { name: 'Guild Commons', icon: 'fa-people-roof', file: 'guild-commons.html' },
         { name: 'Messages', icon: 'fa-envelope', file: 'dm.html', primary: true },
         { name: 'Post Quest', icon: 'fa-circle-plus', file: 'quest-post.html', primary: true },
         { name: 'Getting Started', icon: 'fa-book-open', file: 'getting-started.html' },
@@ -537,6 +539,7 @@
         const pageNavLinks = [
             { name: 'Quest Board', icon: '⚔️', file: 'quest-board.html' },
             { name: 'Guild Hall', icon: '🏰', file: 'guild-hall.html' },
+            { name: 'Guild Commons', icon: '🌿', file: 'guild-commons.html' },
             { name: 'Motion Duel Arena', icon: '🎮', file: 'motion-duel-arena.html' },
             { name: 'Messages', icon: '💬', file: 'dm.html' },
             { name: 'Find People', icon: '🔍', file: 'search.html' },
