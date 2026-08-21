@@ -118,6 +118,12 @@
     .world-invite { padding:48px 20px; background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(255,255,255,.015)); border-block:1px solid var(--border); }
     .world-invite-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:28px; }
     .world-invite-kicker { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .feature-details { max-width:1100px; margin:0 auto; }
+    .feature-details > summary { list-style:none; cursor:pointer; max-width:520px; margin:0 auto; padding:14px 18px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); color:var(--accent); text-align:center; font-weight:800; }
+    .feature-details > summary::-webkit-details-marker { display:none; }
+    .feature-details > summary::after { content:' +'; font-size:1.1em; }
+    .feature-details[open] > summary::after { content:' −'; }
+    .feature-details[open] > summary { border-color:var(--accent); background:rgba(212,175,55,.08); }
     .world-invite h2 { margin:8px 0; color:var(--text); font-size:clamp(1.35rem,3vw,2rem); }
     .world-invite p { max-width:650px; margin:0; color:var(--text-dim); line-height:1.6; }
     @media(max-width:640px){ .world-invite-inner{flex-direction:column;align-items:flex-start}.world-invite .btn{width:100%;text-align:center} }
@@ -546,9 +552,11 @@
     </div>
   </section>
 
-  <!-- FEATURES -->
+  <!-- OPTIONAL FEATURE EXPLORATION -->
   <div class="section-divider"></div>
-  <section class="features reveal">
+  <details class="feature-details">
+    <summary>Explore more ways to use the Guild</summary>
+    <section class="features">
     <h2>What You Can Do</h2>
     <p class="section-sub">It's not just coding tasks. It's anything your community needs.</p>
     <div class="feature-grid">
@@ -598,7 +606,8 @@
         <p>Vote on what the Guild should build next. Back your favorite wishes with Fairy Coins or UPI to make them happen.</p>
       </a>
     </div>
-  </section>
+    </section>
+  </details>
 
   <!-- TRUST SIGNALS -->
   <section class="trust-section reveal">
