@@ -76,7 +76,9 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 <a href="index.html" class="inline-flex items-center gap-1 mt-1 text-[9px] uppercase tracking-[.16em] text-amber-300/80 hover:text-amber-200"><i class="fa-solid fa-shield-halved"></i> Back to Kindred Guild</a>
 </div>
 </div>
-<div class="hidden lg:flex items-center space-x-6">
+<details class="desktop-settings hidden lg:block relative">
+<summary class="list-none cursor-pointer px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs font-orbitron text-cyan-300"><i class="fa-solid fa-sliders mr-1"></i> SETTINGS</summary>
+<div class="absolute top-12 right-0 z-50 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/95 p-3 shadow-2xl backdrop-blur">
   <div class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700 text-xs">
 <i class="fa-solid fa-camera-rotate text-cyan-400"></i>
 <span class="text-slate-400 font-orbitron">CAPTURE:</span>
@@ -122,7 +124,7 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 <option value="HIGH">HIGH</option>
 </select>
 </div>
-</div>
+</details>
 <div class="flex items-center space-x-2 sm:space-x-3">
 <button class="lg:hidden px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg text-xs border border-slate-700" onclick="toggleMobileSettings()" aria-expanded="false" aria-controls="mobileSettingsPanel" title="Open player preferences"><i class="fa-solid fa-sliders"></i></button>
 <button onclick="openModeSelectModal()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-lg text-xs font-orbitron border border-slate-700 flex items-center space-x-1 transition">
@@ -248,15 +250,10 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 <div id="gameOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center z-30 flex-col p-6 text-center">
 <div class="relative mb-3"><i class="fa-solid fa-atom text-6xl text-cyan-400 relative z-10 drop-shadow-[0_0_20px_rgba(56,189,248,0.9)] hart-pulse"></i></div>
 <h2 id="overlayTitle" class="font-orbitron text-3xl sm:text-5xl font-black text-slate-100 mb-2 tracking-wide">MOTION DUEL <span class="text-amber-400">ARENA</span></h2>
-<p id="overlayDesc" class="text-slate-300 max-w-lg mb-4 text-sm leading-relaxed">Step into a short contact duel. Your first goal is simple: find your range, land one clean contact, and feel the arena answer back. Camera tracking is the main controller; manual controls and two-person play remain available when you want them.</p>
-<div class="mb-4 rounded-xl border border-amber-400/30 bg-amber-400/5 px-4 py-3 max-w-lg text-left"><div class="text-[10px] uppercase tracking-[.18em] text-amber-300 font-orbitron mb-1">Your first round</div><div class="text-xs text-slate-300 leading-relaxed">Stand where the fighter can see you. When the opponent telegraphs, answer with one clear hand or foot motion. Misses are part of learning the distance.</div></div>
-<div class="onboarding-tips" aria-label="Quick start tips">
-  <div class="onboarding-tip"><strong>1 · STAND IN VIEW</strong>Give the camera a clear look at your body.</div>
-  <div class="onboarding-tip"><strong>2 · MAKE ONE CLEAR MOTION</strong>Start with a punch or kick and watch the arena respond.</div>
-  <div class="onboarding-tip"><strong>3 · TAKE YOUR TIME</strong>Misses help you find the right distance. Use the guide if tracking needs help.</div>
-</div>
+<p id="overlayDesc" class="text-slate-300 max-w-lg mb-5 text-sm leading-relaxed">Start in the default solo match. Stand where the camera can see you, then make one clear hand or foot motion.</p>
+<div class="mb-5 rounded-xl border border-amber-400/30 bg-amber-400/5 px-4 py-3 max-w-lg text-left"><div class="text-[10px] uppercase tracking-[.18em] text-amber-300 font-orbitron mb-1">First move</div><div class="text-xs text-slate-300 leading-relaxed">A miss is useful feedback. The arena will tell you whether you were ready, blocked, or out of range.</div></div>
 <div id="overlayButtons" class="flex flex-col sm:flex-row gap-3">
-<button onclick="openModeSelectModal()" class="px-8 py-3 bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-500 hover:scale-105 text-slate-950 font-orbitron font-black rounded-xl text-base shadow-xl transition"><i class="fa-solid fa-play mr-2"></i> ENTER THE ARENA</button>
+<button onclick="startMatch()" class="px-8 py-3 bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-500 hover:scale-105 text-slate-950 font-orbitron font-black rounded-xl text-base shadow-xl transition"><i class="fa-solid fa-play mr-2"></i> START SOLO MATCH</button>
 </div>
 </div>
 </main>
@@ -265,24 +262,25 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 text-slate-200 shadow-2xl relative custom-scrollbar max-h-[90vh] overflow-y-auto">
 <div class="text-center mb-6">
 <h3 class="font-orbitron text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-amber-300 uppercase">SELECT BATTLE MODE</h3>
-<p class="text-xs text-slate-400">Start with a short solo or local match</p>
+<p class="text-xs text-slate-400">Solo is ready to start. Other modes are available below.</p>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
 <button id="modeBtn1P" onclick="setGameMode('1P')" class="p-4 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20 text-left transition relative">
 <div class="flex items-center space-x-3 mb-2"><i class="fa-solid fa-robot text-2xl text-cyan-400"></i><span class="font-orbitron font-bold text-lg text-cyan-300">1P VS ADAPTIVE AI</span></div>
-<p class="text-xs text-slate-300">Use simple hand/foot motion tracking against a computer-controlled opponent.</p>
+<p class="text-xs text-slate-300">Camera motion against an adaptive opponent.</p>
 </button>
 <button id="modeBtn2P" onclick="setGameMode('2P')" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative">
 <div class="flex items-center space-x-3 mb-2"><i class="fa-solid fa-user-ninja text-2xl text-rose-400"></i><span class="font-orbitron font-bold text-lg text-rose-300">2-PLAYER LOCAL VS</span></div>
-<p class="text-xs text-slate-300">Player 1 uses Webcam Pose Tracking. Player 2 uses Keyboard / Gamepad Controls.</p>
+<p class="text-xs text-slate-300">One camera player and one keyboard player.</p>
 </button>
 <button id="modeBtnCAM2P" onclick="setGameMode('CAM2P')" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative">
 <div class="flex items-center space-x-3 mb-2"><i class="fa-solid fa-people-arrows text-2xl text-emerald-400"></i><span class="font-orbitron font-bold text-lg text-emerald-300">2P SAME CAMERA</span></div>
-<p class="text-xs text-slate-300">Both players stand side-by-side in one webcam. Hands/feet touching the opponent's body = a hit. Limb-to-limb contact = a block.</p>
+<p class="text-xs text-slate-300">Two players share one camera; limb contact blocks.</p>
 </button>
 </div>
-<div class="border-t border-slate-800 pt-5">
-<h4 class="font-orbitron text-center text-sm font-bold text-amber-400 mb-4 tracking-wider uppercase">SELECT YOUR ANIME FIGHTERS</h4>
+<details class="border-t border-slate-800 pt-5">
+<summary class="cursor-pointer text-center font-orbitron text-sm font-bold text-amber-400 tracking-wider uppercase">Customize fighters <span class="text-[10px] text-slate-500">(optional)</span></summary>
+<div class="mt-4">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div class="bg-slate-950 p-4 rounded-xl border border-cyan-500/30">
 <div class="font-orbitron text-xs font-bold text-cyan-400 mb-2 flex justify-between"><span>PLAYER 1 FIGHTER</span><span id="p1CharNameSelected" class="text-amber-300">G.ONE</span></div>
@@ -294,7 +292,8 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 </div>
 </div>
 </div>
-<button onclick="confirmSelectionsAndStart()" class="w-full mt-6 py-3 bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-500 font-orbitron font-black text-slate-950 rounded-xl text-base shadow-xl hover:scale-[1.01] transition">ENTER BATTLE ARENA</button>
+</details>
+<button onclick="confirmSelectionsAndStart()" class="w-full mt-6 py-3 bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-500 font-orbitron font-black text-slate-950 rounded-xl text-base shadow-xl hover:scale-[1.01] transition">START MATCH</button>
 </div>
 </div>
 
