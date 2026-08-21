@@ -11,9 +11,17 @@
     // 1. DYNAMIC PATH CALCULATION
     const pathParts = window.location.pathname.split('/').filter(part => part !== '');
     const isFileAtEnd = pathParts.length > 0 && pathParts[pathParts.length - 1].includes('.');
-    const folderCount = pathParts.length - (isFileAtEnd ? 1 : 0);
-    const rootPrefix = '../'.repeat(folderCount) || './';
-
+    const projectMarker = '/kindred-guild/';
+    const localProjectIndex = window.location.protocol === 'file:'
+        ? window.location.pathname.indexOf(projectMarker)
+        : -1;
+    const relativeProjectPath = localProjectIndex >= 0
+        ? window.location.pathname.slice(localProjectIndex + projectMarker.length).split('/').filter(Boolean)
+        : [];
+    const folderCount = localProjectIndex >= 0
+        ? relativeProjectPath.length - (relativeProjectPath[relativeProjectPath.length - 1]?.includes('.') ? 1 : 0)
+        : pathParts.length - (isFileAtEnd ? 1 : 0);
+    const rootPrefix = '../'.repeat(Math.max(0, folderCount)) || './';
     function getPath(filename) {
         return `${rootPrefix}${filename}`;
     }
@@ -88,6 +96,28 @@
             min-width: 0;
             overflow: hidden;
         }
+        #site-nav .nav-frame { width: 100%; margin: 0 auto; padding: 0 16px; }
+        #site-nav .nav-shell { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 56px; height: 56px; gap: 12px; }
+        #site-nav .nav-left { display: flex; align-items: center; flex: 1 1 auto; min-width: 0; }
+        #site-nav .nav-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+        #site-nav .nav-brand { display: flex; align-items: center; flex: 0 0 auto; min-width: 36px; }
+        #site-nav .nav-brand a { display: flex; align-items: center; gap: 8px; }
+        #site-nav .nav-brand img { display: block; width: 36px; height: 36px; object-fit: cover; }
+        #site-nav .nav-brand .brand-text { display: none; }
+        #site-nav .primary-nav,
+        #site-nav .desktop-actions,
+        #site-nav .desktop-more-menu { display: none; }
+        #site-nav .mobile-menu-toggle { display: flex; }
+        #mobile-menu { display: none; }
+        #mobile-menu:not(.hidden) { display: block; }
+        @media (min-width: 768px) {
+            #site-nav .nav-frame { max-width: 1280px; padding-left: 24px; padding-right: 24px; }
+            #site-nav .brand-text { display: inline; }
+            #site-nav .primary-nav,
+            #site-nav .desktop-actions,
+            #site-nav .desktop-more-menu { display: flex; }
+            #site-nav .mobile-menu-toggle { display: none; }
+        }
         .glass-nav nav a {
             flex-shrink: 0;
         }
@@ -131,12 +161,20 @@
             display: flex !important;
             flex-direction: column !important;
             justify-content: flex-start !important;
+            align-items: center !important;
             min-height: 100vh !important;
             box-sizing: border-box !important;
         }
-        body.site-nav-flex-adjusted > *:not(#site-nav):not(script):not(style) {
-            margin-top: auto !important;
-            margin-bottom: auto !important;
+        body.site-nav-flex-adjusted > #site-nav {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+        body.site-nav-flex-adjusted > .auth-card,
+        body.site-nav-flex-adjusted > .error-container {
+            flex: 0 0 auto !important;
+            width: min(100%, 420px) !important;
+            margin: clamp(24px, 8vh, 64px) auto 32px !important;
         }
 
         /* First-visit agreement must remain readable on narrow phones. The
@@ -373,17 +411,17 @@
         `;
 
         return `
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="relative flex justify-between items-center h-14">
+            <div class="nav-frame max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="nav-shell relative flex justify-between items-center h-14">
                     <!-- Left: Brand + Primary Nav -->
-                    <div class="flex items-center flex-1">
+                    <div class="nav-left flex items-center flex-1">
                         <div class="nav-brand flex-shrink-0 flex items-center md:mr-6">
                             <a href="${getPath('index.html')}" class="flex items-center gap-2 group">
-                                <img src="${getPath('logo.png')}" alt="Kindred Guild" width="36" height="36" class="h-9 w-9 rounded-xl object-cover ring-2 ring-amber-500/30 group-hover:ring-amber-500 transition-all duration-300 group-hover:scale-105">
-                                <span class="text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none hidden md:inline">KINDRED GUILD</span>
+                                <img src="${getPath('logo.png')}" alt="Kindred Guild" width="36" height="36" class="h-9 w-9 rounded-xl object-cover ring-2 ring-amber-500/30 group-hover:ring-amber-500 transition-all duration-300 group-hover:scale-105" onerror="this.style.display='none'">
+                                <span class="brand-text text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-200 to-amber-400 font-sans leading-none hidden md:inline">KINDRED GUILD</span>
                             </a>
                         </div>
-                        <nav class="hidden md:flex md:items-center md:gap-1">
+                        <nav class="primary-nav hidden md:flex md:items-center md:gap-1">
                             ${primaryLinks}
                             ${adminLinkHtml}
                         </nav>
@@ -399,13 +437,13 @@
                     </div>
 
                     <!-- Right: Hamburger + Actions -->
-                    <div class="flex items-center gap-2">
-                        <div class="hidden md:flex md:items-center md:gap-3">
+                    <div class="nav-right flex items-center gap-2">
+                        <div class="desktop-actions hidden md:flex md:items-center md:gap-3">
                             ${actionPanelHtml}
                         </div>
 
                         <!-- Hamburger for secondary nav items (desktop + tablet only) -->
-                        <div class="relative hidden md:flex md:items-center" id="more-menu-wrapper">
+                        <div class="desktop-more-menu relative hidden md:flex md:items-center" id="more-menu-wrapper">
                             <button type="button" id="more-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-haspopup="true" aria-controls="more-menu-dropdown" aria-expanded="false" aria-label="Open more pages" title="More pages">
                                 <i class="fa-solid fa-bars text-lg" id="more-menu-icon"></i>
                             </button>
@@ -416,7 +454,7 @@
                         </div>
 
                         <!-- Mobile hamburger (shows all items) -->
-                        <div class="md:hidden flex items-center">
+                        <div class="mobile-menu-toggle md:hidden flex items-center">
                             <button type="button" id="mobile-menu-toggle" class="inline-flex items-center justify-center p-2 rounded-xl text-gray-400 hover:text-amber-400 hover:bg-slate-800/60 focus:outline-none border border-slate-700 transition duration-150" aria-controls="mobile-menu" aria-expanded="false" aria-label="Open navigation menu">
                                 <span class="sr-only">Open menu</span>
                                 <i id="hamburger-icon" class="fa-solid fa-bars text-lg"></i>
@@ -426,18 +464,8 @@
                 </div>
             </div>
 
-            <!-- Mobile quick-action strip (primary items only, compact) -->
-            <div class="md:hidden border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-sm" style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-                <div class="flex gap-1.5 px-3 py-1.5" style="white-space:nowrap;">
-                    ${primaryItems.map(item => {
-                        const active = isItemActive(item.file);
-                        return `<a href="${getPath(item.file)}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border flex-shrink-0 transition-all" style="${active ? 'background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:#fbbf24' : 'background:rgba(30,41,59,0.5);border-color:#334155;color:#9ca3af'}"><i class="fa-solid ${item.icon} text-[10px]"></i>${item.name}</a>`;
-                    }).join('')}
-                </div>
-            </div>
-
             <!-- Mobile dropdown (all items) -->
-            <div class="hidden md:hidden" id="mobile-menu" role="dialog" aria-label="Guild navigation" aria-hidden="true">
+            <div class="mobile-menu hidden md:hidden" id="mobile-menu" role="dialog" aria-label="Guild navigation" aria-hidden="true">
                 <div class="pt-2 pb-3 space-y-1 bg-slate-950/95 border-b border-slate-800 backdrop-blur-md">
                     ${mobileLinks}
                     ${mobileAdminLink}
@@ -546,6 +574,7 @@
             style.textContent = `
                 .page-nav-pill:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
                 .page-nav-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:10px 0; margin-bottom:16px; border-bottom:1px solid var(--border); }
+                @media (max-width: 767px) { .page-nav-bar { display:none; } }
             `;
             document.head.appendChild(style);
         }

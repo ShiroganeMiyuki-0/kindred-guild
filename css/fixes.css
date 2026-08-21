@@ -78,10 +78,17 @@ body {
 }
 
 /* ── 5. GLOBAL TEXT WRAP ──────────────────── */
-p, span, div, li, td, a,
+p, span, li, td, a,
 h1, h2, h3, h4, h5, h6 {
-  overflow-wrap: break-word;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* Flex and grid containers must keep a real text column; only the text
+   itself should wrap. This prevents one-character columns on phones. */
+main, section, article, header, footer, .container, .card, .post-form,
+.page-header, .header-bar, .hall-layout, .chat-area, .chat-messages {
+  min-width: 0;
 }
 
 /* ── 6. INPUTS ────────────────────────────── */
@@ -150,8 +157,8 @@ img {
 }
 
 .dm-msg-bubble, .msg-content, .guild-message {
-  overflow-wrap: break-word;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 /* ── 11. MODAL ────────────────────────────── */
@@ -201,7 +208,8 @@ table {
 
 .quest-card {
   overflow: hidden;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 /* ── 15. VIEW SELECTOR ───────────────────── */

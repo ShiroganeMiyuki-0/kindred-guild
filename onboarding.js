@@ -4,8 +4,9 @@
  * Unauthorized copying or redistribution is prohibited.
  * Updated: 2026-07-10 — Added guides for all new features.
  *
- * Automatically triggers non-blocking guide tips the first time a user
- * lands on a page. Also triggerable manually via the "Guide" button.
+ * Runs only when the user explicitly requests a guide through the "Guide"
+ * button or a startGuide=1 URL. Pages should not be covered by walkthroughs
+ * automatically on first visit.
  */
 (function () {
   const storagePrefix = 'kg_tip_';
@@ -220,12 +221,13 @@
 
   function boot() {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('startGuide') === '1') {
-      allMilestoneGroups.forEach(resetMilestones);
-      const url = new URL(window.location.href);
-      url.searchParams.delete('startGuide');
-      window.history.replaceState({}, '', url);
-    }
+    const guideRequested = params.get('startGuide') === '1';
+    if (!guideRequested) return;
+
+    allMilestoneGroups.forEach(resetMilestones);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('startGuide');
+    window.history.replaceState({}, '', url);
     initAutomatedTriggers();
   }
 
