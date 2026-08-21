@@ -50,6 +50,16 @@ canvas{display:block;width:100%;height:100%;}
 .char-swatch{transition:transform .15s ease,box-shadow .15s ease;}
 .char-swatch:hover{transform:translateY(-2px);}
 .char-swatch.selected{box-shadow:0 0 0 2px #fbbf24,0 0 18px rgba(251,191,36,.5);}
+.fighter-portrait{position:absolute;top:4px;width:42px;height:58px;object-fit:contain;object-position:center bottom;pointer-events:none;filter:drop-shadow(0 0 9px rgba(56,189,248,.38));opacity:.9;transform-origin:50% 90%;transition:filter .16s ease,opacity .16s ease;}
+.fighter-portrait-p1{left:4px;}.fighter-portrait-p2{right:4px;filter:drop-shadow(0 0 9px rgba(244,63,94,.38));}
+.fighter-portrait[data-state="ready"]{animation:portraitReady 2.2s ease-in-out infinite;}
+.fighter-portrait[data-state="attack"]{animation:portraitAttack .22s ease-out;filter:drop-shadow(0 0 14px rgba(251,191,36,.85));}
+.fighter-portrait[data-state="hit"]{animation:portraitHit .28s ease-out;filter:drop-shadow(0 0 16px rgba(248,113,113,.95));}
+.fighter-portrait[data-state="guard"]{filter:drop-shadow(0 0 14px rgba(56,189,248,.95));opacity:1;}
+@keyframes portraitReady{0%,100%{transform:translateY(0) scale(1);opacity:.86}50%{transform:translateY(-2px) scale(1.02);opacity:1}}
+@keyframes portraitAttack{0%{transform:translateX(0) scale(1)}55%{transform:translateX(5px) scale(1.06)}100%{transform:translateX(0) scale(1)}}
+@keyframes portraitHit{0%{transform:translateX(0) rotate(0)}30%{transform:translateX(-5px) rotate(-4deg)}100%{transform:translateX(0) rotate(0)}}
+@media(max-width:540px){.fighter-portrait{width:32px;height:46px;top:3px;}.fighter-portrait-p1{left:3px;}.fighter-portrait-p2{right:3px;}}
 </style>
 </head>
 <body class="h-full overflow-hidden bg-slate-950 text-slate-100 flex flex-col">
@@ -166,8 +176,9 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 </div>
 
 <div class="absolute top-3 left-3 right-3 z-20 flex justify-between items-start pointer-events-none">
-<div class="w-[45%] max-w-xs md:max-w-md bg-slate-900/85 p-2.5 sm:p-3 rounded-xl border border-cyan-500/40 backdrop-blur neon-border-blue">
-<div class="flex justify-between items-center mb-1">
+<div class="relative w-[45%] max-w-xs md:max-w-md bg-slate-900/85 p-2.5 sm:p-3 rounded-xl border border-cyan-500/40 backdrop-blur neon-border-blue">
+<img id="p1Portrait" class="fighter-portrait fighter-portrait-p1" data-state="ready" src="assets/motion-duel-cyan.png" alt="Cyan guardian fighter sprite">
+<div class="flex justify-between items-center mb-1 pl-10">
 <span id="p1NameText" class="font-orbitron text-xs sm:text-sm font-bold text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-user text-cyan-300"></i> P1: G.ONE</span>
 <span class="font-orbitron text-[10px] text-amber-300">PTS <b id="playerScoreText">0</b></span><span id="playerHpText" class="font-orbitron text-xs text-cyan-300">100 / 100</span>
 </div>
@@ -187,8 +198,9 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 <div id="combatReason" class="hidden max-w-[260px] text-[9px] sm:text-[10px] text-slate-300 bg-slate-950/85 border border-slate-700/70 px-2 py-1 rounded-lg mt-1 leading-tight" aria-live="polite"></div>
 <div id="comboCounter" class="hidden font-orbitron text-xl sm:text-3xl font-black text-cyan-400 mt-1.5 drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]">0 COMBO!</div>
 </div>
-<div class="w-[45%] max-w-xs md:max-w-md bg-slate-900/85 p-2.5 sm:p-3 rounded-xl border border-rose-500/40 backdrop-blur neon-border-red">
-<div class="flex justify-between items-center mb-1">
+<div class="relative w-[45%] max-w-xs md:max-w-md bg-slate-900/85 p-2.5 sm:p-3 rounded-xl border border-rose-500/40 backdrop-blur neon-border-red">
+<img id="p2Portrait" class="fighter-portrait fighter-portrait-p2" data-state="ready" src="assets/motion-duel-crimson.png" alt="Crimson rival fighter sprite">
+<div class="flex justify-between items-center mb-1 pr-10">
 <span id="p2NameText" class="font-orbitron text-xs sm:text-sm font-bold text-rose-400 flex items-center gap-1.5"><i class="fa-solid fa-skull text-rose-500"></i> RA.ONE (AI)</span>
 <span class="font-orbitron text-[10px] text-amber-300">PTS <b id="aiScoreText">0</b></span><span id="aiHpText" class="font-orbitron text-xs text-rose-300">100 / 100</span>
 </div>
@@ -391,6 +403,11 @@ const THREAT_TIERS=['MINION BOT','ELITE GUARD','SHADOW ACE','OVERLORD PRIME','AP
 function tierName(lvl){return THREAT_TIERS[Math.min(lvl-1,THREAT_TIERS.length-1)];}
 let cameraShake=0,hitStopFrames=0;
 let playerScore=0,aiScore=0;
+const COMBAT_RULES={
+  PUNCH:{damage:12,counterDamage:18,guardKi:8,knockback:0.18,cooldown:330,hitStop:4,label:'PUNCH'},
+  KICK:{damage:22,counterDamage:30,guardKi:10,knockback:0.30,cooldown:420,hitStop:6,label:'KICK'},
+  SUPER:{damage:45,cooldown:750,hitStop:8,label:'SUPER'}
+};
 let lastTime=performance.now();
 let runtimeBooted=false;
 
@@ -428,8 +445,8 @@ const p2Smoother=new LandmarkSmoother(0.55);
 let p1PhysicalHitCooldown=0;
 let prevWristL=null,prevWristR=null,prevAnkleL=null,prevAnkleR=null;
 
-const player={x:-3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',lastAttackTime:0,isGuarding:false,isCharging:false,isCrouching:false,knockback:0,hitFlash:0,dodgeZ:0,dodgeBaseline:null,homeX:-3.2};
-const ai={x:3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',actionTimer:0,reactionDelay:600,lastAttackTime:0,isGuarding:false,isCharging:false,isCrouching:false,knockback:0,hitFlash:0,homeX:3.2,
+const player={x:-3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',lastAttackTime:0,lastGestureTime:0,attackLockUntil:0,isGuarding:false,isCharging:false,isCrouching:false,knockback:0,hitFlash:0,dodgeZ:0,dodgeBaseline:null,homeX:-3.2};
+const ai={x:3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',actionTimer:0,reactionDelay:600,lastAttackTime:0,lastGestureTime:0,attackLockUntil:0,isGuarding:false,isCharging:false,isCrouching:false,knockback:0,hitFlash:0,homeX:3.2,
   history:{PUNCH:0,KICK:0,GUARD:0,CROUCH:0,CHARGE:0}};
 
 /* ============================= 3D WORLD ============================= */
@@ -750,7 +767,7 @@ function processPose(landmarks){
   if(trackingProfile==='SIDE'&&Math.abs(shoulderL.x-shoulderR.x)<0.045){
     setCombatPhase('TRACKING','SIDE PROFILE OK — KEEP SHOULDERS UNOBSTRUCTED','text-cyan-300');
   }
-  if(guardPose&&now-player.lastAttackTime>120){
+  if(guardPose&&now-player.lastGestureTime>120){
     player.isGuarding=true;player.stance='GUARD';player.isCharging=false;player.isCrouching=false;
     setCombatPhase('GUARD','GUARD — HOLD YOUR GROUND','text-cyan-300');
     return;
@@ -758,12 +775,12 @@ function processPose(landmarks){
   if(p1PhysicalHitCooldown>0){p1PhysicalHitCooldown--;setCombatPhase('RECOVERY','RESET YOUR STANCE','text-slate-300');return;}
   if(footReach>0.24&&!footExtended&&footExtending){setCombatPhase('WIND-UP','EXTEND YOUR KICK','text-amber-200');}
   else if(handReach>0.17&&!handExtended&&handExtending){setCombatPhase('WIND-UP','EXTEND YOUR HAND','text-amber-200');}
-  if(footVelocity>sensitivityThreshold*0.9&&footExtended&&footExtending&&now-player.lastAttackTime>360){
-    player.lastAttackTime=now;player.stance='KICK';player.isGuarding=false;player.isCrouching=false;player.isCharging=false;
+  if(footVelocity>sensitivityThreshold*0.9&&footExtended&&footExtending&&now-player.lastGestureTime>360){
+    player.lastGestureTime=now;player.stance='KICK';player.isGuarding=false;player.isCrouching=false;player.isCharging=false;
     setCombatPhase('STRIKE','KICK — DRIVE FORWARD','text-amber-300');
     check3DSpatialCollision('FOOT',footVelocity);
-  }else if(handVelocity>sensitivityThreshold&&handExtended&&handExtending&&now-player.lastAttackTime>300){
-    player.lastAttackTime=now;player.stance='PUNCH';player.isGuarding=false;player.isCrouching=false;player.isCharging=false;
+  }else if(handVelocity>sensitivityThreshold&&handExtended&&handExtending&&now-player.lastGestureTime>300){
+    player.lastGestureTime=now;player.stance='PUNCH';player.isGuarding=false;player.isCrouching=false;player.isCharging=false;
     setCombatPhase('STRIKE','HAND — DRIVE FORWARD','text-amber-300');
     check3DSpatialCollision('HAND',handVelocity);
   }else if(performance.now()<combatPhaseUntil){
@@ -841,21 +858,24 @@ function checkDualCamCollisions(dt){
 function p1LiveLandmarksSafe(){return finiteLandmarks(livePoseLandmarks);}
 function p2LiveLandmarksSafe(){return finiteLandmarks(p2LiveLandmarks);}
 function landDualCamHit(fromP1,weapon){
-  if(roundLocked)return;
   const attackerIsP1=fromP1;
+  const attackType=weapon==='FOOT'?'KICK':'PUNCH';
+  if(!beginCombatAttack(attackerIsP1?1:2,attackType))return;
   const target=attackerIsP1?ai:player;
   const attackerChar=attackerIsP1?selectedP1Char:selectedP2Char;
+  const rule=COMBAT_RULES[attackType];
   const points=weapon==='FOOT'?2:1;
-  const damage=weapon==='FOOT'?16:10;
+  const damage=rule.damage;
   if(attackerIsP1)playerScore+=points;else aiScore+=points;
   setCombatPhase('CONTACT',`CONTACT — ${weapon} HIT`,'text-amber-300');
   sound.playHit();
   target.hp=Math.max(0,target.hp-damage);
-  target.hitFlash=1;applyKnockback(target,attackerIsP1,weapon==='FOOT'?0.24:0.14);
+  setPortraitState(attackerIsP1?'p2':'p1','hit');
+  target.hitFlash=1;applyKnockback(target,attackerIsP1,rule.knockback);
   create3DHitSparks(target.x,1.6,0,attackerChar.colorHex,weapon==='FOOT'?16:10);
   addFloatingText(`+${points} ${weapon} HIT`,window.innerWidth*(attackerIsP1?0.7:0.3),window.innerHeight*0.4,'#fbbf24');
   if(attackerIsP1)incrementCombo();
-  triggerHitStop(weapon==='FOOT'?4:3);flashScreen(0.1);
+  triggerHitStop(rule.hitStop);flashScreen(0.1);
   updateHud();checkWinLoss();
 }
 
@@ -873,6 +893,11 @@ const ONE_P_CONTACT_ZONE={
 };
 function check3DSpatialCollision(type,velocity){
   if(!playerFighter3D||!aiFighter3D)return;
+  const attackType=type==='FOOT'?'KICK':'PUNCH';
+  if(performance.now()<player.attackLockUntil){
+    setCombatPhase('RECOVERY','RECOVERY — WAIT FOR RESET','text-slate-300');
+    return;
+  }
   const hand=new THREE.Vector3();playerFighter3D.armR.hand.getWorldPosition(hand);
   const foot=new THREE.Vector3();playerFighter3D.legR.foot.getWorldPosition(foot);
   const body=new THREE.Vector3();aiFighter3D.group.getWorldPosition(body);body.y+=1.5;
@@ -886,17 +911,43 @@ function check3DSpatialCollision(type,velocity){
   // Prevent a webcam frame from repeatedly re-triggering the same result.
   p1PhysicalHitCooldown=contact?18:10;
   if(contact){
-    playerScore+=type==='FOOT'?2:1;
     setCombatPhase('CONTACT',`CONTACT — ${type==='FOOT'?'FOOT':'HAND'} HIT`,'text-amber-300');
     if(type==='HAND')executePlayerPunch(1);else executePlayerKick(1);
     addFloatingText(`+${type==='FOOT'?2:1} HIT`,window.innerWidth*0.7,window.innerHeight*0.4,'#fbbf24');
     updateHud();
   }else{
-    setCombatPhase('RECOVERY',`MISS — OUT OF RANGE · RESET YOUR STANCE`,'text-slate-300');
+    player.attackLockUntil=performance.now()+COMBAT_RULES[attackType].cooldown*0.7;
+    setCombatPhase('MISS',`MISS — OUT OF RANGE · ${type==='FOOT'?'RESET YOUR FOOT':'RESET YOUR HAND'}`,'text-slate-300');
+    addFloatingText('MISS — RESET',window.innerWidth*0.7,window.innerHeight*0.4,'#cbd5e1');
   }
 }
 
 /* ============================= COMBAT ============================= */
+function setPortraitState(side,state,duration=360){
+  const el=document.getElementById(side==='p1'?'p1Portrait':'p2Portrait');
+  if(!el)return;
+  clearTimeout(el._stateTimer);
+  el.dataset.state=state;
+  if(state!=='ready')el._stateTimer=setTimeout(()=>{el.dataset.state='ready';},duration);
+}
+function beginCombatAttack(attackerNum,type){
+  if(gameState!=='PLAYING'||roundLocked)return false;
+  const actor=attackerNum===1?player:ai;
+  const rule=COMBAT_RULES[type];
+  if(!rule)return false;
+  const now=performance.now();
+  if(now<actor.attackLockUntil){
+    if(attackerNum===1)setCombatPhase('RECOVERY','RECOVERY — WAIT FOR RESET','text-slate-300');
+    return false;
+  }
+  actor.lastAttackTime=now;
+  actor.attackLockUntil=now+rule.cooldown;
+  const stance=type==='SUPER'?'SUPER':type;
+  actor.stance=stance;
+  setPortraitState(attackerNum===1?'p1':'p2','attack',Math.min(320,rule.cooldown));
+  setTimeout(()=>{if(actor.stance===stance&&!actor.isGuarding&&!actor.isCrouching)actor.stance='READY';},Math.min(260,rule.cooldown-40));
+  return true;
+}
 function incrementCombo(){
   combo++;document.getElementById('comboCounter').classList.remove('hidden');
   document.getElementById('comboCounter').innerText=combo+' COMBO!';
@@ -907,26 +958,31 @@ function triggerHitStop(frames){hitStopFrames=Math.max(hitStopFrames,frames);}
 function applyKnockback(target,attackerIsP1,amount){target.knockback=amount*(attackerIsP1?1:-1);}
 
 function executePlayerPunch(attackerNum){
+  if(!beginCombatAttack(attackerNum,'PUNCH'))return;
   sound.playPunch();
   const isP1=attackerNum===1;
   const target=isP1?ai:player;
   const attackerChar=isP1?selectedP1Char:selectedP2Char;
   if(isP1)incrementCombo();
-  let damage=12;
+  const rule=COMBAT_RULES.PUNCH;
+  if(isP1)playerScore+=1;else aiScore+=1;
+  let damage=rule.damage;
   const counterReady=isP1&&player.counterUntil>performance.now();
-  if(counterReady){damage=18;player.counterUntil=0;setCombatPhase('COUNTER','COUNTER CONTACT · +18','text-amber-300');}
+  if(counterReady){damage=rule.counterDamage;player.counterUntil=0;setCombatPhase('COUNTER','COUNTER CONTACT · +18','text-amber-300');}
   if(target===player&&Math.abs(player.dodgeZ)>0.75&&!target.isGuarding){
     addFloatingText('DODGED!',window.innerWidth*0.3,window.innerHeight*0.4,'#a3e635');
     updateHud();checkWinLoss();return;
   }
   if(target.isGuarding){
-    damage=0;target.ki=Math.min(100,target.ki+8);sound.playBlock();
+    damage=0;target.ki=Math.min(100,target.ki+rule.guardKi);sound.playBlock();
+    setPortraitState(isP1?'p2':'p1','guard',520);
     create3DHitSparks(target.x,1.7,0,0x93c5fd,8);
     addFloatingText('BLOCKED · +8 KI',window.innerWidth*(isP1?0.7:0.3),window.innerHeight*0.4,'#38bdf8');
     if(target===player){player.counterUntil=performance.now()+700;setCombatPhase('BLOCK','BLOCKED — COUNTER WINDOW','text-cyan-300');}
     triggerHitStop(3);
   }else{
     sound.playHit();target.hp=Math.max(0,target.hp-damage);
+    setPortraitState(isP1?'p2':'p1','hit');
     create3DHitSparks(target.x,1.7,0,attackerChar.colorHex,14);
     addFloatingText(`-${Math.ceil(damage)} HP`,window.innerWidth*(isP1?0.7:0.3),window.innerHeight*0.4,'#f43f5e');
     target.hitFlash=1;applyKnockback(target,isP1,0.18);triggerHitStop(4);flashScreen(0.08);
@@ -934,26 +990,31 @@ function executePlayerPunch(attackerNum){
   updateHud();checkWinLoss();
 }
 function executePlayerKick(attackerNum){
+  if(!beginCombatAttack(attackerNum,'KICK'))return;
   sound.playKick();
   const isP1=attackerNum===1;
   const target=isP1?ai:player;
   const attackerChar=isP1?selectedP1Char:selectedP2Char;
   if(isP1)incrementCombo();
-  let damage=22;
+  const rule=COMBAT_RULES.KICK;
+  if(isP1)playerScore+=2;else aiScore+=2;
+  let damage=rule.damage;
   const counterReady=isP1&&player.counterUntil>performance.now();
-  if(counterReady){damage=30;player.counterUntil=0;setCombatPhase('COUNTER','COUNTER KICK · +30','text-amber-300');}
+  if(counterReady){damage=rule.counterDamage;player.counterUntil=0;setCombatPhase('COUNTER','COUNTER KICK · +30','text-amber-300');}
   if(target===player&&Math.abs(player.dodgeZ)>0.75&&!target.isGuarding){
     addFloatingText('DODGED!',window.innerWidth*0.3,window.innerHeight*0.4,'#a3e635');
     updateHud();checkWinLoss();return;
   }
   if(target.isGuarding){
-    damage=0;target.ki=Math.min(100,target.ki+10);sound.playBlock();
+    damage=0;target.ki=Math.min(100,target.ki+rule.guardKi);sound.playBlock();
+    setPortraitState(isP1?'p2':'p1','guard',520);
     create3DHitSparks(target.x,1.7,0,0x93c5fd,10);
     addFloatingText('BLOCKED · +10 KI',window.innerWidth*(isP1?0.7:0.3),window.innerHeight*0.4,'#38bdf8');
     if(target===player){player.counterUntil=performance.now()+700;setCombatPhase('BLOCK','BLOCKED — COUNTER WINDOW','text-cyan-300');}
     triggerHitStop(4);
   }else{
     sound.playHit();target.hp=Math.max(0,target.hp-damage);
+    setPortraitState(isP1?'p2':'p1','hit');
     create3DHitSparks(target.x,1.7,0,attackerChar.colorHex,20);
     addFloatingText(`-${Math.ceil(damage)} KICK!`,window.innerWidth*(isP1?0.7:0.3),window.innerHeight*0.4,'#10b981');
     target.hitFlash=1;applyKnockback(target,isP1,0.3);triggerHitStop(6);flashScreen(0.14);
@@ -961,6 +1022,7 @@ function executePlayerKick(attackerNum){
   updateHud();checkWinLoss();
 }
 function executePlayerSuper(attackerNum){
+  if(!beginCombatAttack(attackerNum,'SUPER'))return;
   const isP1=attackerNum===1;
   const attacker=isP1?player:ai;
   const target=isP1?ai:player;
@@ -969,15 +1031,18 @@ function executePlayerSuper(attackerNum){
   triggerCharacterSuperFX(attackerChar,attacker.x,target.x);
   speedLinesActive=true;speedLinesTimer=30;
   triggerHitStop(8);flashScreen(0.22);
-  let damage=45;
+  let damage=COMBAT_RULES.SUPER.damage;
   if(target.isCrouching){
+    setPortraitState(isP1?'p2':'p1','guard',520);
     addFloatingText('DUCKED SUPER BLAST!',window.innerWidth*(isP1?0.7:0.3),window.innerHeight*0.4,'#a855f7');
     damage=0;
   }else if(target.isGuarding){
+    setPortraitState(isP1?'p2':'p1','guard',520);
     damage=0;target.ki=Math.min(100,target.ki+15);sound.playBlock();
     addFloatingText('SUPER BLOCKED · +15 KI',window.innerWidth*(isP1?0.7:0.3),window.innerHeight*0.4,'#38bdf8');
     if(target===player){player.counterUntil=performance.now()+900;setCombatPhase('BLOCK','SUPER BLOCKED — COUNTER WINDOW','text-cyan-300');}
   }else{
+    setPortraitState(isP1?'p2':'p1','hit');
     addFloatingText(`-${damage} ${attackerChar.superName}!`,window.innerWidth*(isP1?0.7:0.3),window.innerHeight*0.4,'#f43f5e');
     target.hitFlash=1;applyKnockback(target,isP1,0.5);
   }
@@ -1731,12 +1796,14 @@ function endGame(playerWon){
 }
 function closeOverlay(){document.getElementById('gameOverlay').classList.add('hidden');}
 async function startNextRound(){
-  player.hp=player.maxHp;player.ki=0;player.stance='IDLE';player.knockback=0;player.hitFlash=0;player.homeX=-3.2;player.x=-3.2;player.dodgeZ=0;player.dodgeBaseline=null;player.counterUntil=0;
-  ai.maxHp=100+(gameLevel-1)*15;ai.hp=ai.maxHp;ai.ki=0;ai.stance='IDLE';ai.knockback=0;ai.hitFlash=0;ai.homeX=3.2;ai.x=3.2;
+  player.hp=player.maxHp;player.ki=0;player.stance='IDLE';player.knockback=0;player.hitFlash=0;player.homeX=-3.2;player.x=-3.2;player.dodgeZ=0;player.dodgeBaseline=null;player.counterUntil=0;player.lastAttackTime=0;player.lastGestureTime=0;player.attackLockUntil=0;
+  ai.maxHp=100+(gameLevel-1)*15;ai.hp=ai.maxHp;ai.ki=0;ai.stance='IDLE';ai.knockback=0;ai.hitFlash=0;ai.homeX=3.2;ai.x=3.2;ai.lastAttackTime=0;ai.lastGestureTime=0;ai.attackLockUntil=0;
   ai.reactionDelay=Math.max(260,620-(gameLevel-1)*70);
   ai.history={PUNCH:0,KICK:0,GUARD:0,CROUCH:0,CHARGE:0};
   ai.pendingAction=null;ai.telegraphTimer=0;ai.isCharging=false;
   combo=0;document.getElementById('comboCounter').classList.add('hidden');
+  p1PhysicalHitCooldown=0;dualContactState={p1:Object.create(null),p2:Object.create(null)};
+  setPortraitState('p1','ready');setPortraitState('p2','ready');
   rebuildFighters3D();
   updateHud();
   trainingBeat=currentRound===1&&p1RoundWins===0&&p2RoundWins===0&&selectedGameMode==='1P'&&!dualCamMode;
