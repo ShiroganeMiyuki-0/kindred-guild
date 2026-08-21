@@ -1,4 +1,4 @@
--- Admin-only homepage activity summary.
+-- Admin-only Guild activity summary for the administrator dashboard.
 -- The function checks the caller inside the database and returns no data to
 -- anonymous or non-admin users, even if the RPC is called directly.
 CREATE OR REPLACE FUNCTION public.get_admin_activity_stats()

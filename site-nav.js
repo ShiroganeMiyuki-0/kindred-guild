@@ -138,6 +138,52 @@
             margin-top: auto !important;
             margin-bottom: auto !important;
         }
+
+        /* First-visit agreement must remain readable on narrow phones. The
+           consent row uses a grid so the checkbox cannot squeeze the copy to
+           zero width, and the card stays inside the visual viewport. */
+        #terms-agreement-overlay {
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        #terms-agreement-overlay .terms-agreement-card {
+            box-sizing: border-box;
+            width: min(480px, 100%);
+            max-width: 100%;
+            max-height: calc(100dvh - 32px);
+            overflow-y: auto;
+        }
+        #terms-agreement-overlay .terms-agreement-consent {
+            display: grid !important;
+            grid-template-columns: auto minmax(0, 1fr);
+            align-items: start;
+            width: 100%;
+            min-width: 0;
+        }
+        #terms-agreement-overlay .terms-agreement-consent input {
+            width: auto;
+            max-width: none;
+            flex: none;
+        }
+        #terms-agreement-overlay .terms-agreement-consent span {
+            display: block;
+            width: auto;
+            min-width: 0;
+            max-width: 100%;
+            writing-mode: horizontal-tb !important;
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+        @media (max-width: 520px) {
+            #terms-agreement-overlay {
+                align-items: flex-start !important;
+                padding: 12px !important;
+            }
+            #terms-agreement-overlay .terms-agreement-card {
+                padding: 22px 18px !important;
+                max-height: calc(100dvh - 24px);
+            }
+        }
     `;
     document.head.appendChild(navStyles);
 
@@ -556,7 +602,7 @@
         overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
 
         overlay.innerHTML = `
-            <div style="background:var(--surface,#14141e);border:1px solid var(--border,#262636);border-radius:16px;max-width:480px;width:100%;padding:32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div class="terms-agreement-card" style="background:var(--surface,#14141e);border:1px solid var(--border,#262636);border-radius:16px;max-width:480px;width:100%;padding:32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
                 <div style="font-size:3rem;margin-bottom:12px;">⚔️</div>
                 <h2 style="color:var(--accent,#d4af37);font-size:1.4rem;margin-bottom:8px;">Welcome to Kindred Guild</h2>
                 <p style="color:var(--text-dim,#9494a8);font-size:0.9rem;line-height:1.6;margin-bottom:20px;">
@@ -574,7 +620,7 @@
                         🏛️ Guild Charter
                     </a>
                 </div>
-                <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin-bottom:20px;text-align:left;">
+                <label class="terms-agreement-consent" style="display:grid;grid-template-columns:auto minmax(0,1fr);align-items:flex-start;gap:8px;cursor:pointer;margin-bottom:20px;text-align:left;">
                     <input type="checkbox" id="terms-checkbox" style="margin-top:3px;accent-color:var(--accent,#d4af37);">
                     <span style="color:var(--text-dim,#9494a8);font-size:0.82rem;line-height:1.4;">
                         I have read and agree to the Terms of Service, Privacy Policy, and Guild Charter.
