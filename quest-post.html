@@ -15,7 +15,8 @@
     .page-header h1 { font-size:1.4rem; color:var(--accent); }
     .user-bar { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
     .user-bar .name { font-weight:600; }
-    .user-bar .coins { font-size:0.85rem; color:var(--text-dim); }
+    .user-bar .coins { display:inline-flex; align-items:center; gap:4px; font-size:0.85rem; color:var(--text-dim); text-decoration:none; transition:color 0.18s, border-color 0.18s; }
+    .user-bar .coins:hover, .user-bar .coins:focus-visible { color:var(--accent); outline:none; }
     .user-bar .coins span { color:var(--accent); }
     .payment-types { display:flex; gap:12px; flex-wrap:wrap; }
     .payment-type { flex:1; min-width:140px; padding:16px; background:var(--bg); border:2px solid var(--border); border-radius:var(--radius); cursor:pointer; text-align:center; transition:border-color 0.2s; }
@@ -59,7 +60,7 @@
     </div>
     <div class="user-bar">
       <div class="name" id="userName">Loading...</div>
-      <div class="coins">💰 <span id="coinBalance">--</span> FC</div>
+      <a class="coins" href="coin_purchase_ui.html" title="Buy Fairy Coins" aria-label="Buy Fairy Coins. Current balance: unknown.">💰 <span id="coinBalance">--</span> FC <span aria-hidden="true">↗</span></a>
     </div>
     <div class="card" style="margin-bottom:16px;">
       <h3 style="color:var(--accent);font-size:1rem;margin-bottom:10px;">📋 Quick Templates</h3>

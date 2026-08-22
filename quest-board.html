@@ -58,12 +58,24 @@
     }
     .user-bar .name-link:hover { color: var(--accent); }
     .user-bar .coins {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       font-size: 0.85rem;
       color: var(--text-dim);
       background: var(--surface-2);
       padding: 6px 12px;
       border-radius: 20px;
       border: 1px solid var(--border);
+      text-decoration: none;
+      transition: border-color 0.18s, color 0.18s, background 0.18s;
+    }
+    .user-bar .coins:hover,
+    .user-bar .coins:focus-visible {
+      color: var(--accent);
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      outline: none;
     }
     .user-bar .coins span { color: var(--accent); font-weight: 600; }
 
@@ -271,7 +283,7 @@
       <div class="user-info">
         <a href="profile.html" class="name-link" id="userName">Loading...</a>
       </div>
-      <div class="coins" id="coinBalanceContainer">💰 <span id="coinBalance">--</span> FC</div>
+      <a class="coins" id="coinBalanceContainer" href="coin_purchase_ui.html" title="Buy Fairy Coins" aria-label="Buy Fairy Coins. Current balance: unknown.">💰 <span id="coinBalance">--</span> FC <span aria-hidden="true">↗</span></a>
     </div>
 
     <div id="latestGrantNotice" class="guild-announcement" role="status" aria-live="polite"></div>
