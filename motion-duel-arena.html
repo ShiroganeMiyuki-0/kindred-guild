@@ -358,7 +358,7 @@ class LandmarkSmoother{
     this.prev=s;return s;
   }
 }
-const smoother=new LandmarkSmoother(0.55);
+const smoother=new LandmarkSmoother(0.68);
 function lerp(a,b,t){return a+(b-a)*t;}
 function lerpAngle(a,b,t){
   let diff=((b-a+Math.PI)%(Math.PI*2))-Math.PI;
@@ -442,7 +442,7 @@ function finiteLandmarks(lm){
 let p1LimbCooldown={LW:0,RW:0,LA:0,RA:0},p2LimbCooldown={LW:0,RW:0,LA:0,RA:0};
 const p2Smoother=new LandmarkSmoother(0.55);
 let p1PhysicalHitCooldown=0;
-let prevWristL=null,prevWristR=null,prevAnkleL=null,prevAnkleR=null;
+let prevWristL=null,prevWristR=null,prevAnkleL=null,prevAnkleR=null,lastPoseFrameAt=0,lastValidPoseAt=0,lastChargeToneAt=0;
 
 const player={x:-3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',lastAttackTime:0,lastGestureTime:0,attackLockUntil:0,isGuarding:false,isCharging:false,isCrouching:false,knockback:0,hitFlash:0,dodgeZ:0,dodgeBaseline:null,homeX:-3.2};
 const ai={x:3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',actionTimer:0,reactionDelay:600,lastAttackTime:0,lastGestureTime:0,attackLockUntil:0,isGuarding:false,isCharging:false,isCrouching:false,knockback:0,hitFlash:0,homeX:3.2,
@@ -732,11 +732,16 @@ function buildFighterRig(charConfig,isEnemy){
 function processPose(landmarks){
   liveVisible=!!landmarks;
   updateCalibration(landmarks);
+  const now=performance.now();
   if(!finiteLandmarks(landmarks)||gameState!=='PLAYING'||roundLocked){
     livePoseLandmarks=null;
     playerReadyForCombat=false;
     player.isGuarding=false;
-    prevWristL=null;prevWristR=null;prevAnkleL=null;prevAnkleR=null;
+    if(gameState==='PLAYING'&&!roundLocked&&lastValidPoseAt&&now-lastValidPoseAt<220){
+      setCombatPhase('TRACKING','REACQUIRING — KEEP MOVING IN FRAME','text-amber-300');
+      return;
+    }
+    prevWristL=null;prevWristR=null;prevAnkleL=null;prevAnkleR=null;lastPoseFrameAt=0;lastValidPoseAt=0;lastChargeToneAt=0;smoother.prev=null;
     if(gameState==='PLAYING'&&!roundLocked)setCombatPhase('TRACKING',trackingProfile==='SIDE'?'SIDE TRACKING LOST — TURN PROFILE, KEEP HANDS + FEET VISIBLE':'TRACKING LOST — STEP INTO FRAME OR USE MANUAL','text-amber-300');
     return;
   }
@@ -744,25 +749,29 @@ function processPose(landmarks){
   livePoseLandmarks=smoothed;
   playerReadyForCombat=true;
   const wrists=[smoothed[15],smoothed[16]],feet=[smoothed[27],smoothed[28]];
-  const now=performance.now();
-  let handVelocity=0,footVelocity=0;
+  lastValidPoseAt=now;
+  const poseDelta=lastPoseFrameAt?Math.min(120,Math.max(16,now-lastPoseFrameAt)):33;
+  lastPoseFrameAt=now;
   const oldWristL=prevWristL,oldWristR=prevWristR,oldAnkleL=prevAnkleL,oldAnkleR=prevAnkleR;
-  if(oldWristL)handVelocity=Math.max(handVelocity,ptDist(wrists[0],oldWristL));
-  if(oldWristR)handVelocity=Math.max(handVelocity,ptDist(wrists[1],oldWristR));
-  if(oldAnkleL)footVelocity=Math.max(footVelocity,ptDist(feet[0],oldAnkleL));
-  if(oldAnkleR)footVelocity=Math.max(footVelocity,ptDist(feet[1],oldAnkleR));
   const shoulderL=smoothed[11],shoulderR=smoothed[12],hipL=smoothed[23],hipR=smoothed[24];
-  const handReach=Math.max(ptDist(wrists[0],shoulderL),ptDist(wrists[1],shoulderR));
-  const footReach=Math.max(ptDist(feet[0],hipL),ptDist(feet[1],hipR));
-  const previousHandReach=Math.max(oldWristL?ptDist(oldWristL,shoulderL):0,oldWristR?ptDist(oldWristR,shoulderR):0);
-  const previousFootReach=Math.max(oldAnkleL?ptDist(oldAnkleL,hipL):0,oldAnkleR?ptDist(oldAnkleR,hipR):0);
-  const handExtending=handReach-previousHandReach>0.012;
-  const footExtending=footReach-previousFootReach>0.012;
-  const handExtended=handReach>0.22;
-  const footExtended=footReach>0.30;
+  const handSpeedL=oldWristL?ptDist3(wrists[0],oldWristL):0,handSpeedR=oldWristR?ptDist3(wrists[1],oldWristR):0;
+  const footSpeedL=oldAnkleL?ptDist3(feet[0],oldAnkleL):0,footSpeedR=oldAnkleR?ptDist3(feet[1],oldAnkleR):0;
+  const handVelocity=Math.max(handSpeedL,handSpeedR),footVelocity=Math.max(footSpeedL,footSpeedR);
+  const handReachL=ptDist3(wrists[0],shoulderL),handReachR=ptDist3(wrists[1],shoulderR);
+  const footReachL=ptDist3(feet[0],hipL),footReachR=ptDist3(feet[1],hipR);
+  const handReach=Math.max(handReachL,handReachR),footReach=Math.max(footReachL,footReachR);
+  const previousHandReachL=oldWristL?ptDist3(oldWristL,shoulderL):0,previousHandReachR=oldWristR?ptDist3(oldWristR,shoulderR):0;
+  const previousFootReachL=oldAnkleL?ptDist3(oldAnkleL,hipL):0,previousFootReachR=oldAnkleR?ptDist3(oldAnkleR,hipR):0;
+  const handExtendingL=handReachL-previousHandReachL>0.008,handExtendingR=handReachR-previousHandReachR>0.008;
+  const footExtendingL=footReachL-previousFootReachL>0.008,footExtendingR=footReachR-previousFootReachR>0.008;
+  const handExtending=handExtendingL||handExtendingR,footExtending=footExtendingL||footExtendingR;
+  const handExtended=handReach>0.22,footExtended=footReach>0.30;
   prevWristL=wrists[0];prevWristR=wrists[1];prevAnkleL=feet[0];prevAnkleR=feet[1];
   document.getElementById('speedMetric').innerText=Math.max(handVelocity,footVelocity).toFixed(3);
-  const guardPose=wrists[0].y<shoulderL.y-0.08&&wrists[1].y<shoulderR.y-0.08;
+  const shoulderCenterY=(shoulderL.y+shoulderR.y)/2,hipCenterY=(hipL.y+hipR.y)/2,wristCenterY=(wrists[0].y+wrists[1].y)/2;
+  const guardPose=wrists[0].y<shoulderL.y-0.04&&wrists[1].y<shoulderR.y-0.04;
+  const chargePose=!guardPose&&ptDist3(wrists[0],wrists[1])<0.22&&wristCenterY>shoulderCenterY+0.06&&wristCenterY<hipCenterY+0.16;
+  const crouchPose=hipCenterY-shoulderCenterY>0.28;
   if(trackingProfile==='SIDE'&&Math.abs(shoulderL.x-shoulderR.x)<0.045){
     setCombatPhase('TRACKING','SIDE PROFILE OK — KEEP SHOULDERS UNOBSTRUCTED','text-cyan-300');
   }
@@ -772,16 +781,27 @@ function processPose(landmarks){
     return;
   }
   if(p1PhysicalHitCooldown>0){p1PhysicalHitCooldown--;setCombatPhase('RECOVERY','RESET YOUR STANCE','text-slate-300');return;}
+  if(chargePose&&now-player.lastGestureTime>120){
+    player.isCharging=true;player.isGuarding=false;player.isCrouching=false;player.stance='CHARGING';
+    player.ki=Math.min(100,player.ki+poseDelta*0.035);if(now-lastChargeToneAt>240){sound.playCharge();lastChargeToneAt=now;}updateHud();
+    setCombatPhase('CHARGE',player.ki>=100?'KI FULL — EXTEND BOTH HANDS':'CHARGE — BRING HANDS TOGETHER','text-amber-300');
+    return;
+  }
+  if(crouchPose&&now-player.lastGestureTime>120){
+    player.isCrouching=true;player.isGuarding=false;player.isCharging=false;player.stance='CROUCH';
+    setCombatPhase('CROUCH','DUCK — LOWER YOUR HIPS','text-purple-300');
+    return;
+  }
   if(footReach>0.24&&!footExtended&&footExtending){setCombatPhase('WIND-UP','EXTEND YOUR KICK','text-amber-200');}
   else if(handReach>0.17&&!handExtended&&handExtending){setCombatPhase('WIND-UP','EXTEND YOUR HAND','text-amber-200');}
   if(footVelocity>sensitivityThreshold*0.9&&footExtended&&footExtending&&now-player.lastGestureTime>360){
     player.lastGestureTime=now;player.stance='KICK';player.isGuarding=false;player.isCrouching=false;player.isCharging=false;
     setCombatPhase('STRIKE','KICK — DRIVE FORWARD','text-amber-300');
-    check3DSpatialCollision('FOOT',footVelocity);
+    resolvePoseStrike('FOOT',footVelocity);
   }else if(handVelocity>sensitivityThreshold&&handExtended&&handExtending&&now-player.lastGestureTime>300){
     player.lastGestureTime=now;player.stance='PUNCH';player.isGuarding=false;player.isCrouching=false;player.isCharging=false;
     setCombatPhase('STRIKE','HAND — DRIVE FORWARD','text-amber-300');
-    check3DSpatialCollision('HAND',handVelocity);
+    resolvePoseStrike('HAND',handVelocity);
   }else if(performance.now()<combatPhaseUntil){
     player.stance='READY';
   }else{
@@ -802,6 +822,7 @@ function torsoBox(lm){
 }
 function inBox(pt,box){return pt.x>=box.minX&&pt.x<=box.maxX&&pt.y>=box.minY&&pt.y<=box.maxY;}
 function ptDist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function ptDist3(a,b){return Math.hypot(a.x-b.x,a.y-b.y,(a.z||0)-(b.z||0));}
 const LIMB_POINTS={LW:15,RW:16,LA:27,RA:28};
 const BLOCK_RADIUS=0.075;
 function checkDualCamCollisions(dt){
@@ -879,17 +900,22 @@ function landDualCamHit(fromP1,weapon){
 }
 
 /*
-   The 3D rig and the webcam landmarks use different scales. A raw spherical
-   distance test made the contact rule difficult to tune and could disagree
-   with what the player saw on screen. Use an explicit arena-space torso zone:
-   the hand/foot must be close in height and depth, and must approach from the
-   player side of the opponent. The gesture intent gate in processPose still
-   decides when this check is allowed to run.
+   Solo camera gestures are resolved directly by the deterministic combat rules:
+   an accepted pose is a committed punch or kick, then guard/dodge/cooldown
+   rules decide the result. The explicit arena-space contact gate below remains
+   for local two-player modes where both players share a spatial field.
 */
 const ONE_P_CONTACT_ZONE={
   HAND:{forward:5.9,vertical:1.22,depth:1.05},
   FOOT:{forward:6.05,vertical:1.48,depth:1.15}
 };
+function resolvePoseStrike(type,velocity){
+  if(selectedGameMode==='1P'&&!dualCamMode){
+    if(type==='FOOT')executePlayerKick(1);else executePlayerPunch(1);
+    return;
+  }
+  check3DSpatialCollision(type,velocity);
+}
 function check3DSpatialCollision(type,velocity){
   if(!playerFighter3D||!aiFighter3D)return;
   const attackType=type==='FOOT'?'KICK':'PUNCH';
@@ -1534,7 +1560,7 @@ async function initCamera(){
   const videoElement=document.getElementById('webcamInput');
   try{
     poseInstance=new Pose({locateFile:(file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
-  poseInstance.setOptions({modelComplexity:1,smoothLandmarks:true,enableSegmentation:false,minDetectionConfidence:0.6,minTrackingConfidence:0.6});
+  poseInstance.setOptions({modelComplexity:1,smoothLandmarks:true,enableSegmentation:false,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
   poseInstance.onResults((results)=>{
     pipCtx.save();pipCtx.clearRect(0,0,pipCanvas.width,pipCanvas.height);
     pipCtx.drawImage(results.image,0,0,pipCanvas.width,pipCanvas.height);
@@ -1713,11 +1739,13 @@ function setCombatPhase(phase,text,colorClass){
   const reasonMap={
     READY:'Move one clear hand or foot forward from your stance.',
     'WIND-UP':'Motion detected, but the limb has not crossed the strike gate yet.',
-    STRIKE:'Intent gate crossed. The arena is checking real contact now.',
+    STRIKE:'Movement accepted. Your attack is now resolving.',
     CONTACT:'Your limb reached the target and the contact was counted.',
     MISS:'The movement did not reach a valid target. Reset and try again.',
     BLOCK:'The attacking limb met a defending limb before the target.',
     GUARD:'Both hands are above the shoulders, so your guard is active.',
+    CHARGE:'Hands together near the abdomen are charging Ki.',
+    CROUCH:'Lower hips are registered as a duck.',
     RECOVERY:'That exchange is settling. Return to a neutral stance.',
     TRACKING:'Combat pauses when the game cannot trust the body landmarks.'
   };
@@ -1802,6 +1830,7 @@ async function startNextRound(){
   ai.pendingAction=null;ai.telegraphTimer=0;ai.isCharging=false;
   combo=0;document.getElementById('comboCounter').classList.add('hidden');
   p1PhysicalHitCooldown=0;dualContactState={p1:Object.create(null),p2:Object.create(null)};
+  prevWristL=null;prevWristR=null;prevAnkleL=null;prevAnkleR=null;lastPoseFrameAt=0;lastValidPoseAt=0;lastChargeToneAt=0;smoother.prev=null;
   setPortraitState('p1','ready');setPortraitState('p2','ready');
   rebuildFighters3D();
   updateHud();
