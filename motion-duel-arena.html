@@ -247,6 +247,17 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 </div>
 </div>
 
+<div id="specialModePanel" class="hidden absolute bottom-3 left-3 z-20 w-[min(92vw,360px)] rounded-xl border border-amber-400/30 bg-slate-950/90 p-3 shadow-2xl backdrop-blur">
+  <div class="flex items-center justify-between gap-2"><strong id="specialModeTitle" class="font-orbitron text-[10px] tracking-widest text-amber-300">SPECIAL MODE</strong><span id="specialModeState" class="text-[9px] uppercase tracking-wider text-slate-400">READY</span></div>
+  <p id="specialModeDescription" class="mt-1 text-[10px] leading-relaxed text-slate-300"></p>
+  <div class="mt-2 flex flex-wrap gap-1.5">
+    <button id="voiceToggleBtn" onclick="toggleSpellMic()" class="hidden rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-[10px] font-orbitron text-amber-200 hover:bg-amber-400/20">START SPELL MIC</button>
+    <button id="voiceTestBtn" onclick="handleSpellPhrase('expecto patronum')" class="hidden rounded border border-purple-400/40 bg-purple-400/10 px-2 py-1 text-[10px] font-orbitron text-purple-200 hover:bg-purple-400/20">TEST SPELL</button>
+    <button id="vrEnterBtn" onclick="toggleVRMode()" class="hidden rounded border border-cyan-400/40 bg-cyan-400/10 px-2 py-1 text-[10px] font-orbitron text-cyan-200 hover:bg-cyan-400/20">ENTER VR VIEW</button>
+  </div>
+  <div id="spellTranscript" class="mt-2 hidden rounded border border-slate-800 bg-slate-900/80 px-2 py-1 text-[10px] text-slate-300" aria-live="polite"></div>
+</div>
+
 <div id="gameOverlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center z-30 flex-col p-6 text-center">
 <div class="relative mb-3"><i class="fa-solid fa-atom text-6xl text-cyan-400 relative z-10 drop-shadow-[0_0_20px_rgba(56,189,248,0.9)] hart-pulse"></i></div>
 <h2 id="overlayTitle" class="font-orbitron text-3xl sm:text-5xl font-black text-slate-100 mb-2 tracking-wide">MOTION DUEL <span class="text-amber-400">ARENA</span></h2>
@@ -276,6 +287,18 @@ MOTION DUEL <span class="text-[10px] text-amber-400 border border-amber-500/40 p
 <button id="modeBtnCAM2P" onclick="setGameMode('CAM2P')" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative">
 <div class="flex items-center space-x-3 mb-2"><i class="fa-solid fa-people-arrows text-2xl text-emerald-400"></i><span class="font-orbitron font-bold text-lg text-emerald-300">2P SAME CAMERA</span></div>
 <p class="text-xs text-slate-300">Two players share one camera; limb contact blocks.</p>
+</button>
+<button id="modeBtnWIZARD" onclick="setGameMode('WIZARD')" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative">
+<div class="flex items-center space-x-3 mb-2"><i class="fa-solid fa-wand-sparkles text-2xl text-purple-300"></i><span class="font-orbitron font-bold text-lg text-purple-200">WIZARD MODE</span></div>
+<p class="text-xs text-slate-300">Say a spell such as “Expecto Patronum”; a test button is available when speech is unsupported.</p>
+</button>
+<button id="modeBtnSHOOTING" onclick="setGameMode('SHOOTING')" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative">
+<div class="flex items-center space-x-3 mb-2"><i class="fa-solid fa-crosshairs text-2xl text-orange-300"></i><span class="font-orbitron font-bold text-lg text-orange-200">SHOOTING & STEALTH</span></div>
+<p class="text-xs text-slate-300">Extend a hand to fire a soft-energy shot; crouch to hide, then stand to reappear.</p>
+</button>
+<button id="modeBtnVR" onclick="setGameMode('VR')" class="p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative">
+<div class="flex items-center space-x-3 mb-2"><i class="fa-solid fa-vr-cardboard text-2xl text-cyan-300"></i><span class="font-orbitron font-bold text-lg text-cyan-200">VR VIEW</span></div>
+<p class="text-xs text-slate-300">Optional WebXR presentation when your headset and browser support it; otherwise use the normal view.</p>
 </button>
 </div>
 <details class="border-t border-slate-800 pt-5">
@@ -376,6 +399,7 @@ const CHARACTERS={
 };
 
 let selectedGameMode='1P';
+let selectedModeVariant='CORE';
 let selectedP1Char=CHARACTERS.GONE;
 let selectedP2Char=CHARACTERS.RAONE;
 let scene,camera,cameraP1,cameraP2,renderer,toonGradientMap;
@@ -409,6 +433,14 @@ const COMBAT_RULES={
 };
 let lastTime=performance.now();
 let runtimeBooted=false;
+let spellRecognition=null,spellMicActive=false;
+let vrSession=null,vrActive=false;
+let specialShotCooldown=0;
+const SPECIAL_MODE_CONFIG={
+  WIZARD:{title:'WIZARD MODE',description:'Speak a spell to cast it. Try Expecto Patronum, Expelliarmus, Stupefy, or Lumos.',state:'SPELLS READY'},
+  SHOOTING:{title:'SHOOTING & STEALTH',description:'Extend a hand to fire a soft-energy shot. Crouch to hide; stand to reappear.',state:'SHOT + STEALTH READY'},
+  VR:{title:'VR VIEW',description:'Optional WebXR presentation for supported headsets. Normal view remains available as a fallback.',state:'NORMAL VIEW READY'}
+};
 
 function showRuntimeError(title,message,actionText='USE MANUAL CONTROLS'){
   const overlay=document.getElementById('gameOverlay');
@@ -417,6 +449,122 @@ function showRuntimeError(title,message,actionText='USE MANUAL CONTROLS'){
   document.getElementById('overlayDesc').textContent=message;
   document.getElementById('overlayButtons').innerHTML=`<button onclick="toggleKeyboardFallback();closeOverlay()" class="px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-600 hover:scale-105 text-slate-950 font-orbitron font-black rounded-xl text-base shadow-xl transition"><i class="fa-solid fa-gamepad mr-2"></i>${actionText}</button>`;
   overlay.classList.remove('hidden');
+}
+
+function modeDisplayName(){
+  if(selectedModeVariant==='WIZARD')return 'WIZARD SPELL DUEL';
+  if(selectedModeVariant==='SHOOTING')return 'SHOOTING & STEALTH';
+  if(selectedModeVariant==='VR')return 'VR VIEW · SOLO AI';
+  return selectedGameMode==='1P'?'1P VS ADAPTIVE AI':selectedGameMode==='CAM2P'?'2P SAME CAMERA':'2-PLAYER LOCAL VS';
+}
+function modeStartCopy(){
+  if(selectedModeVariant==='WIZARD')return 'Choose a spell and speak clearly. Try “Expecto Patronum” to cast a guardian blast.';
+  if(selectedModeVariant==='SHOOTING')return 'Extend one hand to fire a soft-energy shot. Crouch to hide, then stand to reappear.';
+  if(selectedModeVariant==='VR')return 'VR is an optional view layer. Enter VR when supported, or keep playing in the normal view.';
+  return 'Start in the default solo match. Stand where the camera can see you, then make one clear hand or foot motion.';
+}
+function updateSpecialModeUI(){
+  const panel=document.getElementById('specialModePanel');
+  const cfg=SPECIAL_MODE_CONFIG[selectedModeVariant];
+  if(!panel)return;
+  const active=!!cfg;
+  panel.classList.toggle('hidden',!active);
+  const transcript=document.getElementById('spellTranscript');
+  if(selectedModeVariant!=='WIZARD')transcript?.classList.add('hidden');
+  if(!active)return;
+  document.getElementById('specialModeTitle').textContent=cfg.title;
+  document.getElementById('specialModeDescription').textContent=cfg.description;
+  document.getElementById('specialModeState').textContent=cfg.state;
+  const voice=document.getElementById('voiceToggleBtn');
+  const test=document.getElementById('voiceTestBtn');
+  const vr=document.getElementById('vrEnterBtn');
+  const speechCtor=window.SpeechRecognition||window.webkitSpeechRecognition;
+  voice?.classList.toggle('hidden',selectedModeVariant!=='WIZARD');
+  test?.classList.toggle('hidden',selectedModeVariant!=='WIZARD');
+  vr?.classList.toggle('hidden',selectedModeVariant!=='VR');
+  if(voice&&selectedModeVariant==='WIZARD'){
+    voice.textContent=speechCtor?(spellMicActive?'STOP SPELL MIC':'START SPELL MIC'):'MIC UNAVAILABLE';
+    voice.title=speechCtor?'Use the browser microphone for spell commands.':'This browser has no SpeechRecognition API; use TEST SPELL.';
+  }
+  if(vr&&selectedModeVariant==='VR'){
+    const supported=!!(navigator.xr&&renderer?.xr);
+    vr.textContent=vrActive?'EXIT VR VIEW':supported?'ENTER VR VIEW':'VR UNAVAILABLE — NORMAL VIEW';
+    vr.disabled=!supported&&!vrActive;
+  }
+}
+function showSpellTranscript(text){
+  const el=document.getElementById('spellTranscript');
+  if(!el)return;
+  el.textContent=text;el.classList.remove('hidden');
+}
+function createSpellRecognition(){
+  const C=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!C)return null;
+  const rec=new C();
+  rec.lang='en-US';rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;
+  rec.onresult=event=>{
+    const result=event.results[event.results.length-1];
+    const phrase=result[0]?.transcript?.trim()||'';
+    if(phrase)showSpellTranscript((result.isFinal?'HEARD: ':'HEARING: ')+phrase);
+    if(result.isFinal)handleSpellPhrase(phrase);
+  };
+  rec.onerror=event=>{spellMicActive=false;showSpellTranscript(`SPELL MIC: ${String(event.error||'UNAVAILABLE').toUpperCase()}`);updateSpecialModeUI();};
+  rec.onend=()=>{if(spellMicActive){try{rec.start();}catch(error){console.debug('Spell mic restart skipped',error);}}};
+  return rec;
+}
+function toggleSpellMic(){
+  if(selectedModeVariant!=='WIZARD')return;
+  if(spellMicActive){spellMicActive=false;spellRecognition?.stop?.();showSpellTranscript('SPELL MIC OFF');updateSpecialModeUI();return;}
+  spellRecognition=spellRecognition||createSpellRecognition();
+  if(!spellRecognition){showSpellTranscript('SPELL MIC UNAVAILABLE — USE TEST SPELL');setCombatPhase('SPELL','MIC UNAVAILABLE — USE TEST SPELL','text-amber-300');updateSpecialModeUI();return;}
+  spellMicActive=true;showSpellTranscript('SPELL MIC ON — SPEAK A SPELL');updateSpecialModeUI();
+  try{spellRecognition.start();}catch(error){spellMicActive=false;showSpellTranscript('SPELL MIC COULD NOT START');updateSpecialModeUI();}
+}
+function handleSpellPhrase(phrase){
+  if(selectedModeVariant!=='WIZARD')return false;
+  const spoken=String(phrase||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  if(!spoken)return false;
+  showSpellTranscript('CAST: '+spoken.toUpperCase());
+  if(spoken.includes('expecto patronum')||spoken.includes('patronum')){
+    player.ki=100;const before=ai.hp;executePlayerSuper(1);const landed=ai.hp<before;
+    setCombatPhase('SPELL',landed?'EXPECTO PATRONUM — GUARDIAN BLAST':'EXPECTO PATRONUM — BLOCKED OR RECOVERING','text-purple-300');return landed;
+  }
+  if(spoken.includes('expelliarmus')||spoken.includes('disarm')){const before=ai.hp;executePlayerPunch(1);const landed=ai.hp<before;setCombatPhase('SPELL',landed?'EXPELLIARMUS — -12 HP':'EXPELLIARMUS — BLOCKED OR RECOVERING','text-purple-300');return landed;}
+  if(spoken.includes('stupefy')||spoken.includes('stunning')){const before=ai.hp;executePlayerKick(1);const landed=ai.hp<before;setCombatPhase('SPELL',landed?'STUPEFY — -22 HP':'STUPEFY — BLOCKED OR RECOVERING','text-purple-300');return landed;}
+  if(spoken.includes('protego')||spoken.includes('shield')){triggerManualAction(1,'GUARD');setCombatPhase('SPELL','PROTEGO — SHIELD RAISED','text-purple-300');return true;}
+  if(spoken.includes('lumos')||spoken.includes('light')){speedLinesActive=true;speedLinesTimer=24;flashScreen(0.12);setCombatPhase('SPELL','LUMOS — ARENA LIT','text-purple-300');return true;}
+  setCombatPhase('SPELL','SPELL NOT RECOGNIZED — TRY EXPECTO PATRONUM','text-slate-300');return false;
+}
+function castSpecialShot(type){
+  if(selectedModeVariant!=='SHOOTING')return false;
+  const now=performance.now();
+  if(now<specialShotCooldown){setCombatPhase('RECOVERY','SHOT RECHARGING — RESET YOUR HAND','text-slate-300');return false;}
+  specialShotCooldown=now+420;
+  const before=ai.hp;
+  triggerProjectileSuper(player.x,ai.x,selectedP1Char.colorHex,'SHOT');speedLinesActive=true;speedLinesTimer=12;
+  if(type==='FOOT')executePlayerKick(1);else executePlayerPunch(1);
+  const landed=ai.hp<before;
+  setCombatPhase('SHOT',landed?`ENERGY SHOT — -${Math.ceil(before-ai.hp)} HP`:'ENERGY SHOT — BLOCKED OR RECOVERING','text-orange-300');
+  return landed;
+}
+async function toggleVRMode(){
+  if(vrActive){try{await vrSession?.end?.();}catch(error){console.debug('VR end skipped',error);}return;}
+  if(!navigator.xr||!renderer?.xr){setModePanelState('VR UNAVAILABLE — NORMAL VIEW');return;}
+  try{
+    const supported=await navigator.xr.isSessionSupported('immersive-vr');
+    if(!supported){setModePanelState('VR NOT SUPPORTED — NORMAL VIEW');return;}
+    vrSession=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});
+    renderer.xr.enabled=true;renderer.setAnimationLoop(runFrame);vrActive=true;
+    vrSession.addEventListener('end',()=>{vrSession=null;vrActive=false;renderer?.setAnimationLoop?.(null);renderer?.xr&&(renderer.xr.enabled=false);requestAnimationFrame(animate3D);updateSpecialModeUI();});
+    setModePanelState('VR VIEW ACTIVE');updateSpecialModeUI();
+  }catch(error){vrActive=false;vrSession=null;setModePanelState('VR COULD NOT START — NORMAL VIEW');updateSpecialModeUI();}
+}
+function setModePanelState(text){const el=document.getElementById('specialModeState');if(el)el.textContent=text;}
+function setPlayerStealth(active){
+  const hidden=selectedModeVariant==='SHOOTING'&&active;
+  player.isStealthed=hidden;
+  if(playerFighter3D?.group)playerFighter3D.group.visible=!hidden;
+  if(hidden){setModePanelState('HIDDEN — MOVE TO REAPPEAR');setCombatPhase('STEALTH','HIDDEN — CROUCH TO STAY OUT OF SIGHT','text-orange-300');}
 }
 
 window.addEventListener('error',(event)=>console.error('[Anime Motion Fighter] Runtime error:',event.error||event.message));
@@ -444,7 +592,7 @@ const p2Smoother=new LandmarkSmoother(0.55);
 let p1PhysicalHitCooldown=0;
 let prevWristL=null,prevWristR=null,prevAnkleL=null,prevAnkleR=null,lastPoseFrameAt=0,lastValidPoseAt=0,lastChargeToneAt=0;
 
-const player={x:-3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',lastAttackTime:0,lastGestureTime:0,attackLockUntil:0,isGuarding:false,isCharging:false,isCrouching:false,knockback:0,hitFlash:0,dodgeZ:0,dodgeBaseline:null,homeX:-3.2};
+const player={x:-3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',lastAttackTime:0,lastGestureTime:0,attackLockUntil:0,isGuarding:false,isCharging:false,isCrouching:false,isStealthed:false,knockback:0,hitFlash:0,dodgeZ:0,dodgeBaseline:null,homeX:-3.2};
 const ai={x:3.2,y:0,hp:100,maxHp:100,ki:0,maxKi:100,stance:'IDLE',actionTimer:0,reactionDelay:600,lastAttackTime:0,lastGestureTime:0,attackLockUntil:0,isGuarding:false,isCharging:false,isCrouching:false,knockback:0,hitFlash:0,homeX:3.2,
   history:{PUNCH:0,KICK:0,GUARD:0,CROUCH:0,CHARGE:0}};
 
@@ -772,10 +920,12 @@ function processPose(landmarks){
   const guardPose=wrists[0].y<shoulderL.y-0.04&&wrists[1].y<shoulderR.y-0.04;
   const chargePose=!guardPose&&ptDist3(wrists[0],wrists[1])<0.22&&wristCenterY>shoulderCenterY+0.06&&wristCenterY<hipCenterY+0.16;
   const crouchPose=hipCenterY-shoulderCenterY>0.28;
+  if(selectedModeVariant==='SHOOTING'&&!crouchPose&&player.isStealthed)setPlayerStealth(false);
   if(trackingProfile==='SIDE'&&Math.abs(shoulderL.x-shoulderR.x)<0.045){
     setCombatPhase('TRACKING','SIDE PROFILE OK — KEEP SHOULDERS UNOBSTRUCTED','text-cyan-300');
   }
   if(guardPose&&now-player.lastGestureTime>120){
+    setPlayerStealth(false);
     player.isGuarding=true;player.stance='GUARD';player.isCharging=false;player.isCrouching=false;
     setCombatPhase('GUARD','GUARD — HOLD YOUR GROUND','text-cyan-300');
     return;
@@ -788,8 +938,9 @@ function processPose(landmarks){
     return;
   }
   if(crouchPose&&now-player.lastGestureTime>120){
+    if(selectedModeVariant==='SHOOTING')setPlayerStealth(true);
     player.isCrouching=true;player.isGuarding=false;player.isCharging=false;player.stance='CROUCH';
-    setCombatPhase('CROUCH','DUCK — LOWER YOUR HIPS','text-purple-300');
+    if(selectedModeVariant!=='SHOOTING')setCombatPhase('CROUCH','DUCK — LOWER YOUR HIPS','text-purple-300');
     return;
   }
   if(footReach>0.24&&!footExtended&&footExtending){setCombatPhase('WIND-UP','EXTEND YOUR KICK','text-amber-200');}
@@ -800,8 +951,8 @@ function processPose(landmarks){
     resolvePoseStrike('FOOT',footVelocity);
   }else if(handVelocity>sensitivityThreshold&&handExtended&&handExtending&&now-player.lastGestureTime>300){
     player.lastGestureTime=now;player.stance='PUNCH';player.isGuarding=false;player.isCrouching=false;player.isCharging=false;
-    setCombatPhase('STRIKE','HAND — DRIVE FORWARD','text-amber-300');
-    resolvePoseStrike('HAND',handVelocity);
+    setCombatPhase('STRIKE',selectedModeVariant==='SHOOTING'?'SHOT — EXTEND HAND':'HAND — DRIVE FORWARD','text-amber-300');
+    if(selectedModeVariant==='SHOOTING')castSpecialShot('HAND');else resolvePoseStrike('HAND',handVelocity);
   }else if(performance.now()<combatPhaseUntil){
     player.stance='READY';
   }else{
@@ -1331,8 +1482,7 @@ function renderAnimeOverlayFX(){
   fxCtx.globalAlpha=1.0;
 }
 
-function animate3D(now){
-  requestAnimationFrame(animate3D);
+function runFrame(now){
   let delta=now-lastTime;lastTime=now;
   if(gameState==='PAUSED'){renderSceneView();return;}
   if(hitStopFrames>0){hitStopFrames--;delta*=0.15;}
@@ -1363,6 +1513,11 @@ function animate3D(now){
   renderSceneView();
   renderAnimeOverlayFX();
   updateAdaptiveAI(delta);
+}
+function animate3D(now){
+  if(vrActive)return;
+  requestAnimationFrame(animate3D);
+  runFrame(now);
 }
 function renderSceneView(){
   if(!renderer||!scene)return;
@@ -1700,10 +1855,16 @@ function triggerManualAction(playerNum,action){
   if(gameState!=='PLAYING'||roundLocked)return;
   if(playerNum===1)playerReadyForCombat=true;
   const targetObj=playerNum===1?player:ai;
-  if(action==='PUNCH'){targetObj.stance='PUNCH';executePlayerPunch(playerNum);}
-  else if(action==='KICK'){targetObj.stance='KICK';executePlayerKick(playerNum);}
+  if(action==='PUNCH'){
+    targetObj.stance='PUNCH';
+    if(playerNum===1&&selectedModeVariant==='SHOOTING')castSpecialShot('HAND');else executePlayerPunch(playerNum);
+  }
+  else if(action==='KICK'){
+    targetObj.stance='KICK';
+    if(playerNum===1&&selectedModeVariant==='SHOOTING')castSpecialShot('FOOT');else executePlayerKick(playerNum);
+  }
   else if(action==='GUARD'){targetObj.stance='GUARD';targetObj.isGuarding=true;setTimeout(()=>{targetObj.isGuarding=false;if(targetObj.stance==='GUARD')targetObj.stance='IDLE';},400);}
-  else if(action==='DUCK'){targetObj.stance='CROUCH';targetObj.isCrouching=true;setTimeout(()=>{targetObj.isCrouching=false;if(targetObj.stance==='CROUCH')targetObj.stance='IDLE';},400);}
+  else if(action==='DUCK'){targetObj.stance='CROUCH';targetObj.isCrouching=true;if(playerNum===1&&selectedModeVariant==='SHOOTING')setPlayerStealth(true);setTimeout(()=>{targetObj.isCrouching=false;if(targetObj.stance==='CROUCH')targetObj.stance='IDLE';if(playerNum===1&&selectedModeVariant==='SHOOTING')setPlayerStealth(false);},400);}
   else if(action==='CHARGE'){targetObj.stance='CHARGING';targetObj.ki=Math.min(100,targetObj.ki+20);sound.playCharge();updateHud();}
   else if(action==='SUPER'){
     if(targetObj.ki>=100)executePlayerSuper(playerNum);
@@ -1757,7 +1918,11 @@ function setCombatPhase(phase,text,colorClass){
     CROUCH:'Lower hips are registered as a duck.',
     RECOVERY:'That exchange is settling. Return to a neutral stance.',
     TRACKING:'Combat pauses when the game cannot trust the body landmarks.',
-    DODGE:'The opponent moved out of the attack line, so no damage was dealt.'
+    DODGE:'The opponent moved out of the attack line, so no damage was dealt.',
+    SPELL:'Voice spells are theatrical commands mapped to safe arena actions.',
+    SHOT:'A soft-energy shot uses the same deterministic hit, guard, cooldown, and damage rules.',
+    STEALTH:'Crouch hides your fighter in shooting mode; stand up to reappear.',
+    VR:'VR changes the view, not the reliable combat rules.'
   };
   const reason=document.getElementById('combatReason');
   if(reason){reason.textContent=reasonMap[phase]||'The arena is reading your next clear action.';reason.classList.remove('hidden');}
@@ -1833,7 +1998,7 @@ function endGame(playerWon){
 }
 function closeOverlay(){document.getElementById('gameOverlay').classList.add('hidden');}
 async function startNextRound(){
-  player.hp=player.maxHp;player.ki=0;player.stance='IDLE';player.knockback=0;player.hitFlash=0;player.homeX=-3.2;player.x=-3.2;player.dodgeZ=0;player.dodgeBaseline=null;player.counterUntil=0;player.lastAttackTime=0;player.lastGestureTime=0;player.attackLockUntil=0;
+  player.hp=player.maxHp;player.ki=0;player.stance='IDLE';player.isStealthed=false;player.knockback=0;player.hitFlash=0;player.homeX=-3.2;player.x=-3.2;player.dodgeZ=0;player.dodgeBaseline=null;player.counterUntil=0;player.lastAttackTime=0;player.lastGestureTime=0;player.attackLockUntil=0;
   ai.maxHp=100+(gameLevel-1)*15;ai.hp=ai.maxHp;ai.ki=0;ai.stance='IDLE';ai.knockback=0;ai.hitFlash=0;ai.homeX=3.2;ai.x=3.2;ai.lastAttackTime=0;ai.lastGestureTime=0;ai.attackLockUntil=0;
   ai.reactionDelay=Math.max(260,620-(gameLevel-1)*70);
   ai.history={PUNCH:0,KICK:0,GUARD:0,CROUCH:0,CHARGE:0};
@@ -1843,6 +2008,7 @@ async function startNextRound(){
   prevWristL=null;prevWristR=null;prevAnkleL=null;prevAnkleR=null;lastPoseFrameAt=0;lastValidPoseAt=0;lastChargeToneAt=0;smoother.prev=null;
   setPortraitState('p1','ready');setPortraitState('p2','ready');
   rebuildFighters3D();
+  if(playerFighter3D?.group)playerFighter3D.group.visible=true;
   updateHud();
   trainingBeat=currentRound===1&&p1RoundWins===0&&p2RoundWins===0&&selectedGameMode==='1P'&&!dualCamMode;
   trainingBeatTimer=6500;
@@ -1859,7 +2025,9 @@ function startMatch(){
   document.getElementById('p1NameText').innerHTML=`<i class="fa-solid fa-user text-cyan-300"></i> P1: ${selectedP1Char.name}`;
   document.getElementById('p2NameText').innerHTML=`<i class="fa-solid fa-skull text-rose-500"></i> ${selectedP2Char.name}${p2Suffix}`;
   document.getElementById('p2CharLabel').innerText=selectedGameMode==='1P'?'ENEMY AI FIGHTER':'PLAYER 2 FIGHTER';
-  document.getElementById('gameModeDisplay').innerText=selectedGameMode==='1P'?'1P VS ADAPTIVE AI':selectedGameMode==='CAM2P'?'2P SAME CAMERA':'2-PLAYER LOCAL VS';
+  document.getElementById('gameModeDisplay').innerText=modeDisplayName();
+  document.getElementById('overlayDesc').textContent=modeStartCopy();
+  updateSpecialModeUI();
   document.getElementById('levelDisplay').innerText=`LVL ${gameLevel}: ${tierName(gameLevel)}`;
   renderRoundPips();
   closeOverlay();
@@ -1876,18 +2044,29 @@ function toggleMute(){
 function openModeSelectModal(){document.getElementById('modeSelectModal').classList.remove('hidden');}
 function closeModeSelectModal(){document.getElementById('modeSelectModal').classList.add('hidden');}
 function setGameMode(mode){
+  const special=['WIZARD','SHOOTING','VR'];
+  if(vrActive&&mode!=='VR')vrSession?.end?.();
   if(dualCamRunning&&mode!=='CAM2P')stopDualCamera();
-  selectedGameMode=mode;
-  document.getElementById('modeBtn1P').className=mode==='1P'
-    ?'p-4 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20 text-left transition relative'
-    :'p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative';
-  document.getElementById('modeBtn2P').className=mode==='2P'
-    ?'p-4 rounded-xl border-2 border-rose-500 bg-rose-500/10 hover:bg-rose-500/20 text-left transition relative'
-    :'p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative';
-  document.getElementById('modeBtnCAM2P').className=mode==='CAM2P'
-    ?'p-4 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 text-left transition relative'
-    :'p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative';
-  document.getElementById('p2CharLabel').innerText=mode==='1P'?'ENEMY AI FIGHTER':'PLAYER 2 FIGHTER';
+  if(special.includes(mode)){selectedModeVariant=mode;selectedGameMode='1P';}
+  else{selectedModeVariant='CORE';selectedGameMode=mode;}
+  setPlayerStealth(false);
+  const cards={
+    modeBtn1P:[selectedModeVariant==='CORE'&&selectedGameMode==='1P','cyan'],
+    modeBtn2P:[selectedModeVariant==='CORE'&&selectedGameMode==='2P','rose'],
+    modeBtnCAM2P:[selectedModeVariant==='CORE'&&selectedGameMode==='CAM2P','emerald'],
+    modeBtnWIZARD:[selectedModeVariant==='WIZARD','purple'],
+    modeBtnSHOOTING:[selectedModeVariant==='SHOOTING','orange'],
+    modeBtnVR:[selectedModeVariant==='VR','cyan']
+  };
+  Object.entries(cards).forEach(([id,[active,color]])=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.className=active?`p-4 rounded-xl border-2 border-${color}-500 bg-${color}-500/10 hover:bg-${color}-500/20 text-left transition relative`:'p-4 rounded-xl border-2 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-left transition relative';
+    el.setAttribute('aria-pressed',String(active));
+  });
+  document.getElementById('p2CharLabel').innerText=selectedGameMode==='1P'?'ENEMY AI FIGHTER':'PLAYER 2 FIGHTER';
+  document.getElementById('gameModeDisplay').innerText=modeDisplayName();
+  document.getElementById('overlayDesc').textContent=modeStartCopy();
+  updateSpecialModeUI();
 }
 function renderCharGrid(gridId,onSelect,selectedChar){
   const grid=document.getElementById(gridId);
