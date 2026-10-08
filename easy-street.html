@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09111f">
+  <meta name="description" content="Easy Street is a focused runway-planning workspace, available as a separate Kindred Guild page.">
+  <title>Easy Street — Kindred Guild</title>
+  <style>
+    :root { color-scheme: dark; --bar-height: 62px; --intro-height: 74px; --ink: #09111f; --panel: #101b2d; --line: rgba(148,163,184,.2); --gold: #f4c76b; --muted: #a8b4c8; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--ink); color: #f7f8fc; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { display: flex; flex-direction: column; }
+    .topbar { height: var(--bar-height); flex: 0 0 var(--bar-height); display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 0 20px; border-bottom: 1px solid var(--line); background: rgba(10,18,32,.96); }
+    .back, .open { color: var(--gold); text-decoration: none; font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .back:hover, .open:hover { color: #ffe5a3; }
+    .brand { min-width: 0; text-align: center; font-size: 14px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .brand small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 500; letter-spacing: .01em; text-transform: none; }
+    .intro { height: var(--intro-height); flex: 0 0 var(--intro-height); display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 10px 20px; border-bottom: 1px solid var(--line); background: linear-gradient(100deg, rgba(20,34,56,.95), rgba(10,18,32,.98)); }
+    .intro h1 { margin: 0 0 4px; font-size: 17px; line-height: 1.2; }
+    .intro p { margin: 0; max-width: 850px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .external-note { flex: 0 0 auto; color: #cad4e4; font-size: 10px; text-align: right; }
+    .app-frame { flex: 1 1 auto; min-height: 0; width: 100%; border: 0; background: #0b0b0a; }
+    @media (max-width: 680px) {
+      :root { --bar-height: 54px; --intro-height: 104px; }
+      .topbar { gap: 8px; padding: 0 10px; }
+      .brand { font-size: 11px; letter-spacing: .08em; }
+      .brand small { display: none; }
+      .back, .open { font-size: 11px; }
+      .intro { align-items: flex-start; flex-direction: column; justify-content: center; gap: 5px; padding: 10px 14px; }
+      .intro h1 { font-size: 15px; }
+      .intro p { font-size: 11px; }
+      .external-note { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="index.html" aria-label="Back to Kindred Guild">← Kindred Guild</a>
+    <div class="brand">Easy Street<small>A focused cash-flow and runway-planning workspace</small></div>
+    <a class="open" href="https://yonder-umbra-birch-blend.vercel.app/" target="_blank" rel="noopener noreferrer">Open full page ↗</a>
+  </header>
+  <section class="intro" aria-label="About Easy Street">
+    <div>
+      <h1>Organize essentials, priorities, and practical next steps.</h1>
+      <p>Easy Street runs as its own app, separate from Kindred Guild. If you prefer, open it directly in a new tab.</p>
+    </div>
+    <div class="external-note">Independent app · Not financial advice</div>
+  </section>
+  <iframe class="app-frame" src="https://yonder-umbra-birch-blend.vercel.app/" title="Easy Street runway-planning app" loading="eager" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen"></iframe>
+</body>
+</html>

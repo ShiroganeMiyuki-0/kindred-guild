@@ -71,6 +71,9 @@ A community task board where people post jobs and others help them out. Free or 
 ├── trust-and-safety.html   # Trust charter
 ├── terms-of-service.html   # Terms
 ├── privacy-policy.html     # Privacy
+├── easy-street.html        # Easy Street runway planner page
+├── motion-duel-arena.html  # Anime Motion Fighter page (legacy route)
+├── anime-motion-fighter/   # Current production build and upstream source snapshot
 ├── css/globals.css         # Shared styles
 ├── js/supabase-client.js   # Shared Supabase client
 ├── site-nav.js             # Global navigation

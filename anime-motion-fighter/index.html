@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Anime Motion Fighter — a 3D body-controlled fighting game. Use your webcam or keyboard to punch, kick, guard, and unleash super beams in dramatic anime combat.">
+<meta name="theme-color" content="#020617">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta property="og:title" content="ANIME MOTION FIGHTER — 3D Body-Controlled Combat">
+<meta property="og:description" content="Move your body to fight. Webcam motion tracking meets anime-style 3D combat.">
+<meta property="og:type" content="website">
+<title>ANIME MOTION FIGHTER — 3D Body-Controlled Combat</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<script defer src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="styles.css">
+<noscript>
+  <div class="noscript-fallback">
+    <div class="noscript-card">
+      <p class="noscript-icon">⚡</p>
+      <h2 class="noscript-title">JavaScript Required</h2>
+      <p class="noscript-desc">Anime Motion Fighter needs JavaScript to run the 3D engine, webcam tracking, and game logic. Please enable JavaScript in your browser settings and reload.</p>
+    </div>
+  </div>
+</noscript>
+  <script defer src="app.js"></script>
+</head>
+<body class="h-full overflow-hidden">
+
+<!-- ===== LOADING SCREEN ===== -->
+<div id="loadingScreen">
+  <div class="loading-ring"></div>
+  <p class="font-orbitron text-sm text-cyan-400 mt-6 tracking-widest" role="status" aria-live="polite">INITIALIZING ARENA</p>
+  <div class="loading-bar"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
+  <p class="font-inter text-xs text-slate-500 mt-3" id="loadingStatus" role="status" aria-live="polite">Loading 3D engine...</p>
+</div>
+
+<!-- ===== LANDING SCREEN ===== -->
+<div id="landingScreen" class="hidden">
+  <div class="landing-bg"></div>
+  <div class="landing-grid"></div>
+  <div class="hero-glow"></div>
+
+  <div class="relative z-10 min-h-full flex flex-col items-center justify-center px-4 py-12">
+    <!-- Hero -->
+    <div class="text-center mb-10 animate-fade-in-up">
+      <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        <span class="font-orbitron text-[10px] text-cyan-400 tracking-widest uppercase">Webcam Motion Combat</span>
+      </div>
+      <h1 class="landing-title text-5xl sm:text-6xl md:text-7xl mb-4">
+        <span class="title-gradient">ANIME MOTION</span><br>
+        <span class="text-white/90">FIGHTER</span>
+      </h1>
+      <p class="font-inter text-base sm:text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
+        Your body is the controller. Step in front of the camera, throw punches, land kicks, guard against attacks, and unleash devastating super beams — or play with keyboard controls.
+      </p>
+    </div>
+
+    <!-- Feature Tags -->
+    <div class="flex flex-wrap justify-center gap-2 mb-8 animate-fade-in-up" style="animation-delay:.15s">
+      <span class="feature-tag border-cyan-500/20 bg-cyan-500/5 text-cyan-400"><i class="fa-solid fa-video text-[9px]"></i> Webcam Tracking</span>
+      <span class="feature-tag border-amber-500/20 bg-amber-500/5 text-amber-400"><i class="fa-solid fa-gamepad text-[9px]"></i> Keyboard Controls</span>
+      <span class="feature-tag border-rose-500/20 bg-rose-500/5 text-rose-400"><i class="fa-solid fa-mobile-screen text-[9px]"></i> Mobile Touch</span>
+      <span class="feature-tag border-emerald-500/20 bg-emerald-500/5 text-emerald-400"><i class="fa-solid fa-robot text-[9px]"></i> Adaptive AI</span>
+      <span class="feature-tag border-purple-500/20 bg-purple-500/5 text-purple-400"><i class="fa-solid fa-users text-[9px]"></i> Local Multiplayer</span>
+    </div>
+
+    <!-- Mode Selection -->
+    <div class="w-full max-w-3xl mb-8 animate-fade-in-up" style="animation-delay:.3s">
+      <h2 class="font-orbitron text-xs text-slate-500 tracking-widest uppercase text-center mb-4">Choose Your Arena</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="landingModeGrid">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- Character Preview -->
+    <div class="w-full max-w-3xl mb-8 animate-fade-in-up" style="animation-delay:.4s">
+      <details class="group">
+        <summary class="cursor-pointer text-center font-orbitron text-xs text-slate-500 tracking-widest uppercase hover:text-slate-400 transition">
+          <span class="group-open:hidden">▸ </span><span class="hidden group-open:inline">▾ </span>Customize Fighters (Optional)
+        </summary>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="hud-panel p-4">
+            <div class="font-orbitron text-xs font-bold text-cyan-400 mb-3 flex justify-between">
+              <span>PLAYER 1</span>
+              <span id="landingP1Name" class="text-amber-300">G.ONE</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2" id="landingP1Grid"></div>
+          </div>
+          <div class="hud-panel p-4">
+            <div class="font-orbitron text-xs font-bold text-rose-400 mb-3 flex justify-between">
+              <span>OPPONENT</span>
+              <span id="landingP2Name" class="text-amber-300">RA.ONE</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2" id="landingP2Grid"></div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- CTA -->
+    <div class="flex flex-col sm:flex-row gap-3 animate-fade-in-up" style="animation-delay:.5s">
+      <button id="landingStartBtn" class="cta-button cta-primary" aria-label="Start the game">
+        <i class="fa-solid fa-bolt mr-2"></i>ENTER THE ARENA
+      </button>
+      <button onclick="showHelpModal()" class="cta-button cta-secondary" aria-label="Open how to play guide">
+        <i class="fa-solid fa-circle-question mr-2"></i>How to Play
+      </button>
+    </div>
+
+    <!-- Input method hint -->
+    <p class="font-inter text-[11px] text-slate-600 mt-6 text-center max-w-md">
+      Works with webcam body tracking, keyboard, or mobile touch controls. No download required — plays in your browser.
+    </p>
+  </div>
+</div>
+
+<!-- ===== MAIN GAME ===== -->
+<div id="gameContainer" class="hidden h-full flex-col">
+  <!-- Header -->
+  <header class="h-14 bg-slate-900/90 border-b border-slate-800/60 px-3 flex items-center justify-between z-20 backdrop-blur flex-shrink-0">
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-8 h-8 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid fa-bolt text-cyan-200 text-sm"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="font-orbitron text-xs sm:text-sm font-bold tracking-wider text-white truncate">ANIME MOTION <span class="text-amber-400 text-[9px] font-normal border border-amber-500/30 px-1 py-0.5 rounded ml-1">3D</span></h1>
+        <p class="text-[9px] text-slate-500 hidden sm:block font-inter" id="headerModeLabel">1P VS Adaptive AI</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <!-- Settings (desktop) -->
+      <details class="relative hidden md:block">
+        <summary class="list-none cursor-pointer px-2.5 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-slate-700/50 text-[10px] font-orbitron text-slate-400 transition">
+          <i class="fa-solid fa-sliders mr-1"></i><span class="label-full">SETTINGS</span><span class="label-short">CFG</span>
+        </summary>
+        <div class="absolute top-10 right-0 z-50 settings-panel p-4 w-[min(92vw,320px)]">
+          <div class="grid grid-cols-2 gap-3">
+            <label class="text-[10px] text-slate-400 font-orbitron">CAMERA
+              <select id="cameraFacingSelect" onchange="changeCameraFacing(this.value)" class="settings-select mt-1 w-full"><option value="user">FRONT</option><option value="environment">BACK</option></select>
+            </label>
+            <label class="text-[10px] text-slate-400 font-orbitron">ARENA VIEW
+              <select id="cameraViewSelect" onchange="changeCameraView(this.value)" class="settings-select mt-1 w-full"><option value="FRONT">FRONT</option><option value="SIDE">SIDE</option><option value="REAR">REAR</option></select>
+            </label>
+            <label class="text-[10px] text-slate-400 font-orbitron">TRACKING
+              <select id="trackingProfileSelect" onchange="changeTrackingProfile(this.value)" class="settings-select mt-1 w-full"><option value="FRONT">FACING LENS</option><option value="SIDE">SIDE-FACING</option></select>
+            </label>
+            <label class="text-[10px] text-slate-400 font-orbitron">SENSITIVITY
+              <select id="sensitivitySelect" onchange="changeSensitivity(this.value)" class="settings-select mt-1 w-full"><option value="LOW">LOW</option><option value="MED" selected>NORMAL</option><option value="HIGH">HIGH</option></select>
+            </label>
+            <label class="text-[10px] text-slate-400 font-orbitron col-span-2">CAMERA QUALITY
+              <select id="cameraQualitySelect" onchange="changeCameraQuality(this.value)" class="settings-select mt-1 w-full"><option value="AUTO" selected>AUTO (RECOMMENDED)</option><option value="HIGH">HIGH DETAIL</option><option value="LOW">PERFORMANCE</option></select>
+            </label>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button onclick="toggleCameraVisibility()" class="flex-1 px-3 py-1.5 bg-slate-800/60 rounded-lg border border-slate-700/50 text-[10px] font-orbitron text-slate-400 hover:border-cyan-500/40 transition" id="camVisBtn" aria-label="Toggle camera visibility">
+              <i class="fa-solid fa-eye-slash mr-1"></i><span id="camVisLabel">HIDE CAM</span>
+            </button>
+            <button onclick="toggleSplitScreen()" class="flex-1 px-3 py-1.5 bg-slate-800/60 rounded-lg border border-slate-700/50 text-[10px] font-orbitron text-slate-400 hover:border-cyan-500/40 transition" id="splitBtn" aria-label="Toggle split screen view">
+              <i class="fa-solid fa-table-columns mr-1"></i>SPLIT POV
+            </button>
+          </div>
+          <div class="mt-3 pt-3 border-t border-slate-800 flex justify-between text-[10px] font-orbitron">
+            <span class="text-slate-500">MODE</span>
+            <span class="text-cyan-400" id="settingsModeDisplay">1P VS AI</span>
+          </div>
+          <div class="flex justify-between text-[10px] font-orbitron mt-1">
+            <span class="text-slate-500">THREAT</span>
+            <span class="text-amber-400" id="settingsLevelDisplay">LVL 1: MINION BOT</span>
+          </div>
+        </div>
+      </details>
+
+      <!-- Mobile settings toggle -->
+      <button class="md:hidden px-2 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-slate-700/50 text-slate-400 text-xs" onclick="toggleMobileSettings()" aria-label="Open settings">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+
+      <button onclick="openModeSelectModal()" class="px-2.5 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-slate-700/50 text-amber-400 text-[10px] font-orbitron transition" aria-label="Change game mode">
+        <i class="fa-solid fa-users mr-1"></i><span class="label-full">MODE</span>
+      </button>
+      <button onclick="toggleKeyboardDrawer()" class="px-2.5 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-slate-700/50 text-cyan-400 text-[10px] font-orbitron transition" id="kbToggleBtn" aria-label="Toggle keyboard controls">
+        <i class="fa-solid fa-gamepad mr-1"></i><span class="label-full">KEYS</span>
+      </button>
+      <button id="startCamBtn" onclick="initCamera()" class="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-orbitron font-bold rounded-lg text-[10px] sm:text-xs shadow-lg transition" data-loading="false" aria-label="Start webcam for motion tracking">
+        <i class="fa-solid fa-video mr-1"></i><span class="label-full">WEBCAM</span>
+      </button>
+      <button onclick="startCalibration()" class="px-2.5 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-emerald-500/30 text-emerald-400 text-[10px] font-orbitron transition" id="calibBtn">
+        <i class="fa-solid fa-crosshairs mr-1"></i><span class="label-full">CAL</span>
+      </button>
+      <button onclick="showHelpModal()" class="px-2 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-slate-700/50 text-slate-400 text-xs transition" title="How to play">
+        <i class="fa-solid fa-circle-question"></i>
+      </button>
+      <button onclick="togglePause()" class="px-2 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-slate-700/50 text-slate-400 text-xs md:hidden" title="Pause" aria-label="Pause match" aria-pressed="false" id="headerPauseBtn">
+        <i class="fa-solid fa-pause"></i>
+      </button>
+      <button onclick="toggleMute()" class="px-2 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-slate-700/50 text-slate-400 text-xs md:hidden" title="Mute" id="headerMuteBtn">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Settings Panel -->
+  <div id="mobileSettingsPanel" class="hidden md:hidden settings-panel absolute top-14 right-2 z-50 w-[min(92vw,320px)] p-4">
+    <div class="flex justify-between items-center mb-3">
+      <strong class="font-orbitron text-[10px] text-cyan-400 tracking-wider">SETTINGS</strong>
+      <button onclick="toggleMobileSettings()" class="text-slate-500 hover:text-white text-sm">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <label class="text-[10px] text-slate-400 font-orbitron">CAMERA
+        <select onchange="changeCameraFacing(this.value)" class="settings-select mt-1 w-full"><option value="user">FRONT</option><option value="environment">BACK</option></select>
+      </label>
+      <label class="text-[10px] text-slate-400 font-orbitron">VIEW
+        <select onchange="changeCameraView(this.value)" class="settings-select mt-1 w-full"><option value="FRONT">FRONT</option><option value="SIDE">SIDE</option><option value="REAR">REAR</option></select>
+      </label>
+      <label class="text-[10px] text-slate-400 font-orbitron">TRACKING
+        <select onchange="changeTrackingProfile(this.value)" class="settings-select mt-1 w-full"><option value="FRONT">FACING LENS</option><option value="SIDE">SIDE-FACING</option></select>
+      </label>
+      <label class="text-[10px] text-slate-400 font-orbitron">SENSITIVITY
+        <select onchange="changeSensitivity(this.value)" class="settings-select mt-1 w-full"><option value="LOW">LOW</option><option value="MED" selected>NORMAL</option><option value="HIGH">HIGH</option></select>
+      </label>
+      <label class="text-[10px] text-slate-400 font-orbitron col-span-2">CAMERA QUALITY
+        <select onchange="changeCameraQuality(this.value)" class="settings-select mt-1 w-full"><option value="AUTO" selected>AUTO (RECOMMENDED)</option><option value="HIGH">HIGH DETAIL</option><option value="LOW">PERFORMANCE</option></select>
+      </label>
+    </div>
+  </div>
+
+  <!-- Game Canvas Area -->
+  <main class="canvas-container flex-1 relative overflow-hidden bg-black">
+    <div id="webglContainer" class="absolute inset-0 w-full h-full z-0"></div>
+    <canvas id="fxCanvas" class="absolute inset-0 w-full h-full pointer-events-none z-10"></canvas>
+    <div id="vignette"></div>
+    <div id="hitFlash"></div>
+    <div id="impactFrame"></div>
+    <div id="slowMotionOverlay"></div>
+    <div id="koOverlay"><span class="ko-text">K.O.</span></div>
+
+    <!-- Combat Phase Display (center) -->
+    <div id="combatPhaseDisplay">
+      <div id="phaseText" class="phase-text"></div>
+      <div id="phaseSub" class="phase-sub"></div>
+    </div>
+
+    <!-- Combo Display -->
+    <div id="comboDisplay">
+      <div id="comboNumber" class="combo-number">0</div>
+      <div class="combo-label">COMBO</div>
+    </div>
+
+    <!-- Round Banner -->
+    <div id="roundBanner">
+      <span id="roundBannerText" class="round-text text-amber-300"></span>
+    </div>
+
+    <!-- Round Pips -->
+    <div class="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 pointer-events-none" id="roundPipsContainer">
+      <div id="roundPips" class="flex gap-1.5"></div>
+    </div>
+
+    <!-- HUD: Player 1 -->
+    <div class="absolute top-2 left-2 right-[52%] sm:right-[52%] z-20 pointer-events-none">
+      <div class="hud-panel p-2 sm:p-2.5 relative">
+        <img id="p1Portrait" class="fighter-portrait fighter-portrait-p1" data-state="ready" src="assets/motion-duel-cyan.png" alt="P1 fighter">
+        <div class="flex justify-between items-center mb-1 pl-10 sm:pl-12">
+          <span class="font-orbitron text-[10px] sm:text-xs font-bold text-cyan-400 truncate pt-label"><i class="fa-solid fa-user text-cyan-500 mr-1"></i><span id="p1NameText">P1: G.ONE</span></span>
+          <span class="font-orbitron text-[9px] text-amber-400 flex-shrink-0">PTS <b id="playerScoreText">0</b></span>
+        </div>
+        <div class="hp-bar-track mb-1">
+          <div id="playerHpBar" class="hp-bar-fill bg-gradient-to-r from-cyan-500 to-emerald-400 w-full"></div>
+        </div>
+        <div class="flex justify-between items-center mb-0.5">
+          <span class="text-[9px] font-orbitron text-cyan-500 font-bold tracking-wider"><i class="fa-solid fa-bolt text-amber-400 mr-0.5"></i>KI</span>
+          <span id="playerKiText" class="text-[9px] font-orbitron text-amber-400">0%</span>
+        </div>
+        <div class="ki-bar-track">
+          <div id="playerKiBar" class="ki-bar-fill bg-gradient-to-r from-amber-500 to-cyan-400 w-0"></div>
+        </div>
+        <div class="text-[9px] font-inter text-slate-500 mt-1 hp-label" id="playerHpLabel">100 / 100</div>
+      </div>
+    </div>
+
+    <!-- HUD: Player 2 / AI -->
+    <div class="absolute top-2 left-[52%] sm:left-[52%] right-2 z-20 pointer-events-none">
+      <div class="hud-panel p-2 sm:p-2.5 relative">
+        <img id="p2Portrait" class="fighter-portrait fighter-portrait-p2" data-state="ready" src="assets/motion-duel-crimson.png" alt="P2 fighter">
+        <div class="flex justify-between items-center mb-1 pr-10 sm:pr-12">
+          <span class="font-orbitron text-[9px] text-amber-400 flex-shrink-0">PTS <b id="aiScoreText">0</b></span>
+          <span class="font-orbitron text-[10px] sm:text-xs font-bold text-rose-400 truncate text-right pt-label"><span id="p2NameText">RA.ONE (AI)</span><i class="fa-solid fa-skull text-rose-500 ml-1"></i></span>
+        </div>
+        <div class="hp-bar-track mb-1">
+          <div id="aiHpBar" class="hp-bar-fill bg-gradient-to-r from-rose-600 to-amber-500 w-full"></div>
+        </div>
+        <div class="flex justify-between items-center mb-0.5">
+          <span id="aiKiText" class="text-[9px] font-orbitron text-rose-400">0%</span>
+          <span class="text-[9px] font-orbitron text-rose-500 font-bold tracking-wider">KI OVERDRIVE</span>
+        </div>
+        <div class="ki-bar-track">
+          <div id="aiKiBar" class="ki-bar-fill bg-gradient-to-r from-rose-600 to-orange-400 w-0"></div>
+        </div>
+        <div class="text-[9px] font-inter text-slate-500 mt-1 text-right hp-label" id="aiHpLabel">100 / 100</div>
+      </div>
+    </div>
+
+    <!-- Gesture Status (bottom center) -->
+    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-center" id="gestureStatusWrap">
+      <div id="gestureStatus" role="status" aria-live="polite" class="font-orbitron text-[10px] sm:text-xs font-bold text-amber-300 bg-slate-900/90 border border-amber-500/30 px-4 py-1.5 rounded-full uppercase tracking-wider backdrop-blur inline-block">
+        STAND IN VIEW
+      </div>
+      <div id="combatReason" class="hidden max-w-[280px] text-[9px] sm:text-[10px] text-slate-400 bg-slate-950/80 border border-slate-700/50 px-3 py-1 rounded-lg mt-1.5 leading-relaxed font-inter mx-auto"></div>
+    </div>
+
+    <!-- Camera Feed Panel -->
+    <div id="cameraFeedPanel">
+      <canvas id="pipCanvas" class="w-full h-full object-cover" style="transform:scaleX(-1)"></canvas>
+      <div class="absolute top-1 left-1.5 text-[8px] font-orbitron text-cyan-400 bg-slate-950/80 px-1.5 py-0.5 rounded border border-cyan-500/20">
+        <i class="fa-solid fa-video mr-0.5"></i>LIVE
+      </div>
+      <div class="absolute bottom-1 left-1.5 right-1.5 flex justify-between items-center text-[8px] font-orbitron text-slate-400 bg-black/70 px-1.5 py-0.5 rounded">
+        <span>VEL:</span><span id="speedMetric" class="text-amber-400 font-bold">0.00</span>
+      </div>
+      <div class="cam-meters absolute bottom-7 left-1.5 right-1.5 text-[7px] font-orbitron text-slate-500 bg-black/60 px-1 py-0.5 rounded">
+        <div class="flex items-center gap-1">
+          <span class="text-cyan-400">PUNCH</span>
+          <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="punchMeter" class="h-full bg-cyan-400 rounded-full transition-all duration-75" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 mt-0.5">
+          <span class="text-emerald-400">KICK</span>
+          <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="kickMeter" class="h-full bg-emerald-400 rounded-full transition-all duration-75" style="width:0%"></div>
+          </div>
+        </div>
+        <div id="cooldownIndicator" class="mt-0.5 text-center text-amber-400 hidden">READY</div>
+      </div>
+    </div>
+
+    <!-- Bottom controls (desktop only — on mobile these ride in the header) -->
+    <div class="absolute bottom-3 right-3 z-20 gap-1.5 hidden md:flex">
+      <button onclick="togglePause()" id="pauseBtn" class="w-9 h-9 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/50 rounded-lg text-xs font-orbitron text-slate-400 backdrop-blur flex items-center justify-center transition" aria-label="Pause match" aria-pressed="false">
+        <i class="fa-solid fa-pause"></i>
+      </button>
+      <button onclick="toggleMute()" id="muteBtn" class="w-9 h-9 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/50 rounded-lg text-xs font-orbitron text-slate-400 backdrop-blur flex items-center justify-center transition">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
+    </div>
+
+    <!-- Keyboard Controls Drawer -->
+    <div id="keyboardDrawer">
+      <div class="text-[10px] font-orbitron text-cyan-400 mb-2 flex justify-between items-center">
+        <span>KEYBOARD CONTROLS</span>
+        <button onclick="toggleKeyboardDrawer()" class="text-slate-500 hover:text-white">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+        <div class="text-slate-500 font-orbitron col-span-2 mt-1">PLAYER 1</div>
+        <button onclick="triggerManualAction(1,'PUNCH')" class="px-2 py-1.5 bg-cyan-600/20 border border-cyan-500/30 hover:bg-cyan-500/30 rounded-lg font-orbitron text-cyan-300 transition">PUNCH (J)</button>
+        <button onclick="triggerManualAction(1,'KICK')" class="px-2 py-1.5 bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-500/30 rounded-lg font-orbitron text-emerald-300 transition">KICK (I)</button>
+        <button onclick="triggerManualAction(1,'GUARD')" class="px-2 py-1.5 bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-500/30 rounded-lg font-orbitron text-indigo-300 transition">GUARD (K)</button>
+        <button onclick="triggerManualAction(1,'CHARGE')" class="px-2 py-1.5 bg-amber-600/20 border border-amber-500/30 hover:bg-amber-500/30 rounded-lg font-orbitron text-amber-300 transition">CHARGE (L)</button>
+        <button onclick="triggerManualAction(1,'DUCK')" class="px-2 py-1.5 bg-purple-600/20 border border-purple-500/30 hover:bg-purple-500/30 rounded-lg font-orbitron text-purple-300 transition">DUCK (S)</button>
+        <button onclick="triggerManualAction(1,'SUPER')" class="px-2 py-1.5 bg-amber-600/20 border border-amber-500/30 hover:bg-amber-500/30 rounded-lg font-orbitron text-amber-300 transition">SUPER (SPC)</button>
+        <div class="text-slate-500 font-orbitron col-span-2 mt-1">PLAYER 2</div>
+        <button onclick="triggerManualAction(2,'PUNCH')" class="px-2 py-1.5 bg-rose-600/20 border border-rose-500/30 hover:bg-rose-500/30 rounded-lg font-orbitron text-rose-300 transition">PUNCH (1)</button>
+        <button onclick="triggerManualAction(2,'KICK')" class="px-2 py-1.5 bg-orange-600/20 border border-orange-500/30 hover:bg-orange-500/30 rounded-lg font-orbitron text-orange-300 transition">KICK (2)</button>
+        <button onclick="triggerManualAction(2,'GUARD')" class="px-2 py-1.5 bg-purple-600/20 border border-purple-500/30 hover:bg-purple-500/30 rounded-lg font-orbitron text-purple-300 transition">GUARD (3)</button>
+        <button onclick="triggerManualAction(2,'SUPER')" class="px-2 py-1.5 bg-red-600/20 border border-red-500/30 hover:bg-red-500/30 rounded-lg font-orbitron text-red-300 transition">SUPER (0)</button>
+      </div>
+    </div>
+
+    <!-- Video element (hidden) -->
+    <video id="webcamInput" class="hidden" playsinline aria-hidden="true"></video>
+  </main>
+
+  <!-- Mobile Touch Controls -->
+  <div id="touchControls">
+    <div class="touch-dpad">
+      <button class="touch-btn touch-btn-dpad" onpointerdown="triggerManualAction(1,'CHARGE')" aria-label="Charge"><i class="fa-solid fa-bolt text-xs"></i></button>
+      <button class="touch-btn touch-btn-dpad" onpointerdown="triggerManualAction(1,'DUCK')" aria-label="Duck"><i class="fa-solid fa-arrow-down text-xs"></i></button>
+      <button class="touch-btn touch-btn-dpad" onpointerdown="triggerManualAction(1,'GUARD')" aria-label="Guard"><i class="fa-solid fa-shield text-xs"></i></button>
+    </div>
+    <div class="touch-action-group">
+      <div class="touch-action-row">
+        <button class="touch-btn touch-btn-punch" onpointerdown="triggerManualAction(1,'PUNCH')" aria-label="Punch">
+          <i class="fa-solid fa-hand-fist text-lg"></i><span class="touch-label">PUNCH</span>
+        </button>
+        <button class="touch-btn touch-btn-kick" onpointerdown="triggerManualAction(1,'KICK')" aria-label="Kick">
+          <i class="fa-solid fa-shoe-prints text-lg"></i><span class="touch-label">KICK</span>
+        </button>
+        <button class="touch-btn touch-btn-super" onpointerdown="triggerManualAction(1,'SUPER')" aria-label="Super">
+          <i class="fa-solid fa-bolt text-lg"></i><span class="touch-label">SUPER</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OVERLAY (Start / Victory / Defeat) ===== -->
+<div id="gameOverlay" class="hidden fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center z-30 flex-col p-6 text-center">
+  <div class="relative mb-4"><i class="fa-solid fa-atom text-5xl sm:text-6xl text-cyan-400 drop-shadow-[0_0_20px_rgba(56,189,248,0.8)]" id="overlayIcon"></i></div>
+  <h2 id="overlayTitle" class="font-orbitron text-2xl sm:text-4xl font-black text-white mb-2 tracking-wide">READY</h2>
+  <p id="overlayDesc" class="text-slate-400 max-w-lg mb-6 text-sm leading-relaxed font-inter"></p>
+  <div id="overlayButtons" class="flex flex-col sm:flex-row gap-3"></div>
+</div>
+
+<!-- ===== MODE SELECT MODAL ===== -->
+<div id="modeSelectModal" class="hidden fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="modeSelectTitle">
+  <div class="settings-panel max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div class="text-center mb-6">
+      <h3 id="modeSelectTitle" class="font-orbitron text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-amber-300 uppercase tracking-wider">Select Battle Mode</h3>
+      <p class="text-xs text-slate-500 mt-1 font-inter">Choose how you want to fight</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6" id="modeModalGrid"></div>
+    <button onclick="confirmModeAndStart()" class="w-full py-3 bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-500 font-orbitron font-black text-slate-950 rounded-xl text-sm shadow-xl hover:scale-[1.01] transition">
+      <i class="fa-solid fa-play mr-2"></i>START MATCH
+    </button>
+    <button onclick="closeModeSelectModal()" class="w-full mt-2 py-2 text-slate-500 font-orbitron text-xs hover:text-slate-300 transition">CANCEL</button>
+  </div>
+</div>
+
+<!-- ===== HELP MODAL ===== -->
+<div id="helpModal" class="help-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+  <div class="help-card">
+    <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+      <h3 id="helpModalTitle" class="font-orbitron text-base font-bold text-cyan-400"><i class="fa-solid fa-person-rays mr-2"></i>How to Play</h3>
+      <button onclick="hideHelpModal()" class="text-slate-500 hover:text-white transition" aria-label="Close help"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <div class="space-y-3 font-inter text-sm text-slate-300">
+      <div class="p-3 bg-slate-800/40 rounded-xl border border-slate-700/50">
+        <div class="font-orbitron text-xs font-bold text-cyan-400 mb-1">🎮 Input Methods</div>
+        <p class="text-xs text-slate-400">Use <strong class="text-cyan-300">webcam body tracking</strong>, <strong class="text-cyan-300">keyboard</strong>, or <strong class="text-cyan-300">mobile touch buttons</strong>. All three work simultaneously.</p>
+      </div>
+      <div class="p-3 bg-slate-800/40 rounded-xl border border-slate-700/50">
+        <div class="font-orbitron text-xs font-bold text-cyan-400 mb-1">👊 Attacks</div>
+        <p class="text-xs text-slate-400"><strong class="text-cyan-300">PUNCH</strong> — Snap fist forward (J key / tap PUNCH). <strong class="text-emerald-300">KICK</strong> — Raise knee/ankle high (I key / tap KICK). Each has a cooldown after use.</p>
+      </div>
+      <div class="p-3 bg-slate-800/40 rounded-xl border border-slate-700/50">
+        <div class="font-orbitron text-xs font-bold text-indigo-400 mb-1">🛡️ Defense</div>
+        <p class="text-xs text-slate-400"><strong class="text-indigo-300">GUARD</strong> — Hold both hands up (K key / tap GUARD). Blocks all damage and opens a counter window. <strong class="text-purple-300">DUCK</strong> — Lower your hips (S key / tap DUCK) to dodge high attacks and supers.</p>
+      </div>
+      <div class="p-3 bg-slate-800/40 rounded-xl border border-slate-700/50">
+        <div class="font-orbitron text-xs font-bold text-amber-400 mb-1">⚡ Ki & Super</div>
+        <p class="text-xs text-slate-400"><strong class="text-amber-300">CHARGE</strong> — Bring hands together (L key / tap CHARGE) to build Ki energy. At 100%, use <strong class="text-amber-300">SUPER</strong> (Space / tap SUPER) to unleash a devastating beam!</p>
+      </div>
+      <div class="p-3 bg-slate-800/40 rounded-xl border border-slate-700/50">
+        <div class="font-orbitron text-xs font-bold text-rose-400 mb-1">🏆 Rounds</div>
+        <p class="text-xs text-slate-400">Best of 3 rounds. The AI adapts to your favorite moves — mix up your strategy! Win to face tougher opponents.</p>
+      </div>
+    </div>
+    <button onclick="hideHelpModal()" class="w-full mt-4 py-2.5 bg-slate-800 hover:bg-slate-700 font-orbitron font-bold rounded-xl text-slate-300 transition text-xs">GOT IT</button>
+  </div>
+</div>
+
+<!-- ===== PAUSE OVERLAY ===== -->
+<div id="pauseOverlay" role="dialog" aria-modal="true" aria-labelledby="pauseTitle" aria-hidden="true">
+  <div class="pause-card">
+    <i class="fa-solid fa-pause text-3xl text-cyan-400 mb-4" aria-hidden="true"></i>
+    <h2 id="pauseTitle" class="font-orbitron text-2xl font-black tracking-wider text-white">MATCH PAUSED</h2>
+    <p class="mt-3 text-sm leading-relaxed text-slate-400 font-inter">Take a breath. The arena and opponent are waiting for you.</p>
+    <button id="resumeBtn" onclick="togglePause()" class="cta-button cta-primary mt-6 w-full text-sm" autofocus>
+      <i class="fa-solid fa-play mr-2"></i>RESUME MATCH
+    </button>
+    <p class="mt-4 text-[10px] tracking-wider text-slate-500 font-orbitron">PRESS ESC TO RESUME</p>
+  </div>
+</div>
+
+
+</body>
+</html>

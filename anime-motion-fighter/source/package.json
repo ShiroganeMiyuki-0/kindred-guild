@@ -1,0 +1,25 @@
+{
+  "name": "anime-motion-fighter",
+  "version": "2.0.0",
+  "description": "3D anime fighting game with webcam motion tracking — move your body to fight",
+  "scripts": {
+    "dev": "npx --yes serve@14.2.6 . -p 3000 -s",
+    "build": "node tools/build.mjs",
+    "preview": "npx --yes serve@14.2.6 dist -p 4173 -s",
+    "check": "node tools/validate-project.mjs",
+    "build:check": "npm run check && npm run build && node tools/validate-build.mjs"
+  },
+  "keywords": [
+    "anime",
+    "fighting-game",
+    "motion-tracking",
+    "webcam",
+    "3d",
+    "mediapipe",
+    "three.js"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "esbuild": "^0.25.9"
+  }
+}
