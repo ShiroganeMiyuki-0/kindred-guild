@@ -115,6 +115,10 @@
     .founding-badge { display:inline-flex; align-items:center; gap:8px; margin-bottom:16px; padding:7px 12px; border:1px solid rgba(212,175,55,.38); border-radius:999px; background:rgba(212,175,55,.08); color:var(--accent); font-size:.7rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
     .founding-badge-dot { width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); }
     .hero-cta-note a { color:var(--accent); font-weight:700; }
+    .hero-try { margin:20px auto 0; padding:13px 16px 15px; max-width:620px; border:1px solid rgba(212,175,55,.32); border-radius:var(--radius); background:linear-gradient(135deg,rgba(212,175,55,.09),rgba(255,255,255,.025)); }
+    .hero-try-title { margin:0 0 10px; color:var(--accent); font-size:.72rem; font-weight:800; letter-spacing:.15em; text-transform:uppercase; }
+    .hero-try-actions { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+    .hero-try-actions .btn { min-height:42px; }
     .world-invite { padding:48px 20px; background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(255,255,255,.015)); border-block:1px solid var(--border); }
     .world-invite-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:28px; }
     .world-invite-kicker { color:var(--accent); font-size:.75rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
@@ -135,6 +139,9 @@
       .hero .tagline{font-size:1.05rem;}
       .hero .sub-tagline{font-size:.9rem;margin-bottom:22px;}
       .hero-cta-note{font-size:.8rem;}
+      .hero-try { margin-top:16px; padding:12px; }
+      .hero-try-actions { flex-direction:column; }
+      .hero-try-actions .btn { width:100%; text-align:center; }
     }
 
     /* Animated stars background */
@@ -452,6 +459,13 @@
         <a href="quest-post.html" class="btn btn-outline">Post a Task</a>
       </div>
       <p class="hero-cta-note">New to the Guild? <a href="getting-started.html">See how it works</a> · <a href="worker-post.html">Offer your skills</a> · <a href="guild-world.html">Explore the world</a></p>
+      <div class="hero-try" aria-label="Featured tools and games">
+        <h2 class="hero-try-title">Try something new</h2>
+        <div class="hero-try-actions">
+          <a href="easy-street.html" class="btn btn-outline">🛣️ Try Easy Street</a>
+          <a href="motion-duel-arena.html" class="btn btn-outline">🎮 Play Anime Motion Fighter</a>
+        </div>
+      </div>
     </div>
   </section>
 
